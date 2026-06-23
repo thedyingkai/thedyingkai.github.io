@@ -1,3 +1,8 @@
+// Post list renderer for homepage and /blog/.
+//
+// This file only builds article cards. It does not render Markdown content.
+// Article content is rendered by assets/article-renderer.js on /blog/post/.
+
 const POST_REPO = 'thedyingkai/thedyingkai.github.io';
 const POST_BRANCH = 'main';
 const POST_API = `https://api.github.com/repos/${POST_REPO}/contents/posts?ref=${POST_BRANCH}`;
@@ -12,6 +17,7 @@ function escapeHtml(value) {
   }[c]));
 }
 
+// Extract enough metadata to render a card. Full Markdown rendering is not done here.
 function parsePostSummary(fileName, rawText) {
   let meta = {};
   let body = rawText;
