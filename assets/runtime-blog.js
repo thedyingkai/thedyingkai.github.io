@@ -23,15 +23,7 @@ function parsePost(file, text) {
   const stem = file.replace(/\.md$/i, '');
   const heading = body.match(/^#{1,6}\s+(.+)$/m)?.[1]?.replace(/[*_`$\\{}]/g, '').trim();
   const firstText = body.split('\n').map(x => x.replace(/[#*_`>$\\{}]/g, '').trim()).find(Boolean);
-  return {
-    file,
-    slug: stem,
-    title: data.title || heading || stem,
-    description: data.description || firstText || stem,
-    date: data.date || 'Post',
-    tags: Array.isArray(data.tags) ? data.tags : ['笔记'],
-    body
-  };
+  return {file, slug: stem, title: data.title || heading || stem, description: data.description || firstText || stem, date: data.date || 'Post', tags: Array.isArray(data.tags) ? data.tags : ['笔记'], body};
 }
 
 async function loadPosts() {
@@ -61,23 +53,14 @@ async function renderLists() {
 }
 
 function fixLatex(src) {
-  return src
-    .replace(/\\_/g, '_')
-    .replace(/\\\*/g, '*')
-    .replace(/\\begin\{align\\\*\}/g, '\\begin{aligned}')
-    .replace(/\\end\{align\\\*\}/g, '\\end{aligned}')
-    .replace(/\\begin\{align\*\}/g, '\\begin{aligned}')
-    .replace(/\\end\{align\*\}/g, '\\end{aligned}')
-    .replace(/\\newline/g, '\\\\');
+  return src.replace(/\\_/g, '_').replace(/\\\*/g, '*').replace(/\\begin\{align\\\*\}/g, '\\begin{aligned}').replace(/\\end\{align\\\*\}/g, '\\end{aligned}').replace(/\\begin\{align\*\}/g, '\\begin{aligned}').replace(/\\end\{align\*\}/g, '\\end{aligned}').replace(/\\newline/g, '\\\\');
 }
 
 function normalizeMath(text) {
   const parts = text.split(/(```[\s\S]*?```)/g);
   return parts.map(part => {
     if (part.startsWith('```')) return part;
-    return part
-      .replace(/\$\$([\s\S]*?)\$\$/g, (_, x) => `$$${fixLatex(x)}$$`)
-      .replace(/\$(?!\$)([^$\n]+?)\$/g, (_, x) => `$${fixLatex(x)}$`);
+    return part.replace(/\$\$([\s\S]*?)\$\$/g, (_, x) => `$$${fixLatex(x)}$$`).replace(/\$(?!\$)([^$\n]+?)\$/g, (_, x) => `$${fixLatex(x)}$`);
   }).join('');
 }
 
@@ -88,18 +71,30 @@ async function loadHighlighter() {
     const js = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/javascript.min.js')).default;
     const bash = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/bash.min.js')).default;
     const json = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/json.min.js')).default;
-    hljs.registerLanguage('cpp', cpp);
-    hljs.registerLanguage('c++', cpp);
-    hljs.registerLanguage('c', cpp);
-    hljs.registerLanguage('javascript', js);
-    hljs.registerLanguage('js', js);
-    hljs.registerLanguage('bash', bash);
-    hljs.registerLanguage('sh', bash);
-    hljs.registerLanguage('json', json);
+    hljs.registerLanguage('cpp', cpp); hljs.registerLanguage('c++', cpp); hljs.registerLanguage('c', cpp);
+    hljs.registerLanguage('javascript', js); hljs.registerLanguage('js', js);
+    hljs.registerLanguage('bash', bash); hljs.registerLanguage('sh', bash); hljs.registerLanguage('json', json);
     return hljs;
-  } catch {
-    return null;
+  } catch { return null; }
+}
+
+function liteHighlight(raw, lang) {
+  const kw = /^(alignas|alignof|and|asm|auto|bool|break|case|catch|char|class|const|constexpr|continue|decltype|default|delete|do|double|else|enum|explicit|extern|false|float|for|friend|if|inline|int|long|namespace|new|nullptr|operator|private|protected|public|register|return|short|signed|sizeof|static|struct|switch|template|this|throw|true|try|typedef|typename|using|virtual|void|volatile|while|vector|string|map|set|queue|priority_queue|pair)$/;
+  const out = [];
+  const rx = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b[A-Za-z_][A-Za-z0-9_]*\b|\b\d+(?:\.\d+)?\b)/g;
+  let last = 0, m;
+  while ((m = rx.exec(raw))) {
+    out.push(esc(raw.slice(last, m.index)));
+    const s = m[0];
+    if (s.startsWith('//') || s.startsWith('/*')) out.push(`<span class="hljs-comment">${esc(s)}</span>`);
+    else if (s.startsWith('"') || s.startsWith("'")) out.push(`<span class="hljs-string">${esc(s)}</span>`);
+    else if (/^\d/.test(s)) out.push(`<span class="hljs-number">${esc(s)}</span>`);
+    else if ((lang === 'cpp' || lang === 'c++' || lang === 'c') && kw.test(s)) out.push(`<span class="hljs-keyword">${esc(s)}</span>`);
+    else out.push(esc(s));
+    last = rx.lastIndex;
   }
+  out.push(esc(raw.slice(last)));
+  return out.join('');
 }
 
 async function renderer() {
@@ -114,7 +109,7 @@ async function renderer() {
     const token = tokens[idx];
     const rawLang = (token.info || 'text').trim().split(/\s+/)[0] || 'text';
     const lang = rawLang.toLowerCase();
-    let code = esc(token.content);
+    let code = liteHighlight(token.content, lang);
     if (hljs && hljs.getLanguage(lang)) {
       try { code = hljs.highlight(token.content, {language: lang}).value; } catch {}
     }
