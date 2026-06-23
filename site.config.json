@@ -17,14 +17,12 @@
   "home": {
     "eyebrow": "Personal Archive",
     "title": "华风夏韵，洛水天依。",
-    "lead": "写题、做项目、打比赛，也把一路上的笔记和折腾记录留在这里。",
     "actions": [["阅读文章", "/blog/", true], ["友链", "/friends/"], ["成长记录", "/about/"], ["查看项目", "/projects/"]],
     "stats": [["Posts", "auto"], ["Focus", "XCPC"], ["Accent", "#66ccff"], ["Build", "Long Run"]]
   },
   "about": {
     "eyebrow": "About",
     "title": "华风夏韵，洛水天依",
-    "lead": "现役 XCPC 选手，记录题解、模板、训练、项目和一路打比赛的成长轨迹。",
     "cards": [
       ["Profile", "我是谁", "准大二生，就读于北京电子科技学院，网名 thedyingkai_，可以简称 TDK 喵。", ["XCPC", "OI", "Backend"]],
       ["Archive", "记录内容", "VP、参赛题解、专项学习笔记、算法模板、工程项目复盘，以及阶段性的成长记录。", ["题解", "笔记", "项目"]]
@@ -67,7 +65,6 @@
   "projects": {
     "eyebrow": "Projects",
     "title": "项目",
-    "lead": "整理一些正在认真维护的项目、脚本和长期积累下来的东西。",
     "featured": [
       ["Backend / Judge", "Untitled-OJ", "分布式、模块化、可扩展的在线评测平台。", "https://github.com/thedyingkai/Untitled-OJ", ["Go", "OJ", "PostgreSQL", "Redis"]],
       ["Browser Tools", "Tampermonkey Scripts", "面向洛谷的刷题辅助脚本集合。", "https://github.com/thedyingkai/tampermonkey", ["JavaScript", "Luogu", "Userscript"]]
@@ -81,7 +78,6 @@
   "friends": {
     "eyebrow": "Friends",
     "title": "友链",
-    "lead": "一些朋友和常去看的个人站点。",
     "links": [
       ["Friend", "朋友站点 A", "等待添加。", "#", ["Blog"]],
       ["Friend", "朋友站点 B", "等待添加。", "#", ["OI / XCPC"]],
