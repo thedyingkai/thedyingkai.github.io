@@ -14,8 +14,6 @@ let postDate = 'Post';
 let postTags = [];
 let postBody = '';
 
-// Parse the small YAML-like header used by posts/*.md.
-// Supported fields: title, description, date, tags.
 function parsePost(fileName, rawText) {
   postTitle = fileName.replace(/\.md$/i, '');
   postDescription = postTitle;
@@ -43,7 +41,6 @@ function parsePost(fileName, rawText) {
     }
   }
 
-  // A post can omit frontmatter. In that case the first H1 is used as title.
   if (postTitle === fileName.replace(/\.md$/i, '')) {
     for (const line of postBody.split('\n')) {
       const s = line.trim();
@@ -56,14 +53,10 @@ function parsePost(fileName, rawText) {
   }
 }
 
-// The imported old posts escaped LaTeX underscores as \_. We only fix that
-// inside math regions and never touch code blocks or normal text.
 function fixEscapedLatexInMath(text) {
   return text.split('\\_').join('_').split('\\*').join('*');
 }
 
-// Walk through the Markdown text and normalize only $...$ / $$...$$ sections.
-// This keeps source Markdown mostly untouched and avoids changing C++ code.
 function normalizeMathOnly(markdown) {
   let out = '';
   let i = 0;
@@ -108,6 +101,19 @@ function normalizeMathOnly(markdown) {
   return out;
 }
 
+// TexMe/marked may drop the language class from fenced code blocks.
+// Record fence languages from the original Markdown and re-attach them after render.
+function collectFenceLanguages(markdown) {
+  const langs = [];
+  const re = /^```\s*([^\s`]*)/gm;
+  let match;
+  while ((match = re.exec(markdown))) {
+    const lang = (match[1] || '').trim().toLowerCase();
+    langs.push(lang === 'c++' ? 'cpp' : lang);
+  }
+  return langs;
+}
+
 function waitFor(condition, name) {
   const start = Date.now();
   return new Promise((resolve, reject) => {
@@ -129,17 +135,18 @@ function element(tag, className, text) {
   return node;
 }
 
-// Use highlight.js for real tokenization. TexMe/marked may omit language classes,
-// so highlightAuto is used first; highlightElement remains the fallback.
-function highlightCodeBlocks(root) {
+function highlightCodeBlocks(root, languages) {
   if (!window.hljs) return;
-  root.querySelectorAll('pre code').forEach(code => {
+  root.querySelectorAll('pre code').forEach((code, index) => {
     const source = code.textContent;
+    const lang = languages[index] || '';
     try {
-      const result = window.hljs.highlightAuto(source);
+      const result = lang && window.hljs.getLanguage(lang)
+        ? window.hljs.highlight(source, { language: lang })
+        : window.hljs.highlightAuto(source, ['cpp', 'c', 'javascript', 'json', 'bash', 'xml', 'css']);
       code.innerHTML = result.value;
       code.classList.add('hljs');
-      if (result.language) code.classList.add(`language-${result.language}`);
+      code.classList.add(`language-${result.language || lang || 'text'}`);
     } catch {
       window.hljs.highlightElement(code);
     }
@@ -157,7 +164,6 @@ async function renderArticle() {
   }
 
   try {
-    // TexMe, MathJax and highlight.js are loaded by blog/post/index.html.
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
     await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
 
@@ -165,6 +171,7 @@ async function renderArticle() {
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
 
     parsePost(fileName, await response.text());
+    const codeLanguages = collectFenceLanguages(postBody);
     document.title = `${postTitle} · thedyingkai`;
 
     const back = element('a', 'back', '← 返回文章列表');
@@ -184,7 +191,7 @@ async function renderArticle() {
 
     root.replaceChildren(back, header, body);
     await window.MathJax.typesetPromise([body]);
-    highlightCodeBlocks(body);
+    highlightCodeBlocks(body, codeLanguages);
   } catch (error) {
     const box = element('article', 'render-body');
     box.append(element('h1', '', '文章加载失败'));
