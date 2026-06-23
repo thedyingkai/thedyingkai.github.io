@@ -26,7 +26,7 @@ const md = new MarkdownIt({
     const l = esc(lang || 'text');
     return `<div class="code-card"><div class="code-card__bar"><span class="code-card__lang">${l}</span></div><pre><code class="language-${l}">${esc(code)}</code></pre></div>`;
   }
-}).use(katex);
+}).use(katex,{throwOnError:false,errorColor:'#cc0000'});
 
 function page(title, body, raw){
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} · thedyingkai</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/post-renderer.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"></head><body><div class="progress"></div><main class="render-shell"><a class="back" href="/blog/">← 返回文章列表</a><header class="render-head"><h1>${esc(title)}</h1><div class="render-actions"><a class="btn" href="${esc(raw)}">查看原文文件</a></div></header><article class="render-body">${body}</article></main><script src="/assets/site.js"></script></body></html>`;
