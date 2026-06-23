@@ -115,7 +115,7 @@ $$
 恰对应一种 $\{b\_i\}$ 的选择。合并所有 $b\_1+\cdots+b\_n=m$ 的情况，得到
 
 $$
-\sum\_{b\_1+\cdots+b\_n=m}\frac{x^m}{b\_1!\cdots b\_n!}
+\sum\_{b\_1+\cdots+b\_n=m}\frac{x^m}{b\_1!\,b\_2!\,\cdots\,b\_n!}
 = \Bigl(\sum\_{b\_1+\cdots+b\_n=m}\frac{1}{b\_1!\cdots b\_n!}\Bigr)\frac{x^m}{m!}\,m!.
 $$
 
