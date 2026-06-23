@@ -19,7 +19,7 @@
     "title": "华风夏韵，洛水天依。",
     "lead": "写题、做项目、打比赛，也把一路上的笔记和折腾记录留在这里。",
     "actions": [["阅读文章", "/blog/", true], ["友链", "/friends/"], ["成长记录", "/about/"], ["查看项目", "/projects/"]],
-    "stats": [["Posts", "auto"], ["Source", "Markdown"], ["Accent", "#66ccff"], ["Theme", "Gold Gradient"]]
+    "stats": [["Posts", "auto"], ["Focus", "XCPC"], ["Accent", "#66ccff"], ["Build", "Long Run"]]
   },
   "about": {
     "eyebrow": "About",
@@ -27,7 +27,7 @@
     "lead": "现役 XCPC 选手，记录题解、模板、训练、项目和一路打比赛的成长轨迹。",
     "cards": [
       ["Profile", "我是谁", "准大二生，就读于北京电子科技学院，网名 thedyingkai_，可以简称 TDK 喵。", ["XCPC", "OI", "Backend"]],
-      ["Blog", "这里记录什么", "主要放 VP / 参赛题解、专项学习笔记、算法模板、工程项目复盘，以及阶段性的成长记录。", ["题解", "笔记", "项目"]]
+      ["Archive", "记录内容", "VP、参赛题解、专项学习笔记、算法模板、工程项目复盘，以及阶段性的成长记录。", ["题解", "笔记", "项目"]]
     ],
     "milestones": [
       ["2024", "起步", "注册洛谷账号，第一次校队训练，注册 Codeforces 和 AtCoder，完成从入门到洛谷绿名、100 AC 的起步阶段。", ["洛谷绿名", "100 AC"]],
@@ -83,13 +83,13 @@
     "title": "友链",
     "lead": "一些朋友和常去看的个人站点。",
     "links": [
-      ["Friend", "友链位置 A", "这里预留给第一个友链。", "#", ["Reserved", "Blog"]],
-      ["Friend", "友链位置 B", "这里预留给第二个友链。", "#", ["Reserved", "OI / XCPC"]],
-      ["Friend", "友链位置 C", "这里预留给第三个友链。", "#", ["Reserved", "Personal Site"]]
+      ["Friend", "朋友站点 A", "等待添加。", "#", ["Blog"]],
+      ["Friend", "朋友站点 B", "等待添加。", "#", ["OI / XCPC"]],
+      ["Friend", "朋友站点 C", "等待添加。", "#", ["Personal Site"]]
     ],
     "apply": [
       ["Info", "友链信息格式", "站点名称、站点链接、头像链接、简介、标签。", ["Name", "URL", "Avatar", "Description"]],
-      ["Notice", "交换说明", "如果需要交换友链，可以按上面的格式整理信息后联系我。", ["Exchange", "Contact"]]
+      ["Notice", "交换说明", "按上面的格式整理好信息后联系我。", ["Exchange", "Contact"]]
     ]
   }
 }
