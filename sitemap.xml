@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://thedyingkai.github.io/</loc></url>
   <url><loc>https://thedyingkai.github.io/blog/</loc></url>
-  <url><loc>https://thedyingkai.github.io/projects/</loc></url>
   <url><loc>https://thedyingkai.github.io/about/</loc></url>
+  <url><loc>https://thedyingkai.github.io/projects/</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/tree-templates/</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/generating-functions/</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/fibonacci/</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/fast-power/</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/linear-algebra-template/</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/cf-1034-div3/</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/abc-404-a-e/</loc></url>
 </urlset>
