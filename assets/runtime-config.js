@@ -4,8 +4,8 @@ const tagHtml = a => (a || []).map(t => `<span class="tag">${cfgEsc(t)}</span>`)
 
 function cfgCard(x) {
   const meta = x[0], title = x[1], text = x[2], href = typeof x[3] === 'string' ? x[3] : '', tags = Array.isArray(x[3]) ? x[3] : x[4];
-  const open = href ? `<a class="card" href="${cfgEsc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>` : '<div class="card">';
-  const close = href ? '</a>' : '</div>';
+  const open = href && href !== '#' ? `<a class="card" href="${cfgEsc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>` : '<div class="card">';
+  const close = href && href !== '#' ? '</a>' : '</div>';
   return `${open}<div class="card__meta"><span>${cfgEsc(meta)}</span></div><h3>${cfgEsc(title)}</h3><p>${cfgEsc(text)}</p><div class="tags">${tagHtml(tags)}</div>${close}`;
 }
 
@@ -49,9 +49,25 @@ function renderAboutPage(cfg) {
   if (timeline) timeline.innerHTML = (a.timeline || []).map(timelineItem).join('');
 }
 
+function renderFriendsPage(cfg) {
+  const f = cfg.friends;
+  if (!f) return;
+  const title = document.querySelector('[data-config="friends.title"]');
+  const eyebrow = document.querySelector('[data-config="friends.eyebrow"]');
+  const lead = document.querySelector('[data-config="friends.lead"]');
+  if (title) title.textContent = f.title;
+  if (eyebrow) eyebrow.textContent = f.eyebrow;
+  if (lead) lead.textContent = f.lead;
+  const links = document.querySelector('[data-friends-links]');
+  const apply = document.querySelector('[data-friends-apply]');
+  if (links) links.innerHTML = (f.links || []).map(cfgCard).join('');
+  if (apply) apply.innerHTML = (f.apply || []).map(cfgCard).join('');
+}
+
 loadConfig().then(cfg => {
   renderProjectPage(cfg);
   renderAboutPage(cfg);
+  renderFriendsPage(cfg);
 }).catch(e => {
   document.querySelectorAll('[data-config-error]').forEach(x => x.textContent = e.message);
 });
