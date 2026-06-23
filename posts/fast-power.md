@@ -63,3 +63,60 @@ Matrix qp(Matrix base,i64 k){
 ## 快速幂的扩展
 
 - 这是我个人的理解：对于任何一个群，定义一个乘法运算，我们就可以用快速幂求他的 $n$ 次乘法积。我们先找到他的幺元，也就是板子里面的 $res$，再通过结构体重载该群定义的乘法 `*`，我们就可以快速求出 $n$ 次幂。
+
+## 高精度快速幂
+
+- 那我们也能容易的得到高精度的快速幂，使用字符串或压位数组来存储数字，重载乘法运算符，就可以实现快速幂了。
+
+> 高精度乘法可以使用快速傅里叶变换（FFT）乘法或分治加速。
+
+```cpp
+using i64=long long;
+
+struct BigInt{
+    vector<int> d;
+    BigInt(string s="0"){for(int i=s.size()-1;i>=0;--i) d.push_back(s[i]-'0');}
+    BigInt(vector<int>&& v):d(std::move(v)){}
+    BigInt operator*(const BigInt&b)const{
+        vector<int>v(d.size()+b.d.size());
+        for(int i=0;i<d.size();++i)
+            for(int j=0;j<b.d.size();++j){
+                v[i+j]+=d[i]*b.d[j];
+                v[i+j+1]+=v[i+j]/10;
+                v[i+j]%=10;
+        }
+    while(v.size()>1&&v.back()==0) v.pop_back();
+    return BigInt(move(v));
+    }
+    friend ostream& operator<<(ostream&os,const BigInt&x){
+        for(int i=x.d.size()-1;i>=0;--i) os<<x.d[i];
+        return os;
+    }
+};
+
+BigInt qp(BigInt a,i64 b){
+    BigInt res("1");
+    for(;b;b>>=1){
+        if(b&1) res=res*a;
+        a=a*a;
+    }
+    return res;
+}
+```
+
+## 龟速乘
+
+- 另附龟速乘，我理解的主要用途是防止大数爆掉。其实本质来说是我钦定加法运算为乘法，因为任何数加上 $0$ 都是它本身，所以 $0$ 是幺元，还是快速幂。
+
+```cpp
+using i64=long long;
+
+i64 s_mul(i64 a,i64 b,i64 p){
+    int res=0;
+    for(;b;b>>=1){
+        if(b&1) res=(res+a)%p;
+        a=(a+a)%p;
+    }
+    return res%p;
+}
+```
