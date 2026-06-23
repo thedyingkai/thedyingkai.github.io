@@ -140,7 +140,7 @@ function highlightCodeBlocks(root, languages) {
     const source = code.textContent;
     const lang = languages[index] || 'cpp';
     try {
-      const result = window.hljs.getLanguage(lang)
+      const result = window.hljs.getLanguage && window.hljs.getLanguage(lang)
         ? window.hljs.highlight(source, { language: lang })
         : window.hljs.highlightAuto(source);
       code.innerHTML = result.value;
@@ -165,7 +165,7 @@ async function renderArticle() {
   try {
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
     await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
-    await waitFor(() => window.hljs && typeof window.hljs.highlight === 'function' && window.hljs.getLanguage('cpp'), 'highlight.js cpp');
+    await waitFor(() => window.hljs && typeof window.hljs.highlight === 'function', 'highlight.js');
 
     const response = await fetch(RAW_POST_BASE + encodeURIComponent(fileName), { cache: 'no-store' });
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
