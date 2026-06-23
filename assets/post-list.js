@@ -17,7 +17,6 @@ function escapeHtml(value) {
   }[c]));
 }
 
-// Extract enough metadata to render a card. Full Markdown rendering is not done here.
 function parsePostSummary(fileName, rawText) {
   let meta = {};
   let body = rawText;
@@ -80,7 +79,7 @@ async function renderPostLists() {
     const posts = await loadPosts();
     countTargets.forEach(target => target.textContent = posts.length);
     listTargets.forEach(target => {
-      target.innerHTML = posts.map(postCard).join('') || '<div class="card"><h3>暂无文章</h3><p>把 Markdown 文件放进 posts 目录后，这里会自动更新。</p></div>';
+      target.innerHTML = posts.map(postCard).join('') || '<div class="card"><h3>暂无文章</h3><p>之后再慢慢补。</p></div>';
     });
   } catch (error) {
     listTargets.forEach(target => {
