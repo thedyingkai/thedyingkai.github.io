@@ -60,6 +60,48 @@ async function renderLists() {
   }
 }
 
+function fixLatex(src) {
+  return src
+    .replace(/\\_/g, '_')
+    .replace(/\\\*/g, '*')
+    .replace(/\\begin\{align\\\*\}/g, '\\begin{aligned}')
+    .replace(/\\end\{align\\\*\}/g, '\\end{aligned}')
+    .replace(/\\begin\{align\*\}/g, '\\begin{aligned}')
+    .replace(/\\end\{align\*\}/g, '\\end{aligned}')
+    .replace(/\\newline/g, '\\\\');
+}
+
+function normalizeMath(text) {
+  const parts = text.split(/(```[\s\S]*?```)/g);
+  return parts.map(part => {
+    if (part.startsWith('```')) return part;
+    return part
+      .replace(/\$\$([\s\S]*?)\$\$/g, (_, x) => `$$${fixLatex(x)}$$`)
+      .replace(/\$(?!\$)([^$\n]+?)\$/g, (_, x) => `$${fixLatex(x)}$`);
+  }).join('');
+}
+
+async function loadHighlighter() {
+  try {
+    const hljs = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/core.min.js')).default;
+    const cpp = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/cpp.min.js')).default;
+    const js = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/javascript.min.js')).default;
+    const bash = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/bash.min.js')).default;
+    const json = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/json.min.js')).default;
+    hljs.registerLanguage('cpp', cpp);
+    hljs.registerLanguage('c++', cpp);
+    hljs.registerLanguage('c', cpp);
+    hljs.registerLanguage('javascript', js);
+    hljs.registerLanguage('js', js);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sh', bash);
+    hljs.registerLanguage('json', json);
+    return hljs;
+  } catch {
+    return null;
+  }
+}
+
 async function renderer() {
   const MarkdownIt = (await import('https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/+esm')).default;
   const md = new MarkdownIt({html:true, linkify:true, typographer:true});
@@ -67,10 +109,16 @@ async function renderer() {
     const katex = (await import('https://cdn.jsdelivr.net/npm/markdown-it-katex@2.0.3/+esm')).default;
     md.use(katex, {throwOnError:false, errorColor:'#d33'});
   } catch {}
+  const hljs = await loadHighlighter();
   md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx];
-    const lang = esc((token.info || 'text').trim().split(/\s+/)[0] || 'text');
-    return `<div class="code-card"><div class="code-card__bar"><span class="code-card__lang">${lang}</span><span class="code-card__hint">scroll</span></div><pre><code class="language-${lang}">${esc(token.content)}</code></pre></div>`;
+    const rawLang = (token.info || 'text').trim().split(/\s+/)[0] || 'text';
+    const lang = rawLang.toLowerCase();
+    let code = esc(token.content);
+    if (hljs && hljs.getLanguage(lang)) {
+      try { code = hljs.highlight(token.content, {language: lang}).value; } catch {}
+    }
+    return `<div class="code-card"><div class="code-card__bar"><span class="code-card__lang">${esc(rawLang)}</span><span class="code-card__hint">scroll</span></div><pre><code class="hljs language-${esc(lang)}">${code}</code></pre></div>`;
   };
   return md;
 }
@@ -84,11 +132,13 @@ async function renderPost() {
     return;
   }
   try {
-    const raw = await (await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/posts/${encodeURIComponent(file)}`)).text();
+    const res = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/posts/${encodeURIComponent(file)}`);
+    if (!res.ok) throw new Error(`Markdown ${res.status}`);
+    const raw = await res.text();
     const post = parsePost(file, raw);
     document.title = `${post.title} · thedyingkai`;
     const md = await renderer();
-    mount.innerHTML = `<a class="back" href="/blog/">← 返回文章列表</a><header class="render-head"><span class="eyebrow">${esc(post.date)}</span><h1>${esc(post.title)}</h1><p class="render-desc">${esc(post.description)}</p><div class="render-meta">${post.tags.map(t => `<span>#${esc(t)}</span>`).join('')}</div><div class="render-actions"><a class="btn" href="https://github.com/${REPO}/blob/${BRANCH}/posts/${encodeURIComponent(file)}">查看原文文件</a></div></header><article class="render-body">${md.render(post.body)}</article>`;
+    mount.innerHTML = `<a class="back" href="/blog/">← 返回文章列表</a><header class="render-head"><span class="eyebrow">${esc(post.date)}</span><h1>${esc(post.title)}</h1><p class="render-desc">${esc(post.description)}</p><div class="render-meta">${post.tags.map(t => `<span>#${esc(t)}</span>`).join('')}</div><div class="render-actions"><a class="btn" href="https://github.com/${REPO}/blob/${BRANCH}/posts/${encodeURIComponent(file)}">查看原文文件</a></div></header><article class="render-body">${md.render(normalizeMath(post.body))}</article>`;
   } catch (e) {
     mount.innerHTML = `<article class="render-body"><h1>文章加载失败</h1><p>${esc(e.message)}</p></article>`;
   }
