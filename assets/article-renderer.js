@@ -134,12 +134,34 @@ function element(tag, className, text) {
   return node;
 }
 
+function prismLanguage(lang) {
+  if (!window.Prism || !window.Prism.languages) return null;
+  if (lang === 'cpp' || lang === 'c++') return window.Prism.languages.cpp;
+  if (lang === 'c') return window.Prism.languages.c;
+  if (lang === 'js' || lang === 'javascript') return window.Prism.languages.javascript;
+  if (lang === 'ts' || lang === 'typescript') return window.Prism.languages.typescript;
+  if (lang === 'html') return window.Prism.languages.html;
+  if (lang === 'css') return window.Prism.languages.css;
+  return window.Prism.languages[lang] || window.Prism.languages.cpp;
+}
+
 function highlightCodeBlocks(root, languages) {
-  if (!window.hljs || typeof window.hljs.highlight !== 'function') return;
   root.querySelectorAll('pre code').forEach((code, index) => {
     const source = code.textContent;
     const lang = languages[index] || 'cpp';
+
     try {
+      const grammar = prismLanguage(lang);
+      if (grammar && window.Prism && typeof window.Prism.highlight === 'function') {
+        code.innerHTML = window.Prism.highlight(source, grammar, lang === 'c++' ? 'cpp' : lang);
+        code.classList.add('language-' + (lang === 'c++' ? 'cpp' : lang));
+        code.classList.add('prism-code');
+        return;
+      }
+    } catch {}
+
+    try {
+      if (!window.hljs || typeof window.hljs.highlight !== 'function') return;
       const result = window.hljs.getLanguage && window.hljs.getLanguage(lang)
         ? window.hljs.highlight(source, { language: lang })
         : window.hljs.highlightAuto(source);
