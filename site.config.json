@@ -41,8 +41,7 @@
     "lead": "不是简单堆仓库链接，而是把正在做的工程、脚本、训练资料和长期沉淀整理成可以继续扩展的项目索引。",
     "featured": [
       ["Backend / Judge", "Untitled-OJ", "分布式、模块化、可扩展的在线评测平台。", "https://github.com/thedyingkai/Untitled-OJ", ["Go", "OJ", "PostgreSQL", "Redis"]],
-      ["Browser Tools", "Tampermonkey Scripts", "面向洛谷的刷题辅助脚本集合。", "https://github.com/thedyingkai/tampermonkey", ["JavaScript", "Luogu", "Userscript"]],
-      ["Notes", "cs4ncu", "课程资料、复习笔记和学习材料归档。", "https://github.com/thedyingkai/cs4ncu", ["Notes", "CS", "Review"]]
+      ["Browser Tools", "Tampermonkey Scripts", "面向洛谷的刷题辅助脚本集合。", "https://github.com/thedyingkai/tampermonkey", ["JavaScript", "Luogu", "Userscript"]]
     ],
     "directions": [
       ["01", "评测系统", "API、数据库、权限、提交记录、判题沙箱和任务队列。", ["Backend", "Sandbox"]],
