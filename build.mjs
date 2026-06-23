@@ -45,13 +45,17 @@ function info(file, data, text){
   const tags = Array.isArray(data.tags) ? data.tags : (p[3] || ['笔记']);
   return {id, title, description, date, tags};
 }
-const md = new MarkdownIt({
-  html:true, linkify:true, typographer:true,
-  highlight(code, lang){
-    const l = esc(lang || 'text');
-    return `<div class="code-card"><div class="code-card__bar"><span class="code-card__lang">${l}</span><span class="code-card__hint">scroll</span></div><pre><code class="language-${l}">${esc(code)}</code></pre></div>`;
-  }
-}).use(anchor,{slugify:s=>String(s).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-+|-+$/g,'')}).use(footnote).use(katex,{throwOnError:false,errorColor:'#d33'});
+const md = new MarkdownIt({ html:true, linkify:true, typographer:true })
+  .use(anchor,{slugify:s=>String(s).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-+|-+$/g,'')})
+  .use(footnote)
+  .use(katex,{throwOnError:false,errorColor:'#d33'});
+md.renderer.rules.fence = (tokens, idx) => {
+  const token = tokens[idx];
+  const info = token.info ? token.info.trim().split(/\s+/)[0] : '';
+  const lang = esc(info || 'text');
+  const code = esc(token.content);
+  return `<div class="code-card"><div class="code-card__bar"><span class="code-card__lang">${lang}</span><span class="code-card__hint">scroll</span></div><pre><code class="language-${lang}">${code}</code></pre></div>`;
+};
 function shell({title, description, date, tags, body, raw}){
   const tagHtml = tags.map(t=>`<span>#${esc(t)}</span>`).join('');
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${esc(description)}"><title>${esc(title)} · thedyingkai</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/post-renderer.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"></head><body><div class="progress"></div><header class="topbar"><div class="wrap topbar__inner"><a class="brand" href="/"><span class="brand__mark">thedyingkai<span class="brand__dot">.</span></span><span class="brand__sub">Notebook</span></a><nav class="nav"><a href="/">首页</a><a class="is-active" href="/blog/">文章</a><a href="/projects/">项目</a><a href="/about/">关于</a></nav></div></header><main class="render-shell"><a class="back" href="/blog/">← 返回文章列表</a><header class="render-head"><span class="eyebrow">${esc(date)}</span><h1>${esc(title)}</h1><p class="render-desc">${esc(description)}</p><div class="render-meta">${tagHtml}</div><div class="render-actions"><a class="btn" href="${esc(raw)}">查看原文文件</a></div></header><article class="render-body">${body}</article></main><footer class="footer"><div class="wrap footer__inner"><span>© 2026 thedyingkai.</span><span><a href="/blog/">Blog</a></span></div></footer><script src="/assets/site.js"></script></body></html>`;
