@@ -1,0 +1,40 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="快速幂杂谈。"><title>快速幂杂谈 · thedyingkai</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/assets/site.css"><script>window.MathJax={tex:{inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"]]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script></head><body><div class="progress"></div><header class="topbar"><div class="wrap topbar__inner"><a class="brand" href="/"><span class="brand__mark">thedyingkai<span class="brand__dot">.</span></span><span class="brand__sub">Notebook</span></a><nav class="nav"><a href="/">首页</a><a class="is-active" href="/blog/">文章</a><a href="/projects/">项目</a><a href="/about/">关于</a></nav></div></header><main><article class="article"><a class="back" href="/blog/">← 返回文章列表</a><header><span class="eyebrow">2025.07.31</span><h1>快速幂杂谈</h1><p class="article__desc">普通快速幂、逆元、矩阵快速幂、高精度快速幂和群论视角。</p><div class="article__meta"><span>#快速幂</span><span>#数学</span><span>#数论</span></div></header><div class="prose"><h2>普通快速幂</h2><p>最基础的快速幂直接贴板子，推导过程我不太感兴趣。</p><pre><code>using i64=long long;
+
+i64 qp(i64 a,i64 b,i64 p){
+    i64 res=1;
+    while(b&gt;0){if(b&amp;1) res=res*a%p; a=a*a%p; b&gt;&gt;=1;}
+    return res%p;
+}</code></pre><h2>快速幂求逆元</h2><p>在快速幂的基础上可以求逆元。原理用费马小定理易推，即模 $p$ 意义下 $a^{p-2}$ 等于 $a$ 的逆元，使用条件是 $p$ 为素数且 $\gcd(a,p)=1$。</p><pre><code>i64 inv(i64 a,i64 p){return qp(a,p-2,p);}</code></pre><h2>矩阵快速幂</h2><p>快速幂不只是能求整数的幂，也能求矩阵的幂。</p><pre><code>#define _rep(i,x,n) for(int i=x;i&lt;n;i++)
+using i64=long long;
+
+template&lt;class T&gt; struct Matrix{
+    int n,m;
+    vector&lt;vector&lt;T&gt;&gt; rec;
+    vector&lt;T&gt;&amp; operator[](int i){return rec[i];}
+    const vector&lt;T&gt;&amp; operator[](int i)const{return rec[i];}
+    friend Matrix operator*(const Matrix &amp;a,const Matrix &amp;b){
+        Matrix res(a.n,b.m);
+        _rep(k,0,a.m) _rep(i,0,res.n) if(!isZero(a[i][k])) _rep(j,0,res.m) res[i][j]=add(res[i][j],mul(a[i][k],b[k][j]));
+        return res;
+    }
+};
+
+Matrix qp(Matrix base,i64 k){
+    Matrix res(base.n,base.m);
+    _rep(i,0,res.n) res[i][i]=1;
+    while(k){
+        if(k&amp;1) res=res*base;
+        base=base*base;
+        k&gt;&gt;=1;
+    }
+    return res;
+}</code></pre><h2>快速幂的扩展</h2><p>对于任何一个群，定义一个乘法运算，就可以用快速幂求它的 $n$ 次乘法积。先找到幺元，也就是板子里的 <code>res</code>，再通过结构体重载该群定义的乘法 <code>*</code>，就可以快速求出 $n$ 次幂。</p><h2>龟速乘</h2><p>龟速乘主要用途是防止大数爆掉。本质上是把加法运算当作乘法来做快速幂。</p><pre><code>using i64=long long;
+
+i64 s_mul(i64 a,i64 b,i64 p){
+    int res=0;
+    for(;b;b&gt;&gt;=1){
+        if(b&amp;1) res=(res+a)%p;
+        a=(a+a)%p;
+    }
+    return res%p;
+}</code></pre><h2>群论视角</h2><p>快速幂算法本质依赖封闭性、结合律、单位元；如果要支持负指数，还需要逆元。</p></div></article></main><footer class="footer"><div class="wrap footer__inner"><span>© 2026 thedyingkai.</span><span><a href="/blog/">Blog</a></span></div></footer><script src="/assets/site.js"></script></body></html>
