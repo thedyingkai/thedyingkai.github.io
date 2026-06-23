@@ -17,7 +17,7 @@
   "home": {
     "eyebrow": "Personal Archive",
     "title": "华风夏韵，洛水天依。",
-    "lead": "这里保留博客框架、项目索引和成长记录。文章区不写死内容，只由 posts 目录中的 Markdown 文件自动生成。",
+    "lead": "写题、做项目、打比赛，也把一路上的笔记和折腾记录留在这里。",
     "actions": [["阅读文章", "/blog/", true], ["友链", "/friends/"], ["成长记录", "/about/"], ["查看项目", "/projects/"]],
     "stats": [["Posts", "auto"], ["Source", "Markdown"], ["Accent", "#66ccff"], ["Theme", "Gold Gradient"]]
   },
@@ -67,7 +67,7 @@
   "projects": {
     "eyebrow": "Projects",
     "title": "项目",
-    "lead": "不是简单堆仓库链接，而是把正在做的工程、脚本、训练资料和长期沉淀整理成可以继续扩展的项目索引。",
+    "lead": "整理一些正在认真维护的项目、脚本和长期积累下来的东西。",
     "featured": [
       ["Backend / Judge", "Untitled-OJ", "分布式、模块化、可扩展的在线评测平台。", "https://github.com/thedyingkai/Untitled-OJ", ["Go", "OJ", "PostgreSQL", "Redis"]],
       ["Browser Tools", "Tampermonkey Scripts", "面向洛谷的刷题辅助脚本集合。", "https://github.com/thedyingkai/tampermonkey", ["JavaScript", "Luogu", "Userscript"]]
@@ -81,7 +81,7 @@
   "friends": {
     "eyebrow": "Friends",
     "title": "友链",
-    "lead": "这里预留友链位置，用于放置朋友、队友和长期关注的个人站点。",
+    "lead": "一些朋友和常去看的个人站点。",
     "links": [
       ["Friend", "友链位置 A", "这里预留给第一个友链。", "#", ["Reserved", "Blog"]],
       ["Friend", "友链位置 B", "这里预留给第二个友链。", "#", ["Reserved", "OI / XCPC"]],
