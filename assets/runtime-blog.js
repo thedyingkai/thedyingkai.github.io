@@ -27,10 +27,10 @@ function parsePost(file, text) {
 }
 
 async function loadPosts() {
-  const res = await fetch(API, {headers: {'Accept': 'application/vnd.github+json'}});
+  const res = await fetch(API, {headers: {'Accept': 'application/vnd.github+json'}, cache: 'no-store'});
   if (!res.ok) throw new Error(`GitHub API ${res.status}`);
   const files = (await res.json()).filter(x => x.type === 'file' && /\.md$/i.test(x.name) && !x.name.startsWith('_'));
-  const posts = await Promise.all(files.map(async f => parsePost(f.name, await (await fetch(f.download_url)).text())));
+  const posts = await Promise.all(files.map(async f => parsePost(f.name, await (await fetch(f.download_url, {cache:'no-store'})).text())));
   posts.sort((a, b) => String(b.date).localeCompare(String(a.date)) || a.file.localeCompare(b.file));
   return posts;
 }
@@ -52,44 +52,43 @@ async function renderLists() {
   }
 }
 
-function fixLatex(src) {
-  return src.replace(/\\_/g, '_').replace(/\\\*/g, '*').replace(/\\begin\{align\\\*\}/g, '\\begin{aligned}').replace(/\\end\{align\\\*\}/g, '\\end{aligned}').replace(/\\begin\{align\*\}/g, '\\begin{aligned}').replace(/\\end\{align\*\}/g, '\\end{aligned}').replace(/\\newline/g, '\\\\');
+function fixLatex(src, inline = false) {
+  let x = src
+    .replace(/\\_/g, '_')
+    .replace(/\\\*/g, '*')
+    .replace(/\\begin\{align\\\*\}/g, '\\begin{aligned}')
+    .replace(/\\end\{align\\\*\}/g, '\\end{aligned}')
+    .replace(/\\begin\{align\*\}/g, '\\begin{aligned}')
+    .replace(/\\end\{align\*\}/g, '\\end{aligned}')
+    .replace(/\\newline/g, '\\\\');
+  if (inline) x = x.replace(/\\dfrac/g, '\\tfrac').replace(/\\frac/g, '\\tfrac');
+  return x;
 }
 
 function normalizeMath(text) {
   const parts = text.split(/(```[\s\S]*?```)/g);
   return parts.map(part => {
     if (part.startsWith('```')) return part;
-    return part.replace(/\$\$([\s\S]*?)\$\$/g, (_, x) => `$$${fixLatex(x)}$$`).replace(/\$(?!\$)([^$\n]+?)\$/g, (_, x) => `$${fixLatex(x)}$`);
+    return part
+      .replace(/\$\$([\s\S]*?)\$\$/g, (_, x) => `$$${fixLatex(x, false)}$$`)
+      .replace(/\$(?!\$)([^$\n]+?)\$/g, (_, x) => `$${fixLatex(x, true)}$`);
   }).join('');
 }
 
-async function loadHighlighter() {
-  try {
-    const hljs = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/core.min.js')).default;
-    const cpp = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/cpp.min.js')).default;
-    const js = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/javascript.min.js')).default;
-    const bash = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/bash.min.js')).default;
-    const json = (await import('https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/json.min.js')).default;
-    hljs.registerLanguage('cpp', cpp); hljs.registerLanguage('c++', cpp); hljs.registerLanguage('c', cpp);
-    hljs.registerLanguage('javascript', js); hljs.registerLanguage('js', js);
-    hljs.registerLanguage('bash', bash); hljs.registerLanguage('sh', bash); hljs.registerLanguage('json', json);
-    return hljs;
-  } catch { return null; }
-}
-
+const cppKeywords = new Set('alignas alignof and asm auto bool break case catch char class const constexpr continue decltype default delete do double else enum explicit extern false float for friend if inline int long namespace new nullptr operator private protected public register return short signed sizeof static struct switch template this throw true try typedef typename using virtual void volatile while vector string map set queue priority_queue pair'.split(' '));
 function liteHighlight(raw, lang) {
-  const kw = /^(alignas|alignof|and|asm|auto|bool|break|case|catch|char|class|const|constexpr|continue|decltype|default|delete|do|double|else|enum|explicit|extern|false|float|for|friend|if|inline|int|long|namespace|new|nullptr|operator|private|protected|public|register|return|short|signed|sizeof|static|struct|switch|template|this|throw|true|try|typedef|typename|using|virtual|void|volatile|while|vector|string|map|set|queue|priority_queue|pair)$/;
+  const isCpp = ['cpp','c++','c','cc','hpp'].includes(lang);
   const out = [];
-  const rx = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b[A-Za-z_][A-Za-z0-9_]*\b|\b\d+(?:\.\d+)?\b)/g;
+  const rx = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#\s*include\b[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b[A-Za-z_][A-Za-z0-9_]*\b|\b\d+(?:\.\d+)?\b)/g;
   let last = 0, m;
   while ((m = rx.exec(raw))) {
     out.push(esc(raw.slice(last, m.index)));
     const s = m[0];
-    if (s.startsWith('//') || s.startsWith('/*')) out.push(`<span class="hljs-comment">${esc(s)}</span>`);
-    else if (s.startsWith('"') || s.startsWith("'")) out.push(`<span class="hljs-string">${esc(s)}</span>`);
-    else if (/^\d/.test(s)) out.push(`<span class="hljs-number">${esc(s)}</span>`);
-    else if ((lang === 'cpp' || lang === 'c++' || lang === 'c') && kw.test(s)) out.push(`<span class="hljs-keyword">${esc(s)}</span>`);
+    if (s.startsWith('//') || s.startsWith('/*')) out.push(`<span class="tok-comment">${esc(s)}</span>`);
+    else if (s.startsWith('#')) out.push(`<span class="tok-meta">${esc(s)}</span>`);
+    else if (s.startsWith('"') || s.startsWith("'")) out.push(`<span class="tok-string">${esc(s)}</span>`);
+    else if (/^\d/.test(s)) out.push(`<span class="tok-number">${esc(s)}</span>`);
+    else if (isCpp && cppKeywords.has(s)) out.push(`<span class="tok-keyword">${esc(s)}</span>`);
     else out.push(esc(s));
     last = rx.lastIndex;
   }
@@ -104,16 +103,12 @@ async function renderer() {
     const katex = (await import('https://cdn.jsdelivr.net/npm/markdown-it-katex@2.0.3/+esm')).default;
     md.use(katex, {throwOnError:false, errorColor:'#d33'});
   } catch {}
-  const hljs = await loadHighlighter();
   md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx];
     const rawLang = (token.info || 'text').trim().split(/\s+/)[0] || 'text';
     const lang = rawLang.toLowerCase();
-    let code = liteHighlight(token.content, lang);
-    if (hljs && hljs.getLanguage(lang)) {
-      try { code = hljs.highlight(token.content, {language: lang}).value; } catch {}
-    }
-    return `<div class="code-card"><div class="code-card__bar"><span class="code-card__lang">${esc(rawLang)}</span><span class="code-card__hint">scroll</span></div><pre><code class="hljs language-${esc(lang)}">${code}</code></pre></div>`;
+    const code = liteHighlight(token.content, lang);
+    return `<div class="code-card"><div class="code-card__bar"><span class="code-card__lang">${esc(rawLang)}</span><span class="code-card__hint">scroll</span></div><pre><code class="language-${esc(lang)}">${code}</code></pre></div>`;
   };
   return md;
 }
@@ -127,7 +122,7 @@ async function renderPost() {
     return;
   }
   try {
-    const res = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/posts/${encodeURIComponent(file)}`);
+    const res = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/posts/${encodeURIComponent(file)}`, {cache:'no-store'});
     if (!res.ok) throw new Error(`Markdown ${res.status}`);
     const raw = await res.text();
     const post = parsePost(file, raw);
