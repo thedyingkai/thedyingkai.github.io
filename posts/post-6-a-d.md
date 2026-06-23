@@ -1,0 +1,113 @@
+---
+title: Codeforces-1034-Div.3 题解 A-D
+description: Codeforces Round 1034 Div.3 A-D 题解。
+date: 2025.07.03
+tags: [Codeforces, Div3, 题解]
+---
+
+# Codeforces-1034-Div.3 题解 A-D
+
+## A
+
+### 思路
+
+- 我们发现 Bob 赢的条件更为苛刻，需要选择特定要求的数字，而 Alice 则有数字就行，考虑从 Bob 入手。
+- Bob 想赢，首先要满足 $n$ 为奇数，其次 $n-1$ 个数均满足配对要求，整理一下就是 $[1]_4$ 和 $[2]_4$， $[0]_4$ 和 $[3]_4$ 分别两两配对的情况下，余下的元素个数不大于 $1$。
+
+### AC Code
+
+```cpp
+void LuoTianyi(){
+    int n;
+    cin >> n;
+    vector<int> a(n + 1);
+    map<int, int> mp;
+
+    _rep(i, 0, n) mp[i % 4]++;
+
+    if (abs(mp[0] - mp[3]) + abs(mp[1] - mp[2]) < 1) cout << "Bob" << endl;
+    else cout << "Alice" << endl;
+}
+```
+
+## B
+
+### 思路
+
+- 注意到，选手 $j$ 有入围的可能即可，对于大于 $a_j$ 的选手，我直接黑幕让他们自相残杀就行，只要 $k>1$ 他就是有机会的。
+- 对于 $k=1$ 的情况，只有 $j$ 选手最强才能赢。
+
+### AC Code
+
+```cpp
+void LuoTianyi(){
+    int n, j, k;
+    cin >> n >> j >> k;
+    vector<int> a(n + 1);
+    rep(i, 1, n) cin >> a[i];
+    if (a[j] == MAX(a) || k > 1) Yes;
+    else No;
+}
+```
+
+## C
+
+### 思路
+
+> ~~赛时就是 guess 的~~
+
+- 拿前缀先来看，我如果想保住第 $i$ 个数，他必须是前 $i$ 个数中的最小值，否则他必定被更小的数换下去；后缀同理。
+- 想保住第 $i$ 个数的话，只要他符合上面的要求，前面的数就都可以删掉，我们再看后面的，经过若干次操作，总能得到一个数，这个数小于 $a_i$ 就选择后缀操作，反之就选择前缀操作，我们就证明了上面的条件一定得到答案。
+- 即，维护一个前缀最小值和一个后缀最大值数组，只要 $a_i$ 是其中一个就输出 $1$，否则 $0$。
+
+### AC Code
+
+```cpp
+void LuoTianyi(){
+    int n;
+    cin >> n;
+    vector<int> a(n + 1);
+    rep(i, 1, n) cin >> a[i];
+    vector<int> pre(n + 1), suf(n + 1);
+    string s(n, '0');
+
+    pre[1] = a[1];
+    rep(i, 2, n) pre[i] = min(pre[i - 1], a[i]);
+    suf[n] = a[n];
+    dep(i, n - 1, 1) suf[i] = max(suf[i + 1], a[i]);
+
+    rep(i, 1, n) {
+        if (pre[i] == a[i] || suf[i] == a[i]) cout << 1;
+        else cout << 0;
+    }
+
+    ENDL;
+}
+```
+
+## D
+
+### 思路
+
+- 先考虑较为边界的特判，Alice 先手，如果她可以一次性清空，直接获胜。
+- 如果 Alice 未一次性得胜，设分数为字符串中 $1$ 的数量，我们容易得知，Alice 每次操作会把分数 $-4$，而 Bob 只有在得到 $k$ 个连续的 $0$ 时才能让分数 $+4$，从而阻止 Alice 获胜，于是问题转化为何种情况 Bob 能得到 $k$ 个连续的 $0$。
+- $k\leq \lfloor \frac{n}{2} \rfloor$ 时，我们把字符串分为两段，前 $k$、后 $n-k$，Alice 第一次操作未能全部清空 $1$，若前段无 $1$，Bob 在前段操作得到 $k$ 个连续的 $0$，反之，在后段操作，由上面的结论得出 Bob 胜。
+- $k>\lfloor \frac{n}{2} \rfloor$ 时，后 $k$ 个元素构成的段与前 $k$ 个元素构成的段有交接处，这意味着 Alice 可以补满前段，把剩余补后段末尾，则 Bob 必然得不到 $k$ 个连续的 $0$。
+
+### AC Code
+
+```cpp
+void LuoTianyi(){
+    int n, k;
+    cin >> n >> k;
+    string s;
+    cin >> s;
+    s = ' ' + s;
+    int cnt1 = 0;
+    rep(i, 1, n) cnt1 += (s[i] == '1');
+
+    if (cnt1 <= k) cout << "Alice" << endl;
+    else if (k > n / 2) cout << "Alice" << endl;
+    else cout << "Bob" << endl;
+}
+```
