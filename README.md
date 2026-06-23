@@ -1,10 +1,30 @@
 # thedyingkai.github.io
 
-个人博客新站。正文内容由 `posts/*.md` 驱动，构建脚本会自动生成文章页。
+个人博客新站。页面内容不再写死在 HTML 里：
+
+```txt
+site.config.json  -> 首页 / 关于 / 项目 / 导航 / 统计 / 卡片
+posts/*.md        -> 文章正文
+build.mjs         -> 生成 index.html、about/、projects/、blog/
+```
+
+## 改首页、关于、项目
+
+只改 `site.config.json`。
+
+常用字段：
+
+```txt
+site      站点标题、描述、品牌名
+nav       顶部导航
+home      首页 hero、按钮、统计卡片
+about     关于页简介、成长记录卡片
+projects  项目页项目卡片、项目方向
+```
 
 ## 写文章
 
-最省事的用法：直接在 `posts/` 下新建 Markdown 文件。
+直接在 `posts/` 下新建 Markdown 文件：
 
 ```txt
 posts/my-note.md
@@ -23,7 +43,7 @@ tags: [XCPC, 题解, 笔记]
 ---
 ```
 
-可直接复制 `posts/_example.md` 作为模板；以下划线开头的文件不会生成文章页。
+以下划线开头的文件不会生成文章页。
 
 ## 支持内容
 
@@ -32,15 +52,14 @@ tags: [XCPC, 题解, 笔记]
 - 代码块卡片样式
 - 自动生成 `/blog/<文件名>/`
 - 自动生成 `/blog/` 文章归档
+- 自动生成首页、关于页、项目页
 
-## 本地预览
+## 本地构建
 
 ```bash
 npm install
 npm run build
 ```
-
-然后打开生成后的页面即可。
 
 ## GitHub Pages
 
