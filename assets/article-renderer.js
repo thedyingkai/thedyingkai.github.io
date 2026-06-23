@@ -129,6 +129,23 @@ function element(tag, className, text) {
   return node;
 }
 
+// Use highlight.js for real tokenization. TexMe/marked may omit language classes,
+// so highlightAuto is used first; highlightElement remains the fallback.
+function highlightCodeBlocks(root) {
+  if (!window.hljs) return;
+  root.querySelectorAll('pre code').forEach(code => {
+    const source = code.textContent;
+    try {
+      const result = window.hljs.highlightAuto(source);
+      code.innerHTML = result.value;
+      code.classList.add('hljs');
+      if (result.language) code.classList.add(`language-${result.language}`);
+    } catch {
+      window.hljs.highlightElement(code);
+    }
+  });
+}
+
 async function renderArticle() {
   const root = document.querySelector('[data-post-view]');
   if (!root) return;
@@ -167,10 +184,7 @@ async function renderArticle() {
 
     root.replaceChildren(back, header, body);
     await window.MathJax.typesetPromise([body]);
-
-    if (window.hljs) {
-      body.querySelectorAll('pre code').forEach(code => window.hljs.highlightElement(code));
-    }
+    highlightCodeBlocks(body);
   } catch (error) {
     const box = element('article', 'render-body');
     box.append(element('h1', '', '文章加载失败'));
