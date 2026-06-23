@@ -101,15 +101,14 @@ function normalizeMathOnly(markdown) {
   return out;
 }
 
-// TexMe/marked may drop the language class from fenced code blocks.
-// Record fence languages from the original Markdown and re-attach them after render.
 function collectFenceLanguages(markdown) {
   const langs = [];
   const re = /^```\s*([^\s`]*)/gm;
   let match;
   while ((match = re.exec(markdown))) {
     const lang = (match[1] || '').trim().toLowerCase();
-    langs.push(lang === 'c++' ? 'cpp' : lang);
+    if (lang === 'c++' || lang === 'c') langs.push('cpp');
+    else langs.push(lang || 'cpp');
   }
   return langs;
 }
@@ -139,11 +138,11 @@ function highlightCodeBlocks(root, languages) {
   if (!window.hljs) return;
   root.querySelectorAll('pre code').forEach((code, index) => {
     const source = code.textContent;
-    const lang = languages[index] || '';
+    const lang = languages[index] || 'cpp';
     try {
-      const result = lang && window.hljs.getLanguage(lang)
+      const result = window.hljs.getLanguage(lang)
         ? window.hljs.highlight(source, { language: lang })
-        : window.hljs.highlightAuto(source, ['cpp', 'c', 'javascript', 'json', 'bash', 'xml', 'css']);
+        : window.hljs.highlightAuto(source);
       code.innerHTML = result.value;
       code.classList.add('hljs');
       code.classList.add(`language-${result.language || lang || 'text'}`);
@@ -166,6 +165,7 @@ async function renderArticle() {
   try {
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
     await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
+    await waitFor(() => window.hljs && typeof window.hljs.highlight === 'function' && window.hljs.getLanguage('cpp'), 'highlight.js cpp');
 
     const response = await fetch(RAW_POST_BASE + encodeURIComponent(fileName), { cache: 'no-store' });
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
