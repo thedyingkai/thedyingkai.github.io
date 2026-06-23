@@ -10,16 +10,7 @@ const postsDir = path.join(root, 'posts');
 const blogDir = path.join(root, 'blog');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const slug = s => s.replace(/\.md$/i, '');
-const presets = {
-  'about-me': ['关于', '个人介绍与成长记录', 'About', ['About','成长记录']],
-  'tree-templates': ['树状数组线段树', '树状数组与线段树模板', '2025.08.04', ['数据结构','板子','笔记']],
-  'generating-functions': ['生成函数', '普通生成函数、指数生成函数、狄利克雷生成函数与卷积', '2025.08.02', ['数学','数论','笔记']],
-  'fibonacci': ['斐波那契数列', '斐波那契性质、求法与齐肯多夫定理', '2025.07.31', ['数学','数论','笔记']],
-  'fast-power': ['快速幂杂谈', '快速幂、逆元、矩阵快速幂与扩展理解', '2025.07.31', ['快速幂','数学','数论']],
-  'cf-1034-div3': ['Codeforces-1034-Div.3 题解', 'Codeforces Round 1034 Div.3 A-G 题解', '2025.07.03', ['Codeforces','Div3','题解']],
-  'abc404': ['ABC 404', 'AtCoder ABC 404 题解', '2025.06.28', ['ABC','AtCoder','题解']]
-};
-
+const presets = {};
 function meta(src){
   if(!src.startsWith('---\n')) return [{}, src];
   const end = src.indexOf('\n---\n', 4);
@@ -60,6 +51,8 @@ function shell({title, description, date, tags, body, raw}){
   const tagHtml = tags.map(t=>`<span>#${esc(t)}</span>`).join('');
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${esc(description)}"><title>${esc(title)} · thedyingkai</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/post-renderer.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"></head><body><div class="progress"></div><header class="topbar"><div class="wrap topbar__inner"><a class="brand" href="/"><span class="brand__mark">thedyingkai<span class="brand__dot">.</span></span><span class="brand__sub">Notebook</span></a><nav class="nav"><a href="/">首页</a><a class="is-active" href="/blog/">文章</a><a href="/projects/">项目</a><a href="/about/">关于</a></nav></div></header><main class="render-shell"><a class="back" href="/blog/">← 返回文章列表</a><header class="render-head"><span class="eyebrow">${esc(date)}</span><h1>${esc(title)}</h1><p class="render-desc">${esc(description)}</p><div class="render-meta">${tagHtml}</div><div class="render-actions"><a class="btn" href="${esc(raw)}">查看原文文件</a></div></header><article class="render-body">${body}</article></main><footer class="footer"><div class="wrap footer__inner"><span>© 2026 thedyingkai.</span><span><a href="/blog/">Blog</a></span></div></footer><script src="/assets/site.js"></script></body></html>`;
 }
+await fs.rm(blogDir, {recursive:true, force:true});
+await fs.mkdir(blogDir, {recursive:true});
 const files = (await fs.readdir(postsDir)).filter(f => f.endsWith('.md') && !f.startsWith('_'));
 const posts = [];
 for(const file of files){
