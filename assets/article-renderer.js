@@ -1,8 +1,8 @@
 // Article renderer for /blog/post/?file=xxx.md
 //
 // The page itself is static. This script loads one Markdown file from posts/,
-// renders Markdown with TexMe, then lets MathJax typeset LaTeX and highlight.js
-// highlight code blocks. It intentionally does not implement a Markdown parser.
+// renders Markdown with TexMe, then lets MathJax typeset LaTeX. Code highlighting
+// is optional and must never block article rendering.
 
 const REPO = 'thedyingkai/thedyingkai.github.io';
 const BRANCH = 'main';
@@ -135,7 +135,7 @@ function element(tag, className, text) {
 }
 
 function highlightCodeBlocks(root, languages) {
-  if (!window.hljs) return;
+  if (!window.hljs || typeof window.hljs.highlight !== 'function') return;
   root.querySelectorAll('pre code').forEach((code, index) => {
     const source = code.textContent;
     const lang = languages[index] || 'cpp';
@@ -147,7 +147,9 @@ function highlightCodeBlocks(root, languages) {
       code.classList.add('hljs');
       code.classList.add(`language-${result.language || lang || 'text'}`);
     } catch {
-      window.hljs.highlightElement(code);
+      try {
+        window.hljs.highlightElement(code);
+      } catch {}
     }
   });
 }
@@ -165,7 +167,6 @@ async function renderArticle() {
   try {
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
     await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
-    await waitFor(() => window.hljs && typeof window.hljs.highlight === 'function', 'highlight.js');
 
     const response = await fetch(RAW_POST_BASE + encodeURIComponent(fileName), { cache: 'no-store' });
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
