@@ -5,9 +5,10 @@
 ## 已完成
 
 - 纯静态页面，无构建依赖，直接适配 GitHub Pages。
-- 首页、文章列表、文章详情、关于页。
+- 首页、文章列表、文章详情、项目页、关于页、404 页面。
 - 冷调雪白纸面、深牛津蓝强调、衬线大标题、细线卡片、轻纸纹背景。
 - 中文正文排版、代码块、标签、项目卡片、时间线。
+- `robots.txt`、`sitemap.xml`、`favicon.svg`、`.nojekyll`。
 
 ## 部署方式
 
@@ -23,6 +24,12 @@
 https://thedyingkai.github.io/
 ```
 
-## 修改文章
+## 后续迁移方向
 
-现在是纯静态首版，文章页面在 `blog/` 目录下。后续如果要扩展成 Astro 内容系统，可以把当前视觉系统整体迁移到 `src/`。
+当前首版为了直接可访问，采用纯静态文件。后续可以把当前视觉系统迁移到 Astro：
+
+- `assets/site.css` -> `src/styles/global.css`
+- `blog/*/index.html` -> `src/content/blog/*.md`
+- 公共头部、页脚、文章卡片拆为 Astro 组件
+
+这样既保留首版视觉，也能获得 Markdown 内容系统。
