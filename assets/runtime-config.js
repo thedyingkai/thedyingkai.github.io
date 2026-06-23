@@ -9,6 +9,10 @@ function cfgCard(x) {
   return `${open}<div class="card__meta"><span>${cfgEsc(meta)}</span></div><h3>${cfgEsc(title)}</h3><p>${cfgEsc(text)}</p><div class="tags">${tagHtml(tags)}</div>${close}`;
 }
 
+function timelineItem(x) {
+  return `<div class="timeline__item"><span class="timeline__time">${cfgEsc(x[0])}</span><h3>${cfgEsc(x[1])}</h3></div>`;
+}
+
 async function loadConfig() {
   const res = await fetch(`/site.config.json?t=${Date.now()}`);
   if (!res.ok) throw new Error(`site.config.json ${res.status}`);
@@ -39,8 +43,10 @@ function renderAboutPage(cfg) {
   if (lead) lead.textContent = a.lead;
   const cards = document.querySelector('[data-about-cards]');
   const milestones = document.querySelector('[data-about-milestones]');
+  const timeline = document.querySelector('[data-about-timeline]');
   if (cards) cards.innerHTML = a.cards.map(cfgCard).join('');
   if (milestones) milestones.innerHTML = a.milestones.map(cfgCard).join('');
+  if (timeline) timeline.innerHTML = (a.timeline || []).map(timelineItem).join('');
 }
 
 loadConfig().then(cfg => {
