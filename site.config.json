@@ -10,6 +10,7 @@
     ["首页", "/"],
     ["文章", "/blog/"],
     ["项目", "/projects/"],
+    ["友链", "/friends/"],
     ["关于", "/about/"],
     ["GitHub", "https://github.com/thedyingkai"]
   ],
@@ -17,7 +18,7 @@
     "eyebrow": "Personal Archive",
     "title": "华风夏韵，洛水天依。",
     "lead": "这里保留博客框架、项目索引和成长记录。文章区不写死内容，只由 posts 目录中的 Markdown 文件自动生成。",
-    "actions": [["阅读文章", "/blog/", true], ["成长记录", "/about/"], ["查看项目", "/projects/"]],
+    "actions": [["阅读文章", "/blog/", true], ["友链", "/friends/"], ["成长记录", "/about/"], ["查看项目", "/projects/"]],
     "stats": [["Posts", "auto"], ["Source", "Markdown"], ["Accent", "#66ccff"], ["Theme", "Gold Gradient"]]
   },
   "about": {
@@ -75,6 +76,20 @@
       ["01", "评测系统", "API、数据库、权限、提交记录、判题沙箱和任务队列。", ["Backend", "Sandbox"]],
       ["02", "竞赛工具", "围绕刷题平台做更贴近训练流程的增强。", ["Training", "Automation"]],
       ["03", "学习归档", "课程复习、算法笔记、实验报告和题解的可检索体系。", ["Archive", "Blog"]]
+    ]
+  },
+  "friends": {
+    "eyebrow": "Friends",
+    "title": "友链",
+    "lead": "这里预留友链位置，用于放置朋友、队友和长期关注的个人站点。",
+    "links": [
+      ["Friend", "友链位置 A", "这里预留给第一个友链。", "#", ["Reserved", "Blog"]],
+      ["Friend", "友链位置 B", "这里预留给第二个友链。", "#", ["Reserved", "OI / XCPC"]],
+      ["Friend", "友链位置 C", "这里预留给第三个友链。", "#", ["Reserved", "Personal Site"]]
+    ],
+    "apply": [
+      ["Info", "友链信息格式", "站点名称、站点链接、头像链接、简介、标签。", ["Name", "URL", "Avatar", "Description"]],
+      ["Notice", "交换说明", "如果需要交换友链，可以按上面的格式整理信息后联系我。", ["Exchange", "Contact"]]
     ]
   }
 }
