@@ -1,0 +1,53 @@
+{
+  "site": {
+    "title": "thedyingkai",
+    "description": "个人博客、项目和成长记录。",
+    "brand": "thedyingkai",
+    "brandSub": "Notebook",
+    "copyright": "© 2026 thedyingkai."
+  },
+  "nav": [
+    ["首页", "/"],
+    ["文章", "/blog/"],
+    ["项目", "/projects/"],
+    ["关于", "/about/"],
+    ["GitHub", "https://github.com/thedyingkai"]
+  ],
+  "home": {
+    "eyebrow": "Personal Archive",
+    "title": "华风夏韵，洛水天依。",
+    "lead": "这里保留博客框架、项目索引和成长记录。文章区不写死内容，只由 posts 目录中的 Markdown 文件自动生成。",
+    "actions": [["阅读文章", "/blog/", true], ["成长记录", "/about/"], ["查看项目", "/projects/"]],
+    "stats": [["Posts", "auto"], ["Source", "Markdown"], ["Accent", "#66ccff"], ["Theme", "Gold Gradient"]]
+  },
+  "about": {
+    "eyebrow": "About",
+    "title": "华风夏韵，洛水天依",
+    "lead": "现役 XCPC 选手，记录题解、模板、训练、项目和一路打比赛的成长轨迹。",
+    "cards": [
+      ["Profile", "我是谁", "准大二生，就读于北京电子科技学院，网名 thedyingkai_，可以简称 TDK 喵。", ["XCPC", "OI", "Backend"]],
+      ["Blog", "这里记录什么", "主要放 VP / 参赛题解、专项学习笔记、算法模板、工程项目复盘，以及阶段性的成长记录。", ["题解", "笔记", "项目"]]
+    ],
+    "milestones": [
+      ["2024", "起步", "注册洛谷账号，第一次校队训练，注册 Codeforces 和 AtCoder，完成从入门到洛谷绿名、100 AC 的起步阶段。", ["洛谷绿名", "100 AC"]],
+      ["2025 上半年", "上分与训练", "洛谷橙名、红名，Codeforces 绿名、青名、蓝名，洛谷 300 AC、Codeforces 200 AC，并完成第一场线下 XCPC 邀请赛。", ["CF 蓝名", "线下赛"]],
+      ["2025 下半年", "比赛与组织", "蓝桥杯 JavaB 国一，Codeforces 300 AC，洛谷 400 AC，CCPC 南昌邀请赛打星金牌，并举办本校第一场校赛暨新生赛。", ["国一", "打星金牌"]],
+      ["2026", "邀请赛连续奖牌", "ICPC 深圳、西安、南昌邀请赛银牌，CCPC 南昌邀请赛打星银牌，洛谷 500 AC。", ["银牌", "500 AC"]]
+    ]
+  },
+  "projects": {
+    "eyebrow": "Projects",
+    "title": "项目",
+    "lead": "不是简单堆仓库链接，而是把正在做的工程、脚本、训练资料和长期沉淀整理成可以继续扩展的项目索引。",
+    "featured": [
+      ["Backend / Judge", "Untitled-OJ", "分布式、模块化、可扩展的在线评测平台。", "https://github.com/thedyingkai/Untitled-OJ", ["Go", "OJ", "PostgreSQL", "Redis"]],
+      ["Browser Tools", "Tampermonkey Scripts", "面向洛谷的刷题辅助脚本集合。", "https://github.com/thedyingkai/tampermonkey", ["JavaScript", "Luogu", "Userscript"]],
+      ["Notes", "cs4ncu", "课程资料、复习笔记和学习材料归档。", "https://github.com/thedyingkai/cs4ncu", ["Notes", "CS", "Review"]]
+    ],
+    "directions": [
+      ["01", "评测系统", "API、数据库、权限、提交记录、判题沙箱和任务队列。", ["Backend", "Sandbox"]],
+      ["02", "竞赛工具", "围绕刷题平台做更贴近训练流程的增强。", ["Training", "Automation"]],
+      ["03", "学习归档", "课程复习、算法笔记、实验报告和题解的可检索体系。", ["Archive", "Blog"]]
+    ]
+  }
+}
