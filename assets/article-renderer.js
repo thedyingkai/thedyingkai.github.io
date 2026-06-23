@@ -1,3 +1,9 @@
+// Article renderer for /blog/post/?file=xxx.md
+//
+// The page itself is static. This script loads one Markdown file from posts/,
+// renders Markdown with TexMe, then lets MathJax typeset LaTeX and highlight.js
+// highlight code blocks. It intentionally does not implement a Markdown parser.
+
 const REPO = 'thedyingkai/thedyingkai.github.io';
 const BRANCH = 'main';
 const RAW_POST_BASE = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/posts/`;
@@ -8,6 +14,8 @@ let postDate = 'Post';
 let postTags = [];
 let postBody = '';
 
+// Parse the small YAML-like header used by posts/*.md.
+// Supported fields: title, description, date, tags.
 function parsePost(fileName, rawText) {
   postTitle = fileName.replace(/\.md$/i, '');
   postDescription = postTitle;
@@ -35,6 +43,7 @@ function parsePost(fileName, rawText) {
     }
   }
 
+  // A post can omit frontmatter. In that case the first H1 is used as title.
   if (postTitle === fileName.replace(/\.md$/i, '')) {
     for (const line of postBody.split('\n')) {
       const s = line.trim();
@@ -47,10 +56,14 @@ function parsePost(fileName, rawText) {
   }
 }
 
+// The imported old posts escaped LaTeX underscores as \_. We only fix that
+// inside math regions and never touch code blocks or normal text.
 function fixEscapedLatexInMath(text) {
   return text.split('\\_').join('_').split('\\*').join('*');
 }
 
+// Walk through the Markdown text and normalize only $...$ / $$...$$ sections.
+// This keeps source Markdown mostly untouched and avoids changing C++ code.
 function normalizeMathOnly(markdown) {
   let out = '';
   let i = 0;
@@ -127,6 +140,7 @@ async function renderArticle() {
   }
 
   try {
+    // TexMe, MathJax and highlight.js are loaded by blog/post/index.html.
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
     await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
 
