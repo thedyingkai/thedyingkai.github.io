@@ -4,8 +4,13 @@
     const match = /language-([^\s]+)/.exec(rawClass);
     const lang = match ? match[1].toLowerCase() : 'cpp';
     const normalized = lang === 'c++' || lang === 'c' ? 'cpp' : lang;
-    code.classList.remove('language-c++', 'language-c');
+    code.classList.remove('language-c++', 'language-c', 'language-cc');
     code.classList.add(`language-${normalized}`);
+    const pre = code.closest('pre');
+    if (pre) {
+      pre.classList.remove('language-c++', 'language-c', 'language-cc');
+      pre.classList.add(`language-${normalized}`, 'line-numbers');
+    }
   }
 
   function addCopy(pre, raw) {
@@ -34,7 +39,7 @@
   }
 
   function enhanceCodeBlock(code) {
-    if (code.dataset.hljsEnhanced === '1') return;
+    if (code.dataset.prismEnhanced === '1') return;
     const pre = code.closest('pre');
     if (!pre) return;
 
@@ -44,24 +49,21 @@
     normalizeLanguage(code);
     addCopy(pre, raw);
 
-    if (window.hljs) window.hljs.highlightElement(code);
-    if (window.hljs && typeof window.hljs.lineNumbersBlock === 'function') {
-      window.hljs.lineNumbersBlock(code);
-    }
-
-    code.dataset.hljsEnhanced = '1';
+    if (window.Prism) window.Prism.highlightElement(code);
+    code.dataset.prismEnhanced = '1';
   }
 
   function enhance(root = document) {
-    if (!window.hljs) return;
+    if (!window.Prism) return;
     root.querySelectorAll('pre code').forEach(enhanceCodeBlock);
   }
 
   function start() {
+    if (window.Prism) window.Prism.manual = true;
     enhance();
     new MutationObserver(() => enhance()).observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  if (window.hljs) start();
+  if (window.Prism) start();
   else window.addEventListener('load', start, { once: true });
 })();
