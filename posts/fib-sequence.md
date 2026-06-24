@@ -43,13 +43,13 @@ $$
 
 则
 
-$$\begin{align\*}
+$$\begin{align*}
 F_{m+(n+1)}
 &=F_{m+n}+F_{m+n-1}\newline
 &=\bigl(F_mF_{n+1}+F_{m-1}F_n\bigr)+\bigl(F_mF_{n}  +F_{m-1}F_{n-1}\bigr)\newline
 &=F_m\,(F_{n+1}+F_n)\;+\;F_{m-1}\,(F_n+F_{n-1})\newline
 &=F_mF_{n+2}+F_{m-1}F_{n+1},
-\end{align\*}
+\end{align*}
 $$
 
 即对 $(n+1)$ 也成立。由此归纳得证。
@@ -63,13 +63,13 @@ $$
 所以
 
 $$
-\begin{align\*}
+\begin{align*}
 \sum_{i=1}^{n}F_i
 &=\sum_{i=1}^{n}\bigl(F_{i+2}-F_{i+1}\bigr)\newline
 &=(F_3-F_2)+(F_4-F_3)+\cdots+(F_{n+2}-F_{n+1})\newline
 &=F_{n+2}-F_2\newline
 &=F_{n+2}-1.
-\end{align\*}
+\end{align*}
 $$
 
 ### 5. $\sum _{i=1}^n F_i^2 = F_nF_{n+1}$
@@ -83,24 +83,24 @@ $$
 因为右边
 
 $$
-\begin{align\*}
+\begin{align*}
 F_{i+1}F_i - F_iF_{i-1}
 &=F_i(F_{i+1}-F_{i-1}) \newline
 &=F_i(F_i+F_{i-1}-F_{i-1}) \newline
 &=F_i^2.
-\end{align\*}
+\end{align*}
 $$
 
 于是
 
 $$
-\begin{align\*}
+\begin{align*}
 \sum_{i=1}^{n}F_i^2
 &=\sum_{i=1}^{n}\bigl(F_{i+1}F_i - F_iF_{i-1}\bigr)\newline
 &=(F_2F_1 - F_1F_0)+(F_3F_2 - F_2F_1)+\cdots+(F_{n+1}F_n - F_nF_{n-1})\newline
 &=F_{n+1}F_n - F_1F_0\newline
 &=F_nF_{n+1}.
-\end{align\*}
+\end{align*}
 $$
 
 ### 6. $\sum_{i=1}^{n}F_{2i}\;=\;F_{2n+1}-1.$
@@ -112,13 +112,13 @@ $$
 于是
 
 $$
-\begin{align\*}
+\begin{align*}
 \sum_{k=1}^{n}F_{2k}
 &=\sum_{k=1}^{n}\bigl(F_{2k+1}-F_{2k-1}\bigr)\newline
 &=(F_3-F_1)+\cdots+(F_{2n+1}-F_{2n-1})\newline
 &=F_{2n+1}-F_1\newline
 &=F_{2n+1}-1.
-\end{align\*}
+\end{align*}
 $$
 
 ### 7. $\sum_{i=1}^{n}F_{2i-1}\;=\;F_{2n}.$
@@ -205,17 +205,17 @@ pair<i64,i64> fib(i64 n){
 斐波那契数列通项公式：
 
 $$
-\begin{align\*}
+\begin{align*}
 F_n &= \frac{1}{\sqrt5}\Biggl[\Bigl(\tfrac{1+\sqrt5}{2}\Bigr)^n - \Bigl(\tfrac{1-\sqrt5}{2}\Bigr)^n\Biggr].\newline
-\end{align\*}
+\end{align*}
 $$
 
 卢卡斯数列通项公式：
 
 $$
-\begin{align\*}
+\begin{align*}
 L_n &= \Bigl(\tfrac{1+\sqrt5}{2}\Bigr)^n + \Bigl(\tfrac{1-\sqrt5}{2}\Bigr)^n,\newline
-\end{align\*}
+\end{align*}
 $$
 
 两者互推：
