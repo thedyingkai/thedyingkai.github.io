@@ -49,118 +49,35 @@ function parsePost(fileName, rawText) {
   }
 }
 
-function fixEscapedLatexInMath(text) {
-  return text.split('\\_').join('_').split('\\*').join('*').trim();
-}
-
-function isShortInlineMath(body) {
-  const s = body.trim();
-  if (s.length > 80) return false;
-  if (/\\begin|\\end|\\\\|\\sum|\\prod|\\int|\\frac\s*\{/.test(s)) return false;
-  return true;
-}
-
-function readEscapedMath(markdown, start, open, close) {
-  const end = markdown.indexOf(close, start + open.length);
-  if (end < 0) return null;
-  const body = fixEscapedLatexInMath(markdown.slice(start + open.length, end));
-  let pos = end + close.length;
-  let suffix = '';
-  if (markdown[pos] === '\\' && markdown[pos + 1] === '_') {
-    suffix += '_';
-    pos += 2;
-    if (markdown[pos] === '{') {
-      const closeBrace = markdown.indexOf('}', pos + 1);
-      if (closeBrace >= 0) {
-        suffix += markdown.slice(pos, closeBrace + 1);
-        pos = closeBrace + 1;
-      }
-    } else {
-      while (/[A-Za-z0-9]/.test(markdown[pos] || '')) suffix += markdown[pos++];
-    }
-  } else if (markdown[pos] === '_') {
-    suffix += markdown[pos++];
-    if (markdown[pos] === '{') {
-      const closeBrace = markdown.indexOf('}', pos + 1);
-      if (closeBrace >= 0) {
-        suffix += markdown.slice(pos, closeBrace + 1);
-        pos = closeBrace + 1;
-      }
-    } else {
-      while (/[A-Za-z0-9]/.test(markdown[pos] || '')) suffix += markdown[pos++];
-    }
-  }
-  if (open === '\\[' && isShortInlineMath(body)) return { text: `$[${body}]${suffix}$`, pos };
-  if (open === '\\[') return { text: `$$${body}$$`, pos };
-  return { text: `$${body}$`, pos };
-}
-
-function readDollarMath(markdown, start) {
-  const end = markdown.indexOf('$', start + 1);
-  if (end >= 0) {
-    const body = fixEscapedLatexInMath(markdown.slice(start + 1, end));
-    return { text: `$${body}$`, pos: end + 1 };
-  }
-
-  let pos = start + 1;
-  while (pos < markdown.length && !/[\n，。,.；;、)）\s]/.test(markdown[pos])) pos++;
-  let body = markdown.slice(start + 1, pos);
-  body = body.replace(/\\+$/, '');
-  if (/^[A-Za-z0-9_{}^\\]+$/.test(body)) return { text: `$${fixEscapedLatexInMath(body)}$`, pos };
-  return { text: markdown[start], pos: start + 1 };
-}
-
-function normalizeMathSegment(markdown) {
-  let out = '';
-  let i = 0;
-  while (i < markdown.length) {
-    if (markdown.startsWith('\\[', i)) {
-      const res = readEscapedMath(markdown, i, '\\[', '\\]');
-      if (res) {
-        out += res.text;
-        i = res.pos;
-        continue;
-      }
-    }
-    if (markdown.startsWith('\\(', i)) {
-      const res = readEscapedMath(markdown, i, '\\(', '\\)');
-      if (res) {
-        out += res.text;
-        i = res.pos;
-        continue;
-      }
-    }
-    if (markdown[i] === '$') {
-      const res = readDollarMath(markdown, i);
-      out += res.text;
-      i = res.pos;
-      continue;
-    }
-    out += markdown[i++];
-  }
-  return out;
-}
-
-function normalizeMathOnly(markdown) {
-  let out = '';
+function lintMarkdownMath(markdown) {
+  const errors = [];
+  let line = 1;
   let i = 0;
   while (i < markdown.length) {
     if (markdown.slice(i, i + 3) === '```') {
       const end = markdown.indexOf('```', i + 3);
-      if (end < 0) {
-        out += markdown.slice(i);
-        break;
-      }
-      out += markdown.slice(i, end + 3);
+      const chunk = end < 0 ? markdown.slice(i) : markdown.slice(i, end + 3);
+      line += (chunk.match(/\n/g) || []).length;
+      if (end < 0) break;
       i = end + 3;
       continue;
     }
-    const nextFence = markdown.indexOf('```', i);
-    const end = nextFence < 0 ? markdown.length : nextFence;
-    out += normalizeMathSegment(markdown.slice(i, end));
-    i = end;
+
+    if (markdown.startsWith('\\[', i)) errors.push([line, '禁止使用 \\[...\\]，请改成 $...$ 或 $$...$$。']);
+    if (markdown.startsWith('\\(', i)) errors.push([line, '禁止使用 \\(...\\)，请改成 $...$。']);
+    if (markdown.startsWith('\\_', i)) errors.push([line, '禁止使用 \\_ 转义下标，请在数学公式内写 _。']);
+    if (markdown[i] === '$') {
+      const end = markdown.indexOf('$', i + 1);
+      if (end < 0) errors.push([line, '发现未闭合的 $...$ 数学公式。']);
+      else i = end;
+    }
+    if (markdown[i] === '\n') line++;
+    i++;
   }
-  return out;
+  if (errors.length) {
+    const detail = errors.slice(0, 10).map(([ln, msg]) => `第 ${ln} 行：${msg}`).join('\n');
+    throw new Error(`Markdown 数学写法不规范：\n${detail}`);
+  }
 }
 
 function collectFenceLanguages(markdown) {
@@ -223,6 +140,7 @@ async function renderArticle() {
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
 
     parsePost(fileName, await response.text());
+    lintMarkdownMath(postBody);
     const codeLanguages = collectFenceLanguages(postBody);
     document.title = `${postTitle} · thedyingkai`;
 
@@ -239,7 +157,7 @@ async function renderArticle() {
     header.append(meta);
 
     const body = element('article', 'render-body texme-body');
-    body.innerHTML = window.texme.render(normalizeMathOnly(postBody));
+    body.innerHTML = window.texme.render(postBody);
 
     root.replaceChildren(back, header, body);
     await window.MathJax.typesetPromise([body]);
@@ -247,7 +165,9 @@ async function renderArticle() {
   } catch (error) {
     const box = element('article', 'render-body');
     box.append(element('h1', '', '文章加载失败'));
-    box.append(element('p', '', error.message));
+    const pre = element('pre', '', error.message);
+    pre.style.whiteSpace = 'pre-wrap';
+    box.append(pre);
     root.replaceChildren(box);
   }
 }
