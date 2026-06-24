@@ -52,7 +52,7 @@ function actionLink(item) {
 
 function statRow(item) {
   const x = Array.isArray(item) ? { label: item[0], value: item[1] } : item;
-  const value = x.value === 'auto' ? '<b data-post-count>...</b>' : `<b>${cfgEsc(x.value)}</b>`;
+  const value = x.value === 'auto' ? '<b data-post-count>0</b>' : `<b>${cfgEsc(x.value)}</b>`;
   return `<div class="stat"><span>${cfgEsc(x.label)}</span>${value}</div>`;
 }
 

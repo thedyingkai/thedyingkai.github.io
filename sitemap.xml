@@ -6,11 +6,12 @@
   <url><loc>https://thedyingkai.github.io/projects/</loc></url>
   <url><loc>https://thedyingkai.github.io/cloud/</loc></url>
   <url><loc>https://thedyingkai.github.io/friends/</loc></url>
-  <url><loc>https://thedyingkai.github.io/blog/tree-templates/</loc></url>
-  <url><loc>https://thedyingkai.github.io/blog/generating-functions/</loc></url>
-  <url><loc>https://thedyingkai.github.io/blog/fibonacci/</loc></url>
-  <url><loc>https://thedyingkai.github.io/blog/fast-power/</loc></url>
-  <url><loc>https://thedyingkai.github.io/blog/linear-algebra-template/</loc></url>
-  <url><loc>https://thedyingkai.github.io/blog/cf-1034-div3/</loc></url>
-  <url><loc>https://thedyingkai.github.io/blog/abc-404-a-e/</loc></url>
+  <url><loc>https://thedyingkai.github.io/rss.xml</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/post/?file=tree-templates.md</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/post/?file=generating-functions.md</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/post/?file=fib-sequence.md</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/post/?file=quick-power.md</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/post/?file=post-5.md</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/post/?file=post-6-a-d.md</loc></url>
+  <url><loc>https://thedyingkai.github.io/blog/post/?file=post-7.md</loc></url>
 </urlset>

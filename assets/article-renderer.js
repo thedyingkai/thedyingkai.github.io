@@ -211,6 +211,13 @@ function bindTocTooltips(toc) {
   addEventListener('scroll', hide, { passive: true });
 }
 
+function hydrateTocTooltips(toc, items) {
+  for (const item of items) {
+    const link = toc.querySelector(`[data-target="${CSS.escape(item.id)}"]`);
+    if (link) link._tocHtml = item.node.innerHTML;
+  }
+}
+
 function bindTocState(toc, items) {
   const links = new Map([...toc.querySelectorAll('[data-target]')].map(link => [link.dataset.target, link]));
   if (!links.size || !('IntersectionObserver' in window)) return;
@@ -467,6 +474,7 @@ async function renderArticle() {
     root.replaceChildren(back, header, layout);
 
     await window.MathJax.typesetPromise([body]);
+    hydrateTocTooltips(toc, headings);
     enhanceCodeBlocks(body);
     bindTocState(toc, headings);
     bindTocTooltips(toc);

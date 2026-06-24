@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="TDK 的小窝文章归档。">
-    <title>文章 · TDK 的小窝</title>
+    <title>文章 - TDK 的小窝</title>
     <link rel="icon" href="/assets/images/site/ico.png">
     <link rel="alternate" type="application/rss+xml" title="TDK 的小窝 RSS" href="/rss.xml">
     <link rel="stylesheet" href="/assets/site.css">
@@ -16,34 +16,31 @@
     <div class="progress"></div>
     <header class="topbar" data-site-header></header>
     <main>
-        <section class="page-head page-head--split wrap">
-            <div><span class="eyebrow">Archive</span>
+        <section class="page-head page-head--archive wrap">
+            <div>
+                <span class="eyebrow">Archive</span>
                 <h1>文章</h1>
                 <p>题解、算法笔记、模板整理和阶段复盘。</p>
+                <a class="btn page-head__rss" href="/rss.xml">RSS</a>
             </div>
-            <a class="btn page-head__action" href="/rss.xml">RSS</a>
+            <aside class="post-tools" data-post-tools hidden>
+                <div class="post-tools__bar">
+                    <label class="post-search">
+                        <span>搜索</span>
+                        <input type="search" placeholder="标题、摘要、日期或标签" data-post-search>
+                    </label>
+                    <span class="post-tools__count" data-post-result-count></span>
+                </div>
+                <div class="post-tags-filter" data-post-tags></div>
+            </aside>
         </section>
         <section class="article-list wrap">
-            <div class="article-layout">
-                <div class="post-main">
-                    <div class="post-masonry" data-post-list="blog" data-post-layout="masonry"></div>
-                </div>
-                <aside class="post-tools" data-post-tools hidden>
-                    <div class="post-tools__bar">
-                        <label class="post-search">
-                            <span>搜索</span>
-                            <input type="search" placeholder="标题、摘要、日期或标签" data-post-search>
-                        </label>
-                        <span class="post-tools__count" data-post-result-count></span>
-                    </div>
-                    <div class="post-tags-filter" data-post-tags></div>
-                </aside>
-            </div>
+            <div class="post-masonry" data-post-list="blog" data-post-layout="masonry"></div>
         </section>
     </main>
     <footer class="footer" data-site-footer></footer>
-    <script src="/assets/site.js?v=1.5"></script>
-    <script src="/assets/post-list.js?v=1.4"></script>
+    <script src="/assets/site.js?v=1.6"></script>
+    <script src="/assets/post-list.js?v=1.5"></script>
 </body>
 
 </html>

@@ -1,5 +1,5 @@
 :root {
-    --post-max: 1180px
+    --post-max: 1080px
 }
 
 .render-shell {
@@ -93,9 +93,10 @@
 
 .render-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+    grid-template-columns: minmax(0, 760px) minmax(220px, 260px);
     gap: 28px;
-    align-items: start
+    align-items: start;
+    justify-content: center
 }
 
 .render-body {
@@ -108,7 +109,9 @@
     padding: clamp(18px, 4vw, 34px);
     box-shadow: 0 24px 70px -44px rgba(33, 150, 212, .36);
     min-width: 0;
-    overflow: hidden
+    max-width: 100%;
+    overflow: hidden;
+    overflow-wrap: anywhere
 }
 
 .render-toc {
@@ -266,6 +269,12 @@
     box-shadow: var(--shadow-md)
 }
 
+.render-body mjx-container {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden
+}
+
 .render-body blockquote {
     border-left: 4px solid var(--cyan);
     padding: 10px 0 10px 18px;
@@ -304,6 +313,7 @@
 }
 
 .render-body pre:not(.code-pre) {
+    max-width: 100%;
     overflow: auto;
     border: 1px solid rgba(102, 204, 255, .2);
     border-radius: 12px;
@@ -313,6 +323,7 @@
 }
 
 .code-frame {
+    max-width: 100%;
     margin: 26px 0;
     border: 1px solid transparent;
     border-radius: 16px;

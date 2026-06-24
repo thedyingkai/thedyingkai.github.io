@@ -211,14 +211,14 @@
 
   function readMusicState(id) {
     try {
-      const state = JSON.parse(sessionStorage.getItem(musicStateKey(id)) || 'null');
+      const state = JSON.parse(localStorage.getItem(musicStateKey(id)) || sessionStorage.getItem(musicStateKey(id)) || 'null');
       return state && state.id === id ? state : null;
     } catch {
       return null;
     }
   }
 
-  function saveMusicState(id, ap) {
+  function saveMusicState(id, ap, settings) {
     if (!ap?.audio) return;
     const state = {
       id,
@@ -226,9 +226,11 @@
       currentTime: Number(ap.audio.currentTime || 0),
       paused: Boolean(ap.audio.paused),
       volume: Number(ap.audio.volume || 0.45),
+      settings: { ...settings },
       savedAt: Date.now()
     };
     try {
+      localStorage.setItem(musicStateKey(id), JSON.stringify(state));
       sessionStorage.setItem(musicStateKey(id), JSON.stringify(state));
     } catch { }
   }
@@ -246,35 +248,153 @@
     });
   }
 
+  function musicSettings(config, savedState) {
+    const saved = savedState?.settings || {};
+    const order = ['list', 'reverse', 'random'].includes(saved.order) ? saved.order : (config.order || 'random');
+    const loop = saved.loop === 'one' ? 'one' : 'all';
+    const lrcVisible = saved.lrcVisible !== false;
+    const volume = Number.isFinite(savedState?.volume) ? savedState.volume : Number(config.volume ?? 0.45);
+    return { order, loop, lrcVisible, volume: Math.max(0, Math.min(1, volume)) };
+  }
+
+  function applyMusicSettings(ap, settings) {
+    ap.options.order = settings.order === 'random' ? 'random' : 'list';
+    ap.options.loop = settings.loop === 'one' ? 'one' : 'all';
+    if (Number.isFinite(settings.volume)) ap.audio.volume = settings.volume;
+    document.body.classList.toggle('music-lrc-off', !settings.lrcVisible);
+  }
+
+  function musicButton(text, pressed) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = text;
+    button.setAttribute('aria-pressed', String(Boolean(pressed)));
+    return button;
+  }
+
+  function renderMusicPanel(id, ap, settings, save) {
+    document.querySelector('[data-music-panel]')?.remove();
+    const panel = document.createElement('div');
+    panel.className = 'music-panel';
+    panel.dataset.musicPanel = id;
+
+    const orderLabel = { list: '顺序', reverse: '倒序', random: '随机' };
+    const orderButton = musicButton(orderLabel[settings.order] || '顺序', false);
+    const loopButton = musicButton(settings.loop === 'one' ? '单曲' : '列表', settings.loop === 'one');
+    const lrcButton = musicButton(settings.lrcVisible ? '歌词开' : '歌词关', settings.lrcVisible);
+    const volume = document.createElement('input');
+    volume.type = 'range';
+    volume.min = '0';
+    volume.max = '1';
+    volume.step = '0.01';
+    volume.value = String(settings.volume);
+    volume.setAttribute('aria-label', '音乐音量');
+
+    const setOrder = value => {
+      settings.order = value;
+      orderButton.textContent = orderLabel[value] || '顺序';
+      applyMusicSettings(ap, settings);
+      save();
+    };
+
+    orderButton.addEventListener('click', () => {
+      const modes = ['list', 'reverse', 'random'];
+      setOrder(modes[(modes.indexOf(settings.order) + 1) % modes.length]);
+    });
+
+    loopButton.addEventListener('click', () => {
+      settings.loop = settings.loop === 'one' ? 'all' : 'one';
+      loopButton.textContent = settings.loop === 'one' ? '单曲' : '列表';
+      loopButton.setAttribute('aria-pressed', String(settings.loop === 'one'));
+      applyMusicSettings(ap, settings);
+      save();
+    });
+
+    lrcButton.addEventListener('click', () => {
+      settings.lrcVisible = !settings.lrcVisible;
+      lrcButton.textContent = settings.lrcVisible ? '歌词开' : '歌词关';
+      lrcButton.setAttribute('aria-pressed', String(settings.lrcVisible));
+      applyMusicSettings(ap, settings);
+      save();
+    });
+
+    volume.addEventListener('input', () => {
+      settings.volume = Number(volume.value);
+      applyMusicSettings(ap, settings);
+      save();
+    });
+
+    panel.append(orderButton, loopButton, lrcButton, volume);
+    document.body.append(panel);
+  }
+
   function bindMusicState(id, ap, config, savedState) {
-    const desiredOrder = config.order || 'random';
-    const save = () => saveMusicState(id, ap);
+    const settings = musicSettings(config, savedState);
+    let restoring = true;
+    let saveTimer = 0;
+    let lastSecond = -1;
 
-    if (Number.isFinite(savedState?.volume)) ap.audio.volume = savedState.volume;
-    if (Number.isFinite(savedState?.index)) ap.list.switch(Math.max(0, Math.min(savedState.index, ap.list.audios.length - 1)));
-    else if (desiredOrder === 'random') ap.list.switch(Math.floor(Math.random() * ap.list.audios.length));
+    const saveNow = () => saveMusicState(id, ap, settings);
+    const saveSoon = () => {
+      if (restoring) return;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveNow, 240);
+    };
 
-    if (Number.isFinite(savedState?.currentTime) && savedState.currentTime > 0) {
-      setTimeout(() => ap.seek(savedState.currentTime), 250);
+    applyMusicSettings(ap, settings);
+
+    if (Number.isFinite(savedState?.index)) {
+      ap.list.switch(Math.max(0, Math.min(savedState.index, ap.list.audios.length - 1)));
+    } else if (settings.order === 'random') {
+      ap.list.switch(Math.floor(Math.random() * ap.list.audios.length));
     }
-    ap.options.order = desiredOrder;
+
+    const resumeTime = Number(savedState?.currentTime || 0);
+    if (resumeTime > 1) {
+      const seek = () => {
+        if (Number.isFinite(ap.audio.duration) && resumeTime < ap.audio.duration - 1) ap.seek(resumeTime);
+      };
+      ap.audio.addEventListener('loadedmetadata', seek, { once: true });
+      setTimeout(seek, 500);
+    }
 
     if (savedState && !savedState.paused) {
       setTimeout(() => {
         const result = ap.play();
         result?.catch?.(() => {});
-      }, 350);
+      }, 700);
     }
 
-    ap.on?.('play', save);
-    ap.on?.('pause', save);
-    ap.on?.('listswitch', save);
+    renderMusicPanel(id, ap, settings, saveNow);
+
+    ap.on?.('play', saveSoon);
+    ap.on?.('pause', saveSoon);
+    ap.on?.('listswitch', saveSoon);
     ap.audio.addEventListener('timeupdate', () => {
-      if (Math.floor(ap.audio.currentTime) % 5 === 0) save();
+      const second = Math.floor(ap.audio.currentTime || 0);
+      if (second !== lastSecond && second % 3 === 0) {
+        lastSecond = second;
+        saveSoon();
+      }
     });
-    ap.audio.addEventListener('volumechange', save);
-    addEventListener('pagehide', save);
-    save();
+    ap.audio.addEventListener('volumechange', () => {
+      settings.volume = Number(ap.audio.volume || settings.volume);
+      saveSoon();
+    });
+    ap.audio.addEventListener('ended', () => {
+      if (settings.order !== 'reverse' || settings.loop === 'one') return;
+      const from = Number(ap.list?.index || 0);
+      setTimeout(() => {
+        const target = (from - 1 + ap.list.audios.length) % ap.list.audios.length;
+        ap.list.switch(target);
+        ap.play()?.catch?.(() => {});
+      }, 120);
+    });
+    addEventListener('pagehide', saveNow);
+    setTimeout(() => {
+      restoring = false;
+      saveNow();
+    }, 1200);
   }
 
   async function initMusicPlayer() {
@@ -284,6 +404,7 @@
       const id = neteasePlaylistId(config);
       if (!id) return;
       const savedState = readMusicState(id);
+      const savedSettings = musicSettings(config, savedState);
 
       await loadStyleOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css');
       await loadScriptOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js');
@@ -296,11 +417,12 @@
       attr(player, 'fixed', config.fixed ?? true);
       attr(player, 'mini', config.mini ?? true);
       attr(player, 'autoplay', config.autoplay ?? false);
-      attr(player, 'order', 'list');
-      attr(player, 'loop', config.loop || 'all');
-      attr(player, 'preload', config.preload || 'none');
-      attr(player, 'volume', config.volume ?? 0.45);
+      attr(player, 'order', savedSettings.order === 'random' ? 'random' : 'list');
+      attr(player, 'loop', savedSettings.loop === 'one' ? 'one' : 'all');
+      attr(player, 'preload', config.preload || 'metadata');
+      attr(player, 'volume', savedSettings.volume);
       attr(player, 'theme', config.theme || '#66ccff');
+      attr(player, 'lrc-type', config.lrcType ?? 3);
       attr(player, 'list-folded', config.listFolded ?? true);
       attr(player, 'list-max-height', config.listMaxHeight || '320px');
       document.body.append(player);

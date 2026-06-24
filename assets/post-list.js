@@ -123,17 +123,28 @@ async function loadPostsFromGithub() {
   return posts;
 }
 
+function preferGithubPosts() {
+  return /\.github\.io$/i.test(location.hostname) || location.hostname === 'thedyingkai.github.io';
+}
+
 async function loadPosts() {
-  let posts;
-  try {
-    const files = await loadLocalPostFiles();
-    posts = await loadPostsFromLocalFiles(files);
-  } catch {
-    posts = await loadPostsFromGithub();
+  const localSource = async () => loadPostsFromLocalFiles(await loadLocalPostFiles());
+  const sources = preferGithubPosts()
+    ? [loadPostsFromGithub, localSource]
+    : [localSource, loadPostsFromGithub];
+  let lastError;
+
+  for (const source of sources) {
+    try {
+      const posts = await source();
+      posts.sort((a, b) => String(b.date).localeCompare(String(a.date)) || a.fileName.localeCompare(b.fileName));
+      return posts;
+    } catch (error) {
+      lastError = error;
+    }
   }
 
-  posts.sort((a, b) => String(b.date).localeCompare(String(a.date)) || a.fileName.localeCompare(b.fileName));
-  return posts;
+  throw lastError || new Error('Post loading failed');
 }
 
 function uniqueTags(posts) {
@@ -249,6 +260,7 @@ async function renderPostLists() {
       target.innerHTML = posts.map(post => postCard(post, options)).join('') || '<div class="card"><h3>暂无文章</h3><p>之后再慢慢补。</p></div>';
     });
   } catch (error) {
+    countTargets.forEach(target => target.textContent = '0');
     listTargets.forEach(target => {
       target.innerHTML = `<div class="card"><h3>文章加载失败</h3><p>${escapeHtml(error.message)}</p></div>`;
     });

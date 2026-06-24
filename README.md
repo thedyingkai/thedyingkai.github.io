@@ -1,16 +1,8 @@
 # TDK 的小窝
 
-这是 thedyingkai_ 的个人静态博客，部署在 GitHub Pages。站点用于整理算法竞赛题解、数学/模板笔记、工程项目复盘和个人成长记录。
+这是 thedyingkai_ 的个人静态博客，部署在 GitHub Pages。站点主要用于整理算法竞赛题解、数学与模板笔记、项目复盘和成长记录。
 
-## 站点内容
-
-- **文章归档**：Markdown 文章位于 `posts/`，文章页支持 LaTeX、目录、代码高亮、行号和复制按钮。
-- **项目索引**：集中展示在线评测、训练工具、脚本自动化等长期项目。
-- **关于页面**：记录 TDK 的竞赛经历、工程方向和完整时间线。
-- **云盘入口**：纯静态访问 `dl.thedyingkai.cn` 上的公开资源。
-- **友链页面**：展示朋友站点，并预留头像位和交换信息。
-
-## 技术结构
+## 目录
 
 ```text
 .
@@ -18,44 +10,20 @@
 ├── blog/                   # 文章列表与文章阅读页
 ├── posts/                  # Markdown 文章源文件
 ├── projects/               # 项目页
-├── cloud/                  # 云盘资源入口
+├── cloud/                  # 云盘入口
 ├── friends/                # 友链页
 ├── about/                  # 关于页
-├── assets/                 # 站点脚本与样式
-├── highlight/              # Highlight.js 完整版核心、语言与主题资源
-└── config/                 # 拆分后的站点内容配置
+├── assets/                 # 站点脚本、样式和图片
+├── config/                 # 页面内容配置
+├── highlight/              # 站内代码高亮资源
+├── scripts/                # 自动生成 RSS、sitemap、文章清单
+├── rss.xml                 # RSS 输出
+└── sitemap.xml             # 搜索引擎站点地图
 ```
 
-## 文章格式
-
-文章使用带 front matter 的 Markdown：
-
-```markdown
----
-title: 文章标题
-description: 简短描述
-date: 2026.06.24
-tags: [算法, 笔记]
----
-
-## 正文标题
-
-这里写正文。
-```
-
-代码块建议标注语言：
-
-````markdown
-```cpp
-void solve() {
-    // ...
-}
-```
-````
+`.nojekyll` 用来关闭 GitHub Pages 的 Jekyll 处理，保证 `posts/*.md` 可以作为原始 Markdown 被前端读取。
 
 ## 本地预览
-
-在仓库根目录启动静态服务器：
 
 ```powershell
 python -m http.server 8787 --bind 127.0.0.1
@@ -67,15 +35,96 @@ python -m http.server 8787 --bind 127.0.0.1
 http://127.0.0.1:8787/
 ```
 
-## 维护说明
+如果新增或删除了文章，先运行：
 
-- 新文章直接放入 `posts/`，文章列表会从 GitHub 仓库内容接口读取。
-- 导航、首页、项目、关于页、友链页、云盘入口和图片槽位分别维护 `config/*.json`。
-- 云盘页读取 `config/cloud.json` 的静态文件夹树，文件优先使用 `downloadUrl` 或 `href`，否则把 `path` 拼接到 `dl.thedyingkai.cn`。
-- 二次元图片后续放入 `assets/images/anime/`，再到 `config/images.json` 填写对应槽位的 `src`。
-- 代码高亮使用 `highlight/highlight.js` 和 `highlight/languages/*.js` 的完整版资源，不使用压缩版入口。
-- 站点是纯静态页面，不需要构建步骤。
+```powershell
+node scripts/generate-site-data.mjs
+```
 
-## 个人标识
+## 更新文章
 
-TDK 是 `thedyingkai_` 的简称。常用平台 ID 为 `thedyingkai`，主要活动方向是 XCPC、在线评测系统、训练工具和 Web 后端。
+新增文章时，只需要把 Markdown 文件放到 `posts/`，文件名建议使用英文、数字和短横线，例如 `new-post.md`。
+
+文章 front matter：
+
+```markdown
+---
+title: 文章标题
+description: 简短摘要
+date: 2026.06.24
+tags: [算法, 笔记]
+---
+
+## 正文标题
+
+这里写正文。
+```
+
+文章封面默认不显示。需要封面时，在 front matter 里额外写：
+
+```markdown
+cover: 1.jpg
+coverAlt: 图片描述
+```
+
+封面文件从 `assets/images/anime/` 读取，也可以写完整 URL。代码块建议标注语言：
+
+````markdown
+```cpp
+void solve() {
+    // ...
+}
+```
+````
+
+线上部署时，GitHub Actions 会自动运行 `scripts/generate-site-data.mjs`，生成 `config/posts.json`、`rss.xml` 和 `sitemap.xml`。也就是说，正常更新文章只需要提交 `posts/*.md`；本地预览时才需要手动运行生成脚本。
+
+## 更新图片
+
+二次元图片统一放在 `assets/images/anime/`。
+
+当前约定：
+
+```json
+"aboutProfile": { "src": "0.jpg" },
+"homeHero": { "images": [{ "src": "1.jpg" }, { "src": "2.jpg" }] }
+```
+
+`0.jpg` 用于 About 页头像图；首页底层叠放图由 `config/images.json` 的 `homeHero.images` 控制。想加更多首页图片时，把图片放进 `assets/images/anime/`，再追加：
+
+```json
+{
+  "src": "3.jpg",
+  "alt": "图片描述"
+}
+```
+
+## 更新项目
+
+项目页内容在 `config/projects.json`。新增项目时追加一个对象，常用字段包括 `title`、`meta`、`text`、`href`、`tags`。页面会自动按配置渲染卡片。
+
+## 更新云盘
+
+云盘页内容在 `config/cloud.json`。目录使用 `children` 表示，文件优先使用 `downloadUrl` 或 `href`；如果只写 `path`，页面会自动拼接到 `dl.thedyingkai.cn`。
+
+## 更新关于页
+
+关于页内容在 `config/about.json`，包括个人简介、链接、卡片和 Timeline。Timeline 可以继续追加内容，页面会保留完整文本，并在桌面端用左右交错时间线展示。
+
+## 更新友链
+
+友链页内容在 `config/friends.json`。新增友链时追加站点名、链接、描述和头像地址；没有头像时页面会使用文字占位。
+
+## 更新 RSS 和 Sitemap
+
+RSS 与 sitemap 由 `scripts/generate-site-data.mjs` 自动生成：
+
+```powershell
+node scripts/generate-site-data.mjs
+```
+
+GitHub Pages 工作流会在每次部署前运行该脚本，所以线上一般不需要手动维护 `rss.xml`、`sitemap.xml` 和 `config/posts.json`。
+
+## 代码高亮
+
+站内使用 Highlight.js 完整版核心 `highlight/highlight.js`，并保留 `c`、`cpp`、`java`、`python`、`bash` 的完整版语言文件。主题使用 `highlight/styles/atom-one-dark.css`。压缩版入口和未使用主题不参与页面加载。
