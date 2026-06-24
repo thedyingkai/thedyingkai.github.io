@@ -9,21 +9,30 @@
       { href: '/blog/', label: '文章', key: 'blog' },
       { href: '/projects/', label: '项目', key: 'projects' },
       { href: '/cloud/', label: '云盘', key: 'cloud' },
-      { href: '/friends/', label: '友链', key: 'friends' },
-      { href: '/about/', label: '关于', key: 'about' },
-      { href: 'https://github.com/thedyingkai', label: 'GitHub', external: true }
+      { href: '/about/', label: '关于', key: 'about' }
     ],
     footer: {
       name: 'TDK 的小窝',
-      note: '© {year} · thedyingkai_ · QQ 1474039695',
-      links: [
-        { href: '/blog/', label: 'Blog' },
-        { href: '/cloud/', label: 'Cloud' },
-        { href: '/about/', label: 'About' },
-        { href: 'mailto:1474039695@qq.com', label: 'Email' },
-        { href: 'https://github.com/thedyingkai', label: 'GitHub', external: true },
-        { href: 'https://atcoder.jp/users/thedyingkai_', label: 'AtCoder', external: true },
-        { href: 'https://codeforces.com/profile/thedyingkai_', label: 'Codeforces', external: true }
+      note: '© {year} · thedyingkai_',
+      groups: [
+        {
+          title: '站点',
+          links: [
+            { href: '/blog/', label: '文章' },
+            { href: '/projects/', label: '项目' },
+            { href: '/cloud/', label: '云盘' },
+            { href: '/friends/', label: '友链' },
+            { href: '/about/', label: '关于' }
+          ]
+        },
+        {
+          title: '联系',
+          links: [
+            { href: 'mailto:1474039695@qq.com', label: 'Email' },
+            { href: 'https://github.com/thedyingkai', label: 'GitHub', external: true },
+            { href: 'https://space.bilibili.com/646304256/', label: 'Bilibili', external: true }
+          ]
+        }
       ]
     }
   };
@@ -133,12 +142,24 @@
 
     identity.append(name, note);
 
-    const links = document.createElement('nav');
-    links.className = 'footer__links';
-    links.setAttribute('aria-label', '页脚导航');
-    (site.footer?.links || defaultSite.footer.links).forEach(item => links.append(makeLink(item, '')));
+    const groups = document.createElement('div');
+    groups.className = 'footer__groups';
+    const footerGroups = site.footer?.groups || (
+      site.footer?.links ? [{ title: 'Links', links: site.footer.links }] : defaultSite.footer.groups
+    );
+    footerGroups.forEach(group => {
+      const section = document.createElement('section');
+      section.className = 'footer__group';
+      const title = document.createElement('p');
+      title.textContent = group.title;
+      const links = document.createElement('nav');
+      links.setAttribute('aria-label', group.title);
+      (group.links || []).forEach(item => links.append(makeLink(item, '')));
+      section.append(title, links);
+      groups.append(section);
+    });
 
-    inner.append(identity, links);
+    inner.append(identity, groups);
     footer.replaceChildren(inner);
   }
 

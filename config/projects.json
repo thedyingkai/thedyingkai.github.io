@@ -6,7 +6,7 @@
     {
       "meta": "Backend / Judge",
       "title": "Untitled-OJ",
-      "text": "TDK 目前最核心的工程方向：分布式、模块化、可扩展的在线评测平台。",
+      "text": "分布式、模块化、可扩展的在线评测平台。",
       "href": "https://github.com/thedyingkai/Untitled-OJ",
       "tags": [
         "Go",
@@ -18,7 +18,7 @@
     {
       "meta": "Browser Tools",
       "title": "Tampermonkey Scripts",
-      "text": "面向洛谷等训练平台的刷题辅助脚本集合。",
+      "text": "面向洛谷的辅助脚本集合。",
       "href": "https://github.com/thedyingkai/tampermonkey",
       "tags": [
         "JavaScript",
@@ -49,7 +49,7 @@
     {
       "meta": "03",
       "title": "学习归档",
-      "text": "把 TDK 的课程复习、算法笔记、实验报告和题解组织成可检索体系。",
+      "text": "课程复习、算法笔记、实验报告和题解。",
       "tags": [
         "Archive",
         "Blog"

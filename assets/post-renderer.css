@@ -121,7 +121,6 @@
 
 .render-toc__link,
 .render-toc__empty {
-    display: block;
     border-left: 2px solid transparent;
     padding: 7px 0 7px 12px;
     color: var(--ink-2);
@@ -130,8 +129,18 @@
 }
 
 .render-toc__link {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
     border-radius: 0 8px 8px 0;
+    overflow-wrap: anywhere;
     transition: color .18s, background .18s, border-color .18s
+}
+
+.render-toc__empty {
+    display: block
 }
 
 .render-toc__link:hover,
@@ -438,7 +447,7 @@
     .render-toc {
         position: static;
         order: -1;
-        max-height: none
+        max-height: 320px
     }
 }
 

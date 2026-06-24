@@ -1,16 +1,15 @@
 {
-  "eyebrow": "About TDK",
+  "eyebrow": "About",
   "title": "TDK / thedyingkai_",
-  "lead": "算法竞赛、工程项目、成长记录，以及一束蓝色和红色的舞台光。",
+  "lead": "华风夏韵，洛水天依。",
   "profile": {
-    "intro": "我是 thedyingkai_，可以叫我 TDK。现在就读于北京电子科技学院，主要在打 XCPC，同时把 Rust Web、曾经学过的 Java Web、在线评测系统和训练工具慢慢整理成自己的工程体系。",
+    "intro": "我是 thedyingkai_，可以叫我 TDK。现在就读于北京电子科技学院，计算机科学与技术专业。",
     "facts": [
       "BESTI",
       "XCPC",
       "Rust Web",
       "Online Judge",
-      "洛天依",
-      "乐正绫"
+      "Vocaloid"
     ],
     "links": [
       {
@@ -54,10 +53,10 @@
     {
       "meta": "Contest",
       "title": "算法竞赛",
-      "text": "持续训练 XCPC，写题解、补模板、复盘 VP，把比赛里的想法沉淀成可检索的文章。",
+      "text": "持续训练 XCPC，写题解、补模板、复盘 VP。",
       "tags": [
         "XCPC",
-        "OI",
+        "C++",
         "AtCoder",
         "Codeforces"
       ]
@@ -65,12 +64,13 @@
     {
       "meta": "Engineering",
       "title": "工程构建",
-      "text": "围绕在线评测、训练脚本和个人知识库做长期项目，把想法写成能跑、能维护的东西。",
+      "text": "围绕在线评测、训练脚本和个人知识库做长期项目。",
       "tags": [
         "Rust",
         "Java",
-        "OJ",
-        "Scripts"
+        "Go",
+        "JavaScript",
+        "Vue"
       ]
     },
     {

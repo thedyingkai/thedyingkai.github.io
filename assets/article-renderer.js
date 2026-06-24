@@ -109,6 +109,7 @@ function buildToc(items) {
       link.href = `#${item.id}`;
       link.innerHTML = item.html;
       link.setAttribute('aria-label', item.text);
+      link.title = item.text;
       link.dataset.target = item.id;
       nav.append(link);
     });

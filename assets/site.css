@@ -286,6 +286,68 @@ a {
   overflow-wrap: anywhere
 }
 
+.cloud-browser {
+  display: grid;
+  gap: 18px
+}
+
+.cloud-browser__bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap
+}
+
+.cloud-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 800
+}
+
+.cloud-breadcrumb button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--cyan-deep);
+  font: inherit;
+  cursor: pointer
+}
+
+.cloud-entry {
+  width: 100%;
+  min-height: 220px;
+  text-align: left
+}
+
+button.cloud-entry {
+  cursor: pointer;
+  font: inherit;
+  color: inherit
+}
+
+.cloud-entry--folder h3:before {
+  content: "/";
+  margin-right: 6px;
+  color: var(--cyan-deep)
+}
+
+.cloud-entry__url {
+  margin-top: 14px;
+  color: var(--ink-3);
+  font: 12px/1.55 var(--mono);
+  overflow-wrap: anywhere
+}
+
+.cloud-entry__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px
+}
+
 .stat-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, .92), rgba(248, 252, 255, .72));
   border: 1px solid var(--line-2);
@@ -337,6 +399,85 @@ a {
 .stat b {
   font-variant-numeric: tabular-nums;
   color: var(--cyan-deep)
+}
+
+.anime-slot {
+  min-width: 0
+}
+
+.anime-frame {
+  margin: 0;
+  display: grid;
+  align-content: end;
+  min-height: 280px;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(102, 204, 255, .16), rgba(255, 255, 255, .72) 42%, rgba(214, 165, 51, .16));
+  box-shadow: var(--shadow-md);
+  position: relative
+}
+
+.anime-frame img,
+.anime-frame__placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%
+}
+
+.anime-frame img {
+  object-fit: cover
+}
+
+.anime-frame__placeholder {
+  background:
+    linear-gradient(135deg, transparent 0 46%, rgba(102, 204, 255, .26) 46% 48%, transparent 48%),
+    linear-gradient(45deg, transparent 0 58%, rgba(214, 165, 51, .24) 58% 60%, transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, .64), rgba(241, 247, 255, .38))
+}
+
+.anime-frame figcaption {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 14px;
+  background: linear-gradient(180deg, transparent, rgba(248, 251, 255, .92) 42%, rgba(248, 251, 255, .98));
+  color: var(--ink-2)
+}
+
+.anime-frame figcaption span {
+  color: var(--gold-deep);
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 900
+}
+
+.anime-frame figcaption small {
+  font-size: 12px;
+  font-weight: 700
+}
+
+.anime-slot--home {
+  margin-top: 20px
+}
+
+.anime-slot--home .anime-frame {
+  min-height: 190px;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  box-shadow: none
+}
+
+.profile-scene,
+.cloud-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 34px;
+  align-items: start
 }
 
 .band {
@@ -628,14 +769,15 @@ a.card:hover {
 
 .footer__inner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 20px
+  gap: 36px
 }
 
 .footer__identity {
   display: grid;
-  gap: 2px
+  gap: 4px;
+  min-width: 180px
 }
 
 .footer__identity strong {
@@ -644,9 +786,29 @@ a.card:hover {
   font-size: 16px
 }
 
-.footer__links {
+.footer__groups {
   display: flex;
-  gap: 14px;
+  gap: 36px;
+  flex-wrap: wrap;
+  justify-content: flex-end
+}
+
+.footer__group {
+  min-width: 128px
+}
+
+.footer__group p {
+  margin: 0 0 8px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase
+}
+
+.footer__group nav {
+  display: flex;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end
 }
@@ -686,7 +848,9 @@ a.card:hover {
   }
 
   .grid--3,
-  .grid--2 {
+  .grid--2,
+  .profile-scene,
+  .cloud-scene {
     grid-template-columns: 1fr
   }
 
@@ -727,10 +891,12 @@ a.card:hover {
   }
 
   .footer__inner {
-    flex-direction: column
+    flex-direction: column;
+    align-items: flex-start
   }
 
-  .footer__links {
+  .footer__groups,
+  .footer__group nav {
     justify-content: flex-start
   }
 }

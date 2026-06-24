@@ -26,55 +26,58 @@
       "key": "cloud"
     },
     {
-      "label": "友链",
-      "href": "/friends/",
-      "key": "friends"
-    },
-    {
       "label": "关于",
       "href": "/about/",
       "key": "about"
-    },
-    {
-      "label": "GitHub",
-      "href": "https://github.com/thedyingkai",
-      "external": true
     }
   ],
   "footer": {
     "name": "TDK 的小窝",
-    "note": "© {year} · thedyingkai_ · QQ 1474039695",
-    "links": [
+    "note": "© {year} · thedyingkai_",
+    "groups": [
       {
-        "label": "Blog",
-        "href": "/blog/"
+        "title": "站点",
+        "links": [
+          {
+            "label": "文章",
+            "href": "/blog/"
+          },
+          {
+            "label": "项目",
+            "href": "/projects/"
+          },
+          {
+            "label": "云盘",
+            "href": "/cloud/"
+          },
+          {
+            "label": "友链",
+            "href": "/friends/"
+          },
+          {
+            "label": "关于",
+            "href": "/about/"
+          }
+        ]
       },
       {
-        "label": "Cloud",
-        "href": "/cloud/"
-      },
-      {
-        "label": "About",
-        "href": "/about/"
-      },
-      {
-        "label": "Email",
-        "href": "mailto:1474039695@qq.com"
-      },
-      {
-        "label": "GitHub",
-        "href": "https://github.com/thedyingkai",
-        "external": true
-      },
-      {
-        "label": "AtCoder",
-        "href": "https://atcoder.jp/users/thedyingkai_",
-        "external": true
-      },
-      {
-        "label": "Codeforces",
-        "href": "https://codeforces.com/profile/thedyingkai_",
-        "external": true
+        "title": "联系",
+        "links": [
+          {
+            "label": "Email",
+            "href": "mailto:1474039695@qq.com"
+          },
+          {
+            "label": "GitHub",
+            "href": "https://github.com/thedyingkai",
+            "external": true
+          },
+          {
+            "label": "Bilibili",
+            "href": "https://space.bilibili.com/646304256/",
+            "external": true
+          }
+        ]
       }
     ]
   }

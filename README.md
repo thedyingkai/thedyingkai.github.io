@@ -70,8 +70,9 @@ http://127.0.0.1:8787/
 ## 维护说明
 
 - 新文章直接放入 `posts/`，文章列表会从 GitHub 仓库内容接口读取。
-- 导航、首页、项目、关于页、友链页和云盘入口分别维护 `config/*.json`。
-- 云盘页只生成指向 `dl.thedyingkai.cn` 的静态链接，不代理资源、不需要后端。
+- 导航、首页、项目、关于页、友链页、云盘入口和图片槽位分别维护 `config/*.json`。
+- 云盘页读取 `config/cloud.json` 的静态文件夹树，文件优先使用 `downloadUrl` 或 `href`，否则把 `path` 拼接到 `dl.thedyingkai.cn`。
+- 二次元图片后续放入 `assets/images/anime/`，再到 `config/images.json` 填写对应槽位的 `src`。
 - 代码高亮使用 `highlight/highlight.js` 和 `highlight/languages/*.js` 的完整版资源，不使用压缩版入口。
 - 站点是纯静态页面，不需要构建步骤。
 

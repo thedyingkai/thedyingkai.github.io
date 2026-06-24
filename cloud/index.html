@@ -22,17 +22,20 @@
         </section>
         <section class="band">
             <div class="wrap">
-                <div class="cloud-tool">
-                    <form class="cloud-form" data-cloud-form>
-                        <label for="cloud-path">资源路径</label>
-                        <div class="cloud-form__row">
-                            <input id="cloud-path" name="path" type="text" autocomplete="off"
-                                placeholder="archive/file.zip">
-                            <button class="btn btn--primary" type="submit">打开</button>
-                        </div>
-                        <p data-cloud-target></p>
-                    </form>
-                    <div class="hero__actions" data-cloud-actions></div>
+                <div class="cloud-scene">
+                    <div class="cloud-tool">
+                        <form class="cloud-form" data-cloud-form>
+                            <label for="cloud-path">资源路径</label>
+                            <div class="cloud-form__row">
+                                <input id="cloud-path" name="path" type="text" autocomplete="off"
+                                    placeholder="archive/file.zip">
+                                <button class="btn btn--primary" type="submit">打开</button>
+                            </div>
+                            <p data-cloud-target></p>
+                        </form>
+                        <div class="hero__actions" data-cloud-actions></div>
+                    </div>
+                    <div class="anime-slot" data-image-slot="cloudMascot"></div>
                 </div>
             </div>
         </section>
@@ -40,10 +43,16 @@
             <div class="wrap">
                 <div class="section-head">
                     <div><span class="eyebrow">Resources</span>
-                        <h2>资源入口</h2>
+                        <h2>文件夹</h2>
                     </div>
                 </div>
-                <div class="grid grid--3" data-cloud-resources></div>
+                <div class="cloud-browser">
+                    <div class="cloud-browser__bar">
+                        <button class="btn" type="button" data-cloud-back>返回上级</button>
+                        <div class="cloud-breadcrumb" data-cloud-breadcrumb></div>
+                    </div>
+                    <div class="grid grid--3" data-cloud-entries></div>
+                </div>
             </div>
         </section>
         <section class="band">
@@ -59,6 +68,7 @@
     </main>
     <footer class="footer" data-site-footer></footer>
     <script src="/assets/site.js"></script>
+    <script src="/assets/images.js?v=1.0"></script>
     <script src="/assets/cloud.js?v=1.0"></script>
 </body>
 

@@ -2,6 +2,9 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const isExt = h => /^https?:\/\//.test(h || '');
   let baseUrl = 'https://dl.thedyingkai.cn/';
+  let folders = new Map();
+  let rootFolder = 'root';
+  let currentFolder = 'root';
 
   function setText(selector, value) {
     const node = document.querySelector(selector);
@@ -14,10 +17,14 @@
 
   function toResourceUrl(pathOrHref) {
     const raw = String(pathOrHref || '/').trim();
-    if (!raw) return new URL(baseUrl);
+    if (!raw || raw === '/') return new URL(baseUrl);
     if (isExt(raw)) return new URL(raw);
     const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
     return new URL(raw.replace(/^\/+/, ''), base);
+  }
+
+  function downloadUrl(entry) {
+    return toResourceUrl(entry.downloadUrl || entry.href || entry.downloadPath || entry.path || '/').href;
   }
 
   function actionUrl(action) {
@@ -30,13 +37,109 @@
     return `<a class="${cls}" href="${esc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>${esc(action.label)}</a>`;
   }
 
-  function card(item) {
-    const href = toResourceUrl(item.href || item.path || '/').href;
-    return `<a class="card" href="${esc(href)}" target="_blank" rel="noreferrer"><div class="card__meta"><span>${esc(item.meta)}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p><div class="tags">${tagsHtml(item.tags)}</div></a>`;
-  }
-
   function noteCard(item) {
     return `<div class="card"><div class="card__meta"><span>${esc(item.meta)}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p><div class="tags">${tagsHtml(item.tags)}</div></div>`;
+  }
+
+  function folderCard(item) {
+    return `<button class="card cloud-entry cloud-entry--folder" type="button" data-folder="${esc(item.folder)}"><div class="card__meta"><span>Folder</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text || '打开文件夹')}</p><div class="tags">${tagsHtml(item.tags)}</div></button>`;
+  }
+
+  function fileCard(item) {
+    const href = downloadUrl(item);
+    return `<div class="card cloud-entry cloud-entry--file"><div class="card__meta"><span>${esc(item.meta || item.size || 'File')}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text || '下载文件')}</p><p class="cloud-entry__url">${esc(href)}</p><div class="cloud-entry__actions"><a class="btn btn--primary" href="${esc(href)}" target="_blank" rel="noreferrer" download>下载</a><button class="btn" type="button" data-copy-url="${esc(href)}">复制链接</button></div><div class="tags">${tagsHtml(item.tags)}</div></div>`;
+  }
+
+  function folderParent(id) {
+    for (const folder of folders.values()) {
+      if ((folder.entries || []).some(item => item.type === 'folder' && item.folder === id)) return folder.id;
+    }
+    return '';
+  }
+
+  function folderTrail(id) {
+    const trail = [];
+    let cursor = folders.has(id) ? id : rootFolder;
+    while (cursor && folders.has(cursor)) {
+      trail.unshift(folders.get(cursor));
+      if (cursor === rootFolder) break;
+      cursor = folderParent(cursor);
+    }
+    return trail;
+  }
+
+  function folderFromHash() {
+    const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const id = params.get('folder');
+    return id && folders.has(id) ? id : rootFolder;
+  }
+
+  function setFolder(id, push = true) {
+    currentFolder = folders.has(id) ? id : rootFolder;
+    if (push) history.replaceState(null, '', `#folder=${encodeURIComponent(currentFolder)}`);
+    renderFolder();
+  }
+
+  function renderBreadcrumb(folder) {
+    const target = document.querySelector('[data-cloud-breadcrumb]');
+    if (!target) return;
+    target.innerHTML = folderTrail(folder.id).map(item => `<button type="button" data-folder="${esc(item.id)}">${esc(item.title)}</button>`).join('<span>/</span>');
+    target.querySelectorAll('[data-folder]').forEach(button => {
+      button.addEventListener('click', () => setFolder(button.dataset.folder));
+    });
+  }
+
+  function copyToClipboard(text, button) {
+    const done = () => {
+      button.textContent = '已复制';
+      setTimeout(() => { button.textContent = '复制链接'; }, 1200);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => { button.textContent = '复制失败'; });
+      return;
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.append(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      done();
+    } finally {
+      textarea.remove();
+    }
+  }
+
+  function bindFolderEntries(target) {
+    target.querySelectorAll('[data-folder]').forEach(button => {
+      button.addEventListener('click', () => setFolder(button.dataset.folder));
+    });
+    target.querySelectorAll('[data-copy-url]').forEach(button => {
+      button.addEventListener('click', () => copyToClipboard(button.dataset.copyUrl, button));
+    });
+  }
+
+  function renderFolder() {
+    const target = document.querySelector('[data-cloud-entries]');
+    const back = document.querySelector('[data-cloud-back]');
+    if (!target) return;
+
+    const folder = folders.get(currentFolder) || folders.get(rootFolder);
+    renderBreadcrumb(folder);
+    const parent = folderParent(folder.id);
+    if (back) {
+      back.disabled = !parent;
+      back.hidden = !parent;
+      back.onclick = parent ? () => setFolder(parent) : null;
+    }
+
+    const entries = folder.entries || [];
+    target.innerHTML = entries.length
+      ? entries.map(item => item.type === 'folder' ? folderCard(item) : fileCard(item)).join('')
+      : '<div class="card"><h3>空文件夹</h3><p>这个文件夹还没有配置资源。</p></div>';
+    bindFolderEntries(target);
   }
 
   function bindForm() {
@@ -66,17 +169,20 @@
 
   loadCloudConfig().then(cfg => {
     baseUrl = cfg.baseUrl || baseUrl;
+    rootFolder = cfg.rootFolder || rootFolder;
+    folders = new Map((cfg.folders || []).map(folder => [folder.id, folder]));
+    currentFolder = folderFromHash();
     setText('[data-config="cloud.eyebrow"]', cfg.eyebrow);
     setText('[data-config="cloud.title"]', cfg.title);
     setText('[data-config="cloud.lead"]', cfg.lead);
 
     const actions = document.querySelector('[data-cloud-actions]');
-    const resources = document.querySelector('[data-cloud-resources]');
     const notes = document.querySelector('[data-cloud-notes]');
     if (actions) actions.innerHTML = (cfg.actions || []).map(actionLink).join('');
-    if (resources) resources.innerHTML = (cfg.resources || []).map(card).join('');
     if (notes) notes.innerHTML = (cfg.notes || []).map(noteCard).join('');
     bindForm();
+    renderFolder();
+    addEventListener('hashchange', () => setFolder(folderFromHash(), false));
   }).catch(error => {
     document.querySelectorAll('[data-config-error]').forEach(x => x.textContent = error.message);
     bindForm();

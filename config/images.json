@@ -1,0 +1,23 @@
+{
+  "basePath": "/assets/images/anime/",
+  "slots": {
+    "homeHero": {
+      "src": "",
+      "alt": "首页视觉图",
+      "title": "Stage",
+      "caption": "蓝色与红色的舞台光"
+    },
+    "aboutProfile": {
+      "src": "",
+      "alt": "关于页视觉图",
+      "title": "Profile",
+      "caption": "个人气质图位"
+    },
+    "cloudMascot": {
+      "src": "",
+      "alt": "云盘页视觉图",
+      "title": "Cloud",
+      "caption": "资源入口看板图位"
+    }
+  }
+}

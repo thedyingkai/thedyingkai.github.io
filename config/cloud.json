@@ -1,8 +1,9 @@
 {
   "eyebrow": "Cloud Drive",
   "title": "云盘",
-  "lead": "访问 dl.thedyingkai.cn 上的静态资源。这里不代理、不缓存文件，只生成直达资源域名的链接。",
+  "lead": "访问 dl.thedyingkai.cn 上的静态资源。这里不代理、不缓存文件，只根据配置生成 Cloudreve 资源的下载链接。",
   "baseUrl": "https://dl.thedyingkai.cn/",
+  "rootFolder": "root",
   "actions": [
     {
       "label": "打开云盘根目录",
@@ -10,38 +11,105 @@
       "primary": true
     },
     {
-      "label": "HTTP 备用入口",
-      "href": "http://dl.thedyingkai.cn/"
+      "label": "Cloudreve 入口",
+      "path": "/"
     }
   ],
-  "resources": [
+  "folders": [
     {
-      "meta": "Root",
+      "id": "root",
       "title": "云盘根目录",
-      "text": "直接进入 dl.thedyingkai.cn，查看或下载公开资源。",
-      "path": "/",
-      "tags": [
-        "Static",
-        "Download"
+      "description": "这里维护公开资源的静态索引。",
+      "entries": [
+        {
+          "type": "folder",
+          "title": "资料归档",
+          "text": "课件、模板、训练材料等文件。",
+          "folder": "archive",
+          "tags": [
+            "Archive"
+          ]
+        },
+        {
+          "type": "folder",
+          "title": "公开下载",
+          "text": "适合直接分享的公开文件。",
+          "folder": "downloads",
+          "tags": [
+            "Public"
+          ]
+        },
+        {
+          "type": "file",
+          "title": "README",
+          "text": "云盘说明文件占位。部署 Cloudreve 后替换为真实路径。",
+          "path": "README.txt",
+          "tags": [
+            "Text"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "archive",
+      "title": "资料归档",
+      "description": "按主题整理长期保存的资源。",
+      "entries": [
+        {
+          "type": "file",
+          "title": "算法模板包",
+          "text": "占位文件，后续替换成实际压缩包路径。",
+          "path": "archive/templates.zip",
+          "tags": [
+            "XCPC",
+            "ZIP"
+          ]
+        },
+        {
+          "type": "file",
+          "title": "训练资料",
+          "text": "占位文件，后续替换成实际文档路径。",
+          "path": "archive/training.pdf",
+          "tags": [
+            "PDF"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "downloads",
+      "title": "公开下载",
+      "description": "外部访问频率较高的文件入口。",
+      "entries": [
+        {
+          "type": "file",
+          "title": "公开资源示例",
+          "text": "占位文件，后续替换成实际下载路径。",
+          "path": "downloads/example.zip",
+          "tags": [
+            "Download"
+          ]
+        }
       ]
     }
   ],
   "notes": [
     {
       "meta": "Static",
-      "title": "纯静态访问",
-      "text": "GitHub Pages 只负责展示入口和拼接链接，资源文件仍由 dl.thedyingkai.cn 提供。",
+      "title": "纯静态索引",
+      "text": "文件夹和文件列表由 config/cloud.json 维护，GitHub Pages 不读取 Cloudreve 目录接口。",
       "tags": [
         "No backend",
         "No proxy"
       ]
     },
     {
-      "meta": "Path",
-      "title": "相对路径直达",
-      "text": "在输入框填入资源相对路径，例如 archive/file.zip，会打开对应的云盘地址。",
+      "meta": "Download",
+      "title": "下载链接生成",
+      "text": "文件优先使用 downloadUrl 或 href；否则会把 path 拼接到 baseUrl 下生成下载链接。",
       "tags": [
-        "URL builder"
+        "Cloudreve",
+        "Static link"
       ]
     }
   ]
