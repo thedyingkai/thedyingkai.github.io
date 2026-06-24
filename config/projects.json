@@ -1,0 +1,59 @@
+{
+  "eyebrow": "Projects",
+  "title": "项目",
+  "lead": "主要围绕在线评测、训练工具、脚本自动化和个人知识库展开。",
+  "featured": [
+    {
+      "meta": "Backend / Judge",
+      "title": "Untitled-OJ",
+      "text": "TDK 目前最核心的工程方向：分布式、模块化、可扩展的在线评测平台。",
+      "href": "https://github.com/thedyingkai/Untitled-OJ",
+      "tags": [
+        "Go",
+        "OJ",
+        "PostgreSQL",
+        "Redis"
+      ]
+    },
+    {
+      "meta": "Browser Tools",
+      "title": "Tampermonkey Scripts",
+      "text": "面向洛谷等训练平台的刷题辅助脚本集合。",
+      "href": "https://github.com/thedyingkai/tampermonkey",
+      "tags": [
+        "JavaScript",
+        "Luogu",
+        "Userscript"
+      ]
+    }
+  ],
+  "directions": [
+    {
+      "meta": "01",
+      "title": "评测系统",
+      "text": "API、数据库、权限、提交记录、判题沙箱和任务队列。",
+      "tags": [
+        "Backend",
+        "Sandbox"
+      ]
+    },
+    {
+      "meta": "02",
+      "title": "竞赛工具",
+      "text": "围绕刷题平台做更贴近训练流程的增强。",
+      "tags": [
+        "Training",
+        "Automation"
+      ]
+    },
+    {
+      "meta": "03",
+      "title": "学习归档",
+      "text": "把 TDK 的课程复习、算法笔记、实验报告和题解组织成可检索体系。",
+      "tags": [
+        "Archive",
+        "Blog"
+      ]
+    }
+  ]
+}

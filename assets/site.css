@@ -234,6 +234,58 @@ a {
   text-shadow: 0 1px 1px rgba(0, 0, 0, .18)
 }
 
+.cloud-tool {
+  display: grid;
+  gap: 22px;
+  max-width: 860px
+}
+
+.cloud-form {
+  display: grid;
+  gap: 12px
+}
+
+.cloud-form label {
+  color: var(--cyan-deep);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase
+}
+
+.cloud-form__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center
+}
+
+.cloud-form input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .78);
+  color: var(--ink);
+  font: 600 15px/1.4 var(--mono);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-sm);
+  outline: none
+}
+
+.cloud-form input:focus {
+  border-color: var(--line-strong);
+  box-shadow: 0 0 0 4px rgba(102, 204, 255, .14)
+}
+
+.cloud-form p {
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 13px;
+  overflow-wrap: anywhere
+}
+
 .stat-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, .92), rgba(248, 252, 255, .72));
   border: 1px solid var(--line-2);
@@ -664,6 +716,10 @@ a.card:hover {
   .nav {
     margin-left: 0;
     flex-wrap: wrap
+  }
+
+  .cloud-form__row {
+    grid-template-columns: 1fr
   }
 
   .hero {

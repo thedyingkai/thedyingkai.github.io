@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="TDK 的云盘静态资源入口。">
+    <title>云盘 · TDK 的小窝</title>
+    <link rel="icon" href="/ico.png">
+    <link rel="stylesheet" href="/assets/site.css">
+    <link rel="stylesheet" href="/assets/fonts.css?v=1.1">
+</head>
+
+<body>
+    <div class="progress"></div>
+    <header class="topbar" data-site-header></header>
+    <main>
+        <section class="page-head wrap"><span class="eyebrow" data-config="cloud.eyebrow">Cloud Drive</span>
+            <h1 data-config="cloud.title">云盘</h1>
+            <p data-config="cloud.lead">访问 dl.thedyingkai.cn 上的静态资源。</p>
+            <p data-config-error></p>
+        </section>
+        <section class="band">
+            <div class="wrap">
+                <div class="cloud-tool">
+                    <form class="cloud-form" data-cloud-form>
+                        <label for="cloud-path">资源路径</label>
+                        <div class="cloud-form__row">
+                            <input id="cloud-path" name="path" type="text" autocomplete="off"
+                                placeholder="archive/file.zip">
+                            <button class="btn btn--primary" type="submit">打开</button>
+                        </div>
+                        <p data-cloud-target></p>
+                    </form>
+                    <div class="hero__actions" data-cloud-actions></div>
+                </div>
+            </div>
+        </section>
+        <section class="band band--2">
+            <div class="wrap">
+                <div class="section-head">
+                    <div><span class="eyebrow">Resources</span>
+                        <h2>资源入口</h2>
+                    </div>
+                </div>
+                <div class="grid grid--3" data-cloud-resources></div>
+            </div>
+        </section>
+        <section class="band">
+            <div class="wrap">
+                <div class="section-head">
+                    <div><span class="eyebrow">Notes</span>
+                        <h2>访问说明</h2>
+                    </div>
+                </div>
+                <div class="grid grid--2" data-cloud-notes></div>
+            </div>
+        </section>
+    </main>
+    <footer class="footer" data-site-footer></footer>
+    <script src="/assets/site.js"></script>
+    <script src="/assets/cloud.js?v=1.0"></script>
+</body>
+
+</html>

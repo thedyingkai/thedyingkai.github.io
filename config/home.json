@@ -1,0 +1,46 @@
+{
+  "eyebrow": "thedyingkai_ / TDK",
+  "title": "TDK 的小窝",
+  "lead": "这里存放 XCPC 训练、题解、工程项目和日常成长记录。喜欢洛天依和乐正绫，常用 ID 是 thedyingkai。",
+  "actions": [
+    {
+      "label": "阅读文章",
+      "href": "/blog/",
+      "primary": true
+    },
+    {
+      "label": "友链",
+      "href": "/friends/"
+    },
+    {
+      "label": "成长记录",
+      "href": "/about/"
+    },
+    {
+      "label": "查看项目",
+      "href": "/projects/"
+    },
+    {
+      "label": "访问云盘",
+      "href": "/cloud/"
+    }
+  ],
+  "stats": [
+    {
+      "label": "Posts",
+      "value": "auto"
+    },
+    {
+      "label": "Nickname",
+      "value": "TDK"
+    },
+    {
+      "label": "Focus",
+      "value": "XCPC"
+    },
+    {
+      "label": "Signal",
+      "value": "洛天依 / 乐正绫"
+    }
+  ]
+}

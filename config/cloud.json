@@ -1,0 +1,48 @@
+{
+  "eyebrow": "Cloud Drive",
+  "title": "云盘",
+  "lead": "访问 dl.thedyingkai.cn 上的静态资源。这里不代理、不缓存文件，只生成直达资源域名的链接。",
+  "baseUrl": "https://dl.thedyingkai.cn/",
+  "actions": [
+    {
+      "label": "打开云盘根目录",
+      "path": "/",
+      "primary": true
+    },
+    {
+      "label": "HTTP 备用入口",
+      "href": "http://dl.thedyingkai.cn/"
+    }
+  ],
+  "resources": [
+    {
+      "meta": "Root",
+      "title": "云盘根目录",
+      "text": "直接进入 dl.thedyingkai.cn，查看或下载公开资源。",
+      "path": "/",
+      "tags": [
+        "Static",
+        "Download"
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "meta": "Static",
+      "title": "纯静态访问",
+      "text": "GitHub Pages 只负责展示入口和拼接链接，资源文件仍由 dl.thedyingkai.cn 提供。",
+      "tags": [
+        "No backend",
+        "No proxy"
+      ]
+    },
+    {
+      "meta": "Path",
+      "title": "相对路径直达",
+      "text": "在输入框填入资源相对路径，例如 archive/file.zip，会打开对应的云盘地址。",
+      "tags": [
+        "URL builder"
+      ]
+    }
+  ]
+}

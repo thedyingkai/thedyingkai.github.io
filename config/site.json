@@ -1,0 +1,81 @@
+{
+  "title": "TDK 的小窝",
+  "description": "thedyingkai_ 的个人博客、项目和成长记录。",
+  "brand": "TDK 的小窝",
+  "brandSub": "thedyingkai_",
+  "copyright": "© 2026 TDK 的小窝",
+  "nav": [
+    {
+      "label": "首页",
+      "href": "/",
+      "key": "home"
+    },
+    {
+      "label": "文章",
+      "href": "/blog/",
+      "key": "blog"
+    },
+    {
+      "label": "项目",
+      "href": "/projects/",
+      "key": "projects"
+    },
+    {
+      "label": "云盘",
+      "href": "/cloud/",
+      "key": "cloud"
+    },
+    {
+      "label": "友链",
+      "href": "/friends/",
+      "key": "friends"
+    },
+    {
+      "label": "关于",
+      "href": "/about/",
+      "key": "about"
+    },
+    {
+      "label": "GitHub",
+      "href": "https://github.com/thedyingkai",
+      "external": true
+    }
+  ],
+  "footer": {
+    "name": "TDK 的小窝",
+    "note": "© {year} · thedyingkai_ · QQ 1474039695",
+    "links": [
+      {
+        "label": "Blog",
+        "href": "/blog/"
+      },
+      {
+        "label": "Cloud",
+        "href": "/cloud/"
+      },
+      {
+        "label": "About",
+        "href": "/about/"
+      },
+      {
+        "label": "Email",
+        "href": "mailto:1474039695@qq.com"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/thedyingkai",
+        "external": true
+      },
+      {
+        "label": "AtCoder",
+        "href": "https://atcoder.jp/users/thedyingkai_",
+        "external": true
+      },
+      {
+        "label": "Codeforces",
+        "href": "https://codeforces.com/profile/thedyingkai_",
+        "external": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "eyebrow": "Friends",
+  "title": "友链",
+  "lead": "这里放朋友们的站点，也欢迎用下面的信息交换友链。",
+  "links": [
+    {
+      "meta": "Friend",
+      "title": "ChaceWebsite",
+      "text": "朋友的个人博客。",
+      "href": "https://blog.chacewebsite.cn/",
+      "tags": [
+        "Blog"
+      ]
+    }
+  ],
+  "apply": [
+    {
+      "meta": "Info",
+      "title": "友链信息格式",
+      "text": "站点名称、站点链接、头像链接、简介、标签。我的站点名可以写 TDK 的小窝。",
+      "tags": [
+        "Name",
+        "URL",
+        "Avatar",
+        "Description"
+      ]
+    },
+    {
+      "meta": "Notice",
+      "title": "交换说明",
+      "text": "按上面的格式整理好信息后，通过 QQ 1474039695 或邮箱联系我。",
+      "tags": [
+        "Exchange",
+        "Contact"
+      ]
+    }
+  ]
+}
