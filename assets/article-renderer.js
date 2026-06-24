@@ -56,8 +56,8 @@ function fixEscapedLatexInMath(text) {
 function normalizeMathSegment(text) {
   return text
     .replace(/\\\(([^\n]*?)\\\)/g, (_, body) => `$${fixEscapedLatexInMath(body)}$`)
-    .replace(/\\\[([^\n]*?)\\\]((?:_\{[^}]+\}|_[A-Za-z0-9]+)?)/g, (_, body, suffix) => `$[${fixEscapedLatexInMath(body)}]${suffix || ''}$`)
-    .replace(/\$([A-Za-z][A-Za-z0-9_{}^\\]*)\\(?=\s|$|[，。,.；;、)])/g, (_, body) => `$${fixEscapedLatexInMath(body)}$`);
+    .replace(/\\\[([^\n]*?)\\\]((?:\\?_\{[^}]+\}|\\?_[A-Za-z0-9]+)?)/g, (_, body, suffix) => `$[${fixEscapedLatexInMath(body)}]${fixEscapedLatexInMath(suffix || '')}$`)
+    .replace(/\$([A-Za-z][A-Za-z0-9_{}^]*?)\\(?=\s|$|[，。,.；;、)])/g, (_, body) => `$${fixEscapedLatexInMath(body)}$`);
 }
 
 function normalizeMathOnly(markdown) {
