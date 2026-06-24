@@ -53,6 +53,13 @@ function fixEscapedLatexInMath(text) {
   return text.split('\\_').join('_').split('\\*').join('*');
 }
 
+function normalizeMathSegment(text) {
+  return text
+    .replace(/\\\(([^\n]*?)\\\)/g, (_, body) => `$${fixEscapedLatexInMath(body)}$`)
+    .replace(/\\\[([^\n]*?)\\\]((?:_\{[^}]+\}|_[A-Za-z0-9]+)?)/g, (_, body, suffix) => `$[${fixEscapedLatexInMath(body)}]${suffix || ''}$`)
+    .replace(/\$([A-Za-z][A-Za-z0-9_{}^\\]*)\\(?=\s|$|[，。,.；;、)])/g, (_, body) => `$${fixEscapedLatexInMath(body)}$`);
+}
+
 function normalizeMathOnly(markdown) {
   let out = '';
   let i = 0;
@@ -67,27 +74,34 @@ function normalizeMathOnly(markdown) {
       i = end + 3;
       continue;
     }
-    if (markdown.slice(i, i + 2) === '$$') {
-      const end = markdown.indexOf('$$', i + 2);
-      if (end < 0) {
-        out += markdown.slice(i);
-        break;
-      }
-      out += '$$' + fixEscapedLatexInMath(markdown.slice(i + 2, end)) + '$$';
-      i = end + 2;
-      continue;
-    }
-    if (markdown[i] === '$') {
-      const end = markdown.indexOf('$', i + 1);
-      if (end < 0) {
-        out += markdown[i++];
+    const nextFence = markdown.indexOf('```', i);
+    const end = nextFence < 0 ? markdown.length : nextFence;
+    let seg = normalizeMathSegment(markdown.slice(i, end));
+    let j = 0;
+    while (j < seg.length) {
+      if (seg.slice(j, j + 2) === '$$') {
+        const k = seg.indexOf('$$', j + 2);
+        if (k < 0) {
+          out += seg.slice(j);
+          break;
+        }
+        out += '$$' + fixEscapedLatexInMath(seg.slice(j + 2, k)) + '$$';
+        j = k + 2;
         continue;
       }
-      out += '$' + fixEscapedLatexInMath(markdown.slice(i + 1, end)) + '$';
-      i = end + 1;
-      continue;
+      if (seg[j] === '$') {
+        const k = seg.indexOf('$', j + 1);
+        if (k < 0) {
+          out += seg[j++];
+          continue;
+        }
+        out += '$' + fixEscapedLatexInMath(seg.slice(j + 1, k)) + '$';
+        j = k + 1;
+        continue;
+      }
+      out += seg[j++];
     }
-    out += markdown[i++];
+    i = end;
   }
   return out;
 }
