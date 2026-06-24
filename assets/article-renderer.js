@@ -55,8 +55,7 @@ function collectFenceLanguages(markdown) {
   let match;
   while ((match = re.exec(markdown))) {
     const lang = (match[1] || '').trim().toLowerCase();
-    if (lang === 'c++' || lang === 'c') langs.push('cpp');
-    else langs.push(lang || 'cpp');
+    langs.push(lang || 'c++');
   }
   return langs;
 }
@@ -84,10 +83,8 @@ function element(tag, className, text) {
 
 function markCodeBlocks(root, languages) {
   root.querySelectorAll('pre code').forEach((code, index) => {
-    const lang = languages[index] || 'cpp';
-    const normalized = lang === 'c++' || lang === 'c' ? 'cpp' : lang;
-    code.dataset.rawCode = code.textContent;
-    code.classList.add(`language-${normalized}`);
+    const lang = languages[index] || 'c++';
+    code.className = `language-${lang}`;
   });
 }
 
@@ -104,6 +101,7 @@ async function renderArticle() {
   try {
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
     await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
+    await waitFor(() => window.hljs && typeof window.hljs.highlightAll === 'function', 'highlight.js');
 
     const response = await fetch(RAW_POST_BASE + encodeURIComponent(fileName), { cache: 'no-store' });
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
@@ -128,8 +126,9 @@ async function renderArticle() {
     body.innerHTML = window.texme.render(postBody);
 
     root.replaceChildren(back, header, body);
-    await window.MathJax.typesetPromise([body]);
     markCodeBlocks(body, codeLanguages);
+    await window.MathJax.typesetPromise([body]);
+    window.hljs.highlightAll();
   } catch (error) {
     const box = element('article', 'render-body');
     box.append(element('h1', '', '文章加载失败'));
