@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="description" content="文章归档。">
-    <title>文章 · thedyingkai</title>
+    <meta name="description" content="TDK 的小窝文章归档。">
+    <title>文章 · TDK 的小窝</title>
     <link rel="icon" href="/ico.png">
     <link rel="stylesheet" href="/assets/site.css">
     <link rel="stylesheet" href="/assets/fonts.css?v=1.1">
@@ -13,25 +13,17 @@
 
 <body>
     <div class="progress"></div>
-    <header class="topbar">
-        <div class="wrap topbar__inner"><a class="brand" href="/"><span class="brand__mark">thedyingkai<span
-                        class="brand__dot">.</span></span><span class="brand__sub">Notebook</span></a>
-            <nav class="nav"><a href="/">首页</a><a class="is-active" href="/blog/">文章</a><a href="/projects/">项目</a><a
-                    href="/friends/">友链</a><a href="/about/">关于</a></nav>
-        </div>
-    </header>
+    <header class="topbar" data-site-header></header>
     <main>
         <section class="page-head wrap"><span class="eyebrow">Archive</span>
             <h1>文章</h1>
+            <p>题解、算法笔记、模板整理和阶段复盘。</p>
         </section>
         <section class="article-list wrap">
             <div class="grid grid--3" data-post-list></div>
         </section>
     </main>
-    <footer class="footer">
-        <div class="wrap footer__inner"><span>© 2026 thedyingkai.</span><span><span data-post-count>...</span> posts /
-                <a href="/friends/">Friends</a></span></div>
-    </footer>
+    <footer class="footer" data-site-footer></footer>
     <script src="/assets/site.js"></script>
     <script src="/assets/post-list.js?v=1.1"></script>
 </body>
