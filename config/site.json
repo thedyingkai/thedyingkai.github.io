@@ -43,6 +43,10 @@
             "href": "/blog/"
           },
           {
+            "label": "RSS",
+            "href": "/rss.xml"
+          },
+          {
             "label": "项目",
             "href": "/projects/"
           },

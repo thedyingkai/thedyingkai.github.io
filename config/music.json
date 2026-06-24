@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "playlistUrl": "https://music.163.com/playlist?id=6713209040&uct2=U2FsdGVkX1/YnnJxZ9lTu751g42+0kJi0gzwFY7G6tQ=",
+  "playlistId": "6713209040",
+  "server": "netease",
+  "type": "playlist",
+  "fixed": true,
+  "mini": true,
+  "autoplay": false,
+  "order": "random",
+  "loop": "all",
+  "preload": "none",
+  "volume": 0.45,
+  "theme": "#66ccff",
+  "listFolded": true,
+  "listMaxHeight": "320px"
+}

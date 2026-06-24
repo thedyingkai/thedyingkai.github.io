@@ -1,23 +1,23 @@
 {
   "basePath": "/assets/images/anime/",
   "slots": {
-    "homeHero": {
-      "src": "",
-      "alt": "首页视觉图",
-      "title": "Stage",
-      "caption": "蓝色与红色的舞台光"
-    },
     "aboutProfile": {
-      "src": "",
-      "alt": "关于页视觉图",
+      "src": "0.jpg",
+      "alt": "洛天依与乐正绫同人图",
       "title": "Profile",
-      "caption": "个人气质图位"
+      "caption": "华风夏韵，洛水天依。"
     },
-    "cloudMascot": {
-      "src": "",
-      "alt": "云盘页视觉图",
-      "title": "Cloud",
-      "caption": "资源入口看板图位"
+    "homeHero": {
+      "images": [
+        {
+          "src": "1.jpg",
+          "alt": "蓝色舞台上的洛天依视觉图"
+        },
+        {
+          "src": "2.jpg",
+          "alt": "浅蓝色洛天依线稿视觉图"
+        }
+      ]
     }
   }
 }

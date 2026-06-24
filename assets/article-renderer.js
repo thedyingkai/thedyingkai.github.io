@@ -1,4 +1,5 @@
 const POST_BASE = '/posts/';
+const IMAGE_CONFIG = '/config/images.json';
 
 const LANGUAGE_ALIASES = {
   'c++': 'cpp',
@@ -44,8 +45,16 @@ function el(tag, cls, text) {
   return node;
 }
 
+function parseMetaValue(value) {
+  const trimmed = value.trim();
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    return trimmed.slice(1, -1).split(',').map(x => x.trim()).filter(Boolean);
+  }
+  return trimmed.replace(/^["']|["']$/g, '');
+}
+
 function parsePost(file, raw) {
-  const post = { title: file.replace(/\.md$/i, ''), description: '', date: 'Post', tags: ['Note'], body: raw };
+  const post = { title: file.replace(/\.md$/i, ''), description: '', date: 'Post', tags: ['Note'], cover: '', coverAlt: '', body: raw };
   const normalized = raw.replace(/\r\n?/g, '\n');
   if (normalized.startsWith('---\n')) {
     const end = normalized.indexOf('\n---\n', 4);
@@ -54,19 +63,33 @@ function parsePost(file, raw) {
         const p = line.indexOf(':');
         if (p < 0) continue;
         const k = line.slice(0, p).trim();
-        const v = line.slice(p + 1).trim();
+        const v = parseMetaValue(line.slice(p + 1));
         if (k === 'title') post.title = v;
         if (k === 'description') post.description = v;
         if (k === 'date') post.date = v;
-        if (k === 'tags' && v.startsWith('[') && v.endsWith(']')) {
-          post.tags = v.slice(1, -1).split(',').map(x => x.trim()).filter(Boolean);
-        }
+        if (k === 'tags' && Array.isArray(v)) post.tags = v;
+        if (k === 'cover' || k === 'image') post.cover = v;
+        if (k === 'coverAlt' || k === 'cover_alt' || k === 'imageAlt') post.coverAlt = v;
       }
       post.body = normalized.slice(end + 5);
     }
   }
   if (!post.description) post.description = post.title;
   return post;
+}
+
+function resolveImageSrc(src, basePath) {
+  const raw = String(src || '').trim();
+  if (!raw) return '';
+  if (/^(?:https?:)?\/\//.test(raw) || raw.startsWith('/')) return raw;
+  return `${basePath || ''}${raw}`;
+}
+
+async function loadCoverBasePath() {
+  const res = await fetch(`${IMAGE_CONFIG}?t=${Date.now()}`);
+  if (!res.ok) throw new Error(`config/images.json ${res.status}`);
+  const cfg = await res.json();
+  return cfg.basePath || '';
 }
 
 function slugifyHeading(text, index) {
@@ -107,7 +130,7 @@ function buildToc(items) {
     items.forEach(item => {
       const link = el('a', `render-toc__link render-toc__link--${item.level}`);
       link.href = `#${item.id}`;
-      link.innerHTML = item.html;
+      link.textContent = truncateTocText(item.text);
       link.setAttribute('aria-label', item.text);
       link.title = item.text;
       link.dataset.target = item.id;
@@ -117,6 +140,14 @@ function buildToc(items) {
 
   aside.append(nav);
   return aside;
+}
+
+function truncateTocText(text, max = 22) {
+  const chars = [...String(text || '').replace(/\s+/g, ' ').trim()];
+  if (chars.length <= max) return chars.join('');
+  const head = Math.ceil(max * .68);
+  const tail = Math.max(4, max - head - 2);
+  return `${chars.slice(0, head).join('')}..${chars.slice(-tail).join('')}`;
 }
 
 function bindTocState(toc, items) {
@@ -341,6 +372,8 @@ async function renderArticle() {
     const res = await fetch(POST_BASE + encodeURIComponent(file), { cache: 'no-store' });
     if (!res.ok) throw new Error(`Markdown ${res.status}`);
     const post = parsePost(file, await res.text());
+    const coverBasePath = post.cover ? await loadCoverBasePath().catch(() => '/assets/images/anime/') : '';
+    const coverSrc = resolveImageSrc(post.cover, coverBasePath);
     document.title = `${post.title} · TDK 的小窝`;
 
     const back = el('a', 'back', '← 返回文章');
@@ -353,6 +386,15 @@ async function renderArticle() {
     const meta = el('div', 'render-meta');
     for (const tag of post.tags) meta.append(el('span', '', `#${tag}`));
     header.append(meta);
+    if (coverSrc) {
+      const cover = el('figure', 'render-cover');
+      const img = document.createElement('img');
+      img.src = coverSrc;
+      img.alt = post.coverAlt || post.title;
+      img.loading = 'eager';
+      cover.append(img);
+      header.append(cover);
+    }
 
     const body = el('article', 'render-body texme-body');
     body.innerHTML = window.texme.render(post.body);

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="TDK 的小窝，thedyingkai_ 的个人博客、算法笔记、项目归档和成长记录。">
     <title>TDK 的小窝</title>
-    <link rel="icon" href="/ico.png">
+    <link rel="icon" href="/assets/images/site/ico.png">
+    <link rel="alternate" type="application/rss+xml" title="TDK 的小窝 RSS" href="/rss.xml">
     <link rel="stylesheet" href="/assets/site.css">
     <link rel="stylesheet" href="/assets/fonts.css?v=1.1">
 </head>
@@ -17,12 +18,15 @@
     <main>
         <section class="hero">
             <div class="wrap hero__grid">
-                <div><span class="eyebrow" data-config="home.eyebrow">thedyingkai_ / TDK</span>
+                <div class="hero__copy">
+                    <div class="hero__image-stack" data-image-stack="homeHero" aria-hidden="true"></div>
+                    <div class="hero__content"><span class="eyebrow" data-config="home.eyebrow">thedyingkai_ / TDK</span>
                     <h1 data-config="home.title">TDK 的小窝</h1>
                     <p class="hero__lead" data-config="home.lead">这里存放 XCPC 训练、题解、工程项目和日常成长记录。喜欢洛天依和乐正绫，常用 ID 是 thedyingkai。</p>
                     <div class="hero__actions" data-home-actions><a class="btn btn--primary" href="/blog/">阅读文章</a><a class="btn"
                             href="/friends/">友链</a><a class="btn" href="/about/">成长记录</a><a class="btn"
                             href="/projects/">查看项目</a><a class="btn" href="/cloud/">访问云盘</a></div>
+                    </div>
                 </div>
                 <aside class="stat-card">
                     <p class="stat-card__title">Archive</p>
@@ -32,7 +36,6 @@
                         <div class="stat"><span>Focus</span><b>XCPC</b></div>
                         <div class="stat"><span>Signal</span><b>洛天依 / 乐正绫</b></div>
                     </div>
-                    <div class="anime-slot anime-slot--home" data-image-slot="homeHero"></div>
                 </aside>
             </div>
         </section>
@@ -43,15 +46,15 @@
                         <h2>最近记录</h2>
                     </div>
                 </div>
-                <div class="grid grid--3" data-post-list></div>
+                <div class="grid grid--3" data-post-list="home"></div>
             </div>
         </section>
     </main>
     <footer class="footer" data-site-footer></footer>
-    <script src="/assets/site.js"></script>
+    <script src="/assets/site.js?v=1.4"></script>
     <script type="module" src="/assets/runtime-config.js?v=1.2"></script>
-    <script src="/assets/images.js?v=1.0"></script>
-    <script src="/assets/post-list.js?v=1.1"></script>
+    <script src="/assets/images.js?v=1.2"></script>
+    <script src="/assets/post-list.js?v=1.3"></script>
 </body>
 
 </html>

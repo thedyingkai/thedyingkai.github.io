@@ -163,11 +163,85 @@
     footer.replaceChildren(inner);
   }
 
+  function loadStyleOnce(href) {
+    if ([...document.styleSheets].some(sheet => sheet.href === href)) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.onload = resolve;
+      link.onerror = reject;
+      document.head.append(link);
+    });
+  }
+
+  function loadScriptOnce(src) {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.defer = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.append(script);
+    });
+  }
+
+  function neteasePlaylistId(config) {
+    const value = String(config?.playlistId || config?.playlistUrl || config?.id || '').trim();
+    if (/^\d+$/.test(value)) return value;
+    return value.match(/[?&]id=(\d+)/)?.[1] || '';
+  }
+
+  async function loadMusicConfig() {
+    const res = await fetch(`/config/music.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error(`config/music.json ${res.status}`);
+    return res.json();
+  }
+
+  function attr(node, name, value) {
+    if (value == null || value === '') return;
+    node.setAttribute(name, String(value));
+  }
+
+  async function initMusicPlayer() {
+    try {
+      const config = await loadMusicConfig();
+      if (config.enabled === false) return;
+      const id = neteasePlaylistId(config);
+      if (!id) return;
+
+      await loadStyleOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css');
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js');
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js');
+
+      const player = document.createElement('meting-js');
+      attr(player, 'server', config.server || 'netease');
+      attr(player, 'type', config.type || 'playlist');
+      attr(player, 'id', id);
+      attr(player, 'fixed', config.fixed ?? true);
+      attr(player, 'mini', config.mini ?? true);
+      attr(player, 'autoplay', config.autoplay ?? false);
+      attr(player, 'order', config.order || 'random');
+      attr(player, 'loop', config.loop || 'all');
+      attr(player, 'preload', config.preload || 'none');
+      attr(player, 'volume', config.volume ?? 0.45);
+      attr(player, 'theme', config.theme || '#66ccff');
+      attr(player, 'list-folded', config.listFolded ?? true);
+      attr(player, 'list-max-height', config.listMaxHeight || '320px');
+      document.body.append(player);
+    } catch {
+      // Music is optional; the site should stay quiet if the config or CDN is unavailable.
+    }
+  }
+
   loadSiteConfig().then(site => {
     renderHeader(site);
     renderFooter(site);
     setProgress();
   });
+  initMusicPlayer();
   setProgress();
   addEventListener('scroll', setProgress, { passive: true });
 })();

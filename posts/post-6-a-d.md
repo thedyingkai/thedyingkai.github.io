@@ -3,6 +3,8 @@ title: Codeforces-1034-Div.3 题解
 description: Codeforces Round 1034 Div.3 A-G 题解。
 date: 2025.07.03
 tags: [Codeforces, Div3, 题解]
+cover: 1.jpg
+coverAlt: 蓝色舞台上的洛天依视觉图
 ---
 
 # Codeforces-1034-Div.3 题解
