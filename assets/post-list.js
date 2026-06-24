@@ -71,12 +71,12 @@ async function loadPosts() {
 }
 
 async function renderPostLists() {
-  const countTargets = [...document.querySelectorAll('[data-post-count]')];
-  const listTargets = [...document.querySelectorAll('[data-post-list]')];
-  if (!listTargets.length && !countTargets.length) return;
+  if (!document.querySelector('[data-post-list], [data-post-count]')) return;
 
   try {
     const posts = await loadPosts();
+    const countTargets = [...document.querySelectorAll('[data-post-count]')];
+    const listTargets = [...document.querySelectorAll('[data-post-list]')];
     countTargets.forEach(target => target.textContent = posts.length);
     listTargets.forEach(target => {
       target.innerHTML = posts.map(postCard).join('') || '<div class="card"><h3>暂无文章</h3><p>之后再慢慢补。</p></div>';
