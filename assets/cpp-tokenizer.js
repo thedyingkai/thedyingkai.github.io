@@ -11,6 +11,24 @@
   const id = c => /[A-Za-z0-9_]/.test(c || '');
   const spaces = (s, i) => { while (i < s.length && /\s/.test(s[i])) i++; return i; };
 
+  function ensureStyle() {
+    if (document.getElementById('cpp-tokenizer-style')) return;
+    const style = document.createElement('style');
+    style.id = 'cpp-tokenizer-style';
+    style.textContent = `
+      .texme-body pre code.line-numbered-code{display:block!important;padding:0!important;white-space:normal!important;line-height:1.55!important;tab-size:4!important}
+      .texme-body .code-line{display:grid!important;grid-template-columns:3.8em minmax(0,max-content)!important;min-width:max-content!important;line-height:1.55!important;min-height:1.55em!important}
+      .texme-body .code-line:hover{background:rgba(102,204,255,.055)!important}
+      .texme-body .code-ln{display:block!important;padding:0 1em 0 0!important;text-align:right!important;color:#66707d!important;user-select:none!important;border-right:1px solid rgba(102,204,255,.16)!important;background:linear-gradient(90deg,rgba(43,45,48,.38),rgba(43,45,48,.14))!important;font-variant-numeric:tabular-nums!important}
+      .texme-body .code-src{display:block!important;padding:0 22px!important;white-space:pre!important}
+      .texme-body pre.has-copy{padding-top:48px!important}
+      .texme-body .copy-code-btn{position:absolute;top:8px;right:10px;z-index:3;height:24px;padding:0 10px;border:1px solid rgba(102,204,255,.26);border-radius:999px;background:rgba(21,28,41,.72);color:#b6c7dc;font:700 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px)}
+      .texme-body .copy-code-btn:hover{border-color:rgba(102,204,255,.55);color:#66ccff;background:rgba(21,28,41,.92)}
+      .texme-body .copy-code-btn.is-copied{color:#6aab73;border-color:rgba(106,171,115,.55)}
+    `;
+    document.head.append(style);
+  }
+
   function readString(s, i, q) {
     let j = i + 1;
     while (j < s.length) {
@@ -65,8 +83,7 @@
       const m = /^(\s*)(#\s*[A-Za-z_][A-Za-z0-9_]*)([\s\S]*)$/.exec(line);
       if (m) {
         out += esc(m[1]) + span('jt-directive', m[2]);
-        let rest = m[3];
-        rest = rest.replace(/(<[^>]+>)/g, x => span('jt-include', x));
+        let rest = esc(m[3]).replace(/(&lt;[^&]+&gt;)/g, x => `<span class="jt-include">${x}</span>`);
         return { html: out + rest, block: false };
       }
     }
@@ -79,7 +96,6 @@
         out += span('jt-comment', line.slice(i));
         break;
       }
-
       if (two === '/*') {
         const end = line.indexOf('*/', i + 2);
         if (end < 0) {
@@ -91,21 +107,18 @@
         i = end + 2;
         continue;
       }
-
       if (ch === '"' || ch === "'") {
         const j = readString(line, i, ch);
         out += span(ch === '"' ? 'jt-string' : 'jt-char', line.slice(i, j));
         i = j;
         continue;
       }
-
       if (/\d/.test(ch) || (ch === '.' && /\d/.test(line[i + 1] || ''))) {
         const j = readNumber(line, i);
         out += span('jt-number', line.slice(i, j));
         i = j;
         continue;
       }
-
       if (id0(ch)) {
         let j = i + 1;
         while (j < line.length && id(line[j])) j++;
@@ -114,24 +127,20 @@
         i = j;
         continue;
       }
-
       if ('+-*/%=!<>&|^~?:.'.includes(ch) || OPS.some(op => line.startsWith(op, i))) {
         const j = readOp(line, i);
         out += span('jt-operator', line.slice(i, j));
         i = j;
         continue;
       }
-
       if ('(){}[];,'.includes(ch)) {
         out += span('jt-punctuation', ch);
         i++;
         continue;
       }
-
       out += esc(ch);
       i++;
     }
-
     return { html: out, block: state.block };
   }
 
@@ -142,7 +151,7 @@
       const res = highlightLine(line, state);
       state.block = res.block;
       return `<span class="code-line"><span class="code-ln">${idx + 1}</span><span class="code-src">${res.html || '&#8203;'}</span></span>`;
-    }).join('\n');
+    }).join('');
   }
 
   function isCppBlock(code) {
@@ -151,11 +160,41 @@
     return /language-(cpp|c\+\+|c)\b/.test(cls) || /#\s*include|using\s+namespace\s+std|bits\/stdc\+\+/.test(src);
   }
 
+  function addCopyButton(pre, raw) {
+    if (pre.querySelector('.copy-code-btn')) return;
+    pre.classList.add('has-copy');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-code-btn';
+    btn.textContent = 'COPY';
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(raw);
+        btn.textContent = 'COPIED';
+        btn.classList.add('is-copied');
+        setTimeout(() => {
+          btn.textContent = 'COPY';
+          btn.classList.remove('is-copied');
+        }, 1200);
+      } catch {
+        btn.textContent = 'FAIL';
+        setTimeout(() => btn.textContent = 'COPY', 1200);
+      }
+    });
+    pre.append(btn);
+  }
+
   function enhance(root = document) {
+    ensureStyle();
     root.querySelectorAll('pre code').forEach(code => {
+      const pre = code.closest('pre');
+      if (!pre) return;
+      const raw = code.dataset.rawCode || code.textContent;
+      code.dataset.rawCode = raw;
+      addCopyButton(pre, raw);
       if (code.dataset.cppEnhanced === '1') return;
       if (!isCppBlock(code)) return;
-      code.innerHTML = highlightCpp(code.textContent);
+      code.innerHTML = highlightCpp(raw);
       code.dataset.cppEnhanced = '1';
       code.classList.add('jetbrains-code', 'line-numbered-code');
     });
