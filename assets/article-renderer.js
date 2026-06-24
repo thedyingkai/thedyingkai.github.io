@@ -65,7 +65,6 @@ function lintMarkdownMath(markdown) {
 
     if (markdown.startsWith('\\[', i)) errors.push([line, '禁止使用 \\[...\\]，请改成 $...$ 或 $$...$$。']);
     if (markdown.startsWith('\\(', i)) errors.push([line, '禁止使用 \\(...\\)，请改成 $...$。']);
-    if (markdown.startsWith('\\_', i)) errors.push([line, '禁止使用 \\_ 转义下标，请在数学公式内写 _。']);
     if (markdown[i] === '$') {
       const end = markdown.indexOf('$', i + 1);
       if (end < 0) errors.push([line, '发现未闭合的 $...$ 数学公式。']);
