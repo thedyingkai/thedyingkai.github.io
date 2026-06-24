@@ -142,7 +142,7 @@
       const res = highlightLine(line, state);
       state.block = res.block;
       return `<span class="code-line"><span class="code-ln">${idx + 1}</span><span class="code-src">${res.html || '&#8203;'}</span></span>`;
-    }).join('');
+    }).join('\n');
   }
 
   function isCppBlock(code) {
