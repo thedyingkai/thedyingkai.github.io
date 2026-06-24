@@ -166,6 +166,27 @@
     background: linear-gradient(90deg, rgba(102, 204, 255, .18), rgba(214, 165, 51, .08), transparent)
 }
 
+.render-toc-tip {
+    position: fixed;
+    z-index: 300;
+    width: min(520px, calc(100vw - 24px));
+    padding: 12px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .96);
+    color: var(--ink);
+    box-shadow: 0 18px 46px -24px rgba(33, 150, 212, .62), 0 8px 18px -16px rgba(122, 77, 16, .34);
+    font-size: 14px;
+    line-height: 1.65;
+    pointer-events: none
+}
+
+.render-toc-tip mjx-container {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden
+}
+
 .render-toc__link--3 {
     padding-left: 24px
 }

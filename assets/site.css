@@ -822,28 +822,70 @@ a.card--with-image:hover .post-card__thumb img {
   font-size: 17px
 }
 
+.page-head--split {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px
+}
+
+.page-head__action {
+  flex-shrink: 0;
+  margin-bottom: 12px
+}
+
 .article-list {
+  max-width: 1440px;
   padding-bottom: 80px
+}
+
+.article-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);
+  gap: 28px;
+  align-items: start
+}
+
+.post-main {
+  min-width: 0
+}
+
+.post-masonry {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start
+}
+
+.post-masonry__column {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0
 }
 
 .post-tools {
   display: grid;
   gap: 14px;
-  margin: 0 0 24px
+  position: sticky;
+  top: 92px;
+  padding: 18px;
+  border: 1px solid rgba(102, 204, 255, .24);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .72), rgba(255, 255, 255, .34));
+  box-shadow: 0 22px 56px -42px rgba(33, 150, 212, .52)
 }
 
 .post-tools__bar {
-  display: flex;
-  align-items: center;
+  display: grid;
   gap: 12px;
-  flex-wrap: wrap
+  align-items: start
 }
 
 .post-search {
   display: grid;
   gap: 6px;
-  min-width: min(100%, 340px);
-  flex: 1
+  min-width: 0
 }
 
 .post-search span,
@@ -874,7 +916,6 @@ a.card--with-image:hover .post-card__thumb img {
 }
 
 .post-tools__count {
-  margin-left: auto;
   color: var(--ink-3)
 }
 
@@ -1022,6 +1063,21 @@ a.card--with-image:hover .post-card__thumb img {
     display: block
   }
 
+  .page-head--split,
+  .article-layout {
+    grid-template-columns: 1fr;
+    display: grid
+  }
+
+  .post-tools {
+    position: static;
+    order: -1
+  }
+
+  .post-masonry {
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+  }
+
   .nav {
     gap: 0
   }
@@ -1054,8 +1110,7 @@ a.card--with-image:hover .post-card__thumb img {
     align-items: stretch
   }
 
-  .post-search,
-  .post-tools__bar .btn {
+  .post-search {
     width: 100%
   }
 
@@ -1066,6 +1121,10 @@ a.card--with-image:hover .post-card__thumb img {
 
   .hero {
     padding-top: 54px
+  }
+
+  .post-masonry {
+    grid-template-columns: 1fr
   }
 
   .hero__actions {

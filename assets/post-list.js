@@ -88,6 +88,12 @@ function postCard(post, options = {}) {
   return `<a class="card card--post${cover ? ' card--with-image' : ''}" href="/blog/post/?file=${encodeURIComponent(post.fileName)}">${thumb}<div class="card__meta"><span>${escapeHtml(post.date)}</span></div><h3>${escapeHtml(post.title)}</h3><p>${escapeHtml(post.description)}</p><div class="tags">${tags}</div></a>`;
 }
 
+function cardElement(post, options) {
+  const template = document.createElement('template');
+  template.innerHTML = postCard(post, options).trim();
+  return template.content.firstElementChild;
+}
+
 async function loadLocalPostFiles() {
   const response = await fetch(`${POST_MANIFEST}?t=${Date.now()}`, { cache: 'no-store' });
   if (!response.ok) throw new Error(`posts.json ${response.status}`);
@@ -158,6 +164,17 @@ function setupPostTools(posts, target, options) {
     });
   }
 
+  let lastFiltered = posts;
+  let resizeTimer = 0;
+
+  const renderCards = filtered => {
+    if (target.dataset.postLayout === 'masonry') {
+      renderMasonry(target, filtered, options);
+      return;
+    }
+    target.innerHTML = filtered.map(post => postCard(post, options)).join('') || empty;
+  };
+
   const render = () => {
     const query = normalizeText(input?.value || '');
     const filtered = posts.filter(post => {
@@ -165,13 +182,53 @@ function setupPostTools(posts, target, options) {
       const matchTags = !selectedTags.size || [...selectedTags].every(tag => (post.tags || []).includes(tag));
       return matchQuery && matchTags;
     });
-    target.innerHTML = filtered.map(post => postCard(post, options)).join('') || empty;
+    lastFiltered = filtered;
+    renderCards(filtered);
     if (count) count.textContent = `${filtered.length} / ${posts.length} 篇`;
   };
 
   input?.addEventListener('input', render);
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => renderCards(lastFiltered), 120);
+  }, { passive: true });
   render();
   return true;
+}
+
+function masonryColumnCount(target) {
+  const width = target.clientWidth || window.innerWidth;
+  if (width < 620) return 1;
+  return 3;
+}
+
+function shortestColumnIndex(columns) {
+  return columns
+    .map((column, index) => ({ index, height: column.getBoundingClientRect().height }))
+    .sort((a, b) => a.height - b.height || a.index - b.index)[0].index;
+}
+
+function renderMasonry(target, posts, options) {
+  if (!posts.length) {
+    target.className = 'post-masonry';
+    target.innerHTML = '<div class="card"><h3>没有匹配文章</h3><p>换个关键词或标签试试。</p></div>';
+    return;
+  }
+
+  const count = masonryColumnCount(target);
+  target.className = 'post-masonry';
+  target.style.gridTemplateColumns = `repeat(${count}, minmax(0, 1fr))`;
+  target.replaceChildren(...Array.from({ length: count }, () => {
+    const column = document.createElement('div');
+    column.className = 'post-masonry__column';
+    return column;
+  }));
+
+  const columns = [...target.children];
+  posts.forEach(post => {
+    const index = shortestColumnIndex(columns);
+    columns[index].append(cardElement(post, options));
+  });
 }
 
 async function renderPostLists() {

@@ -130,10 +130,10 @@ function buildToc(items) {
     items.forEach(item => {
       const link = el('a', `render-toc__link render-toc__link--${item.level}`);
       link.href = `#${item.id}`;
-      link.textContent = truncateTocText(item.text);
+      link.textContent = tocLabel(item.text);
       link.setAttribute('aria-label', item.text);
-      link.title = item.text;
       link.dataset.target = item.id;
+      link._tocHtml = item.html;
       nav.append(link);
     });
   }
@@ -142,12 +142,73 @@ function buildToc(items) {
   return aside;
 }
 
-function truncateTocText(text, max = 22) {
-  const chars = [...String(text || '').replace(/\s+/g, ' ').trim()];
+function latexPlainText(text) {
+  return String(text || '')
+    .replace(/\$/g, '')
+    .replace(/\\mathrm\{([^}]+)\}/g, '$1')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2')
+    .replace(/\\sum/g, '∑')
+    .replace(/\\mu/g, 'μ')
+    .replace(/\\varphi|\\phi/g, 'φ')
+    .replace(/\\varepsilon|\\epsilon/g, 'ε')
+    .replace(/\\iff/g, '↔')
+    .replace(/\\cdot/g, '·')
+    .replace(/\\left|\\right/g, '')
+    .replace(/[{}]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function truncateTocText(text, max = 30) {
+  const chars = [...latexPlainText(text)];
   if (chars.length <= max) return chars.join('');
   const head = Math.ceil(max * .68);
   const tail = Math.max(4, max - head - 2);
   return `${chars.slice(0, head).join('')}..${chars.slice(-tail).join('')}`;
+}
+
+function tocLabel(text) {
+  return truncateTocText(text);
+}
+
+function bindTocTooltips(toc) {
+  const links = [...toc.querySelectorAll('[data-target]')].filter(link => link._tocHtml);
+  if (!links.length) return;
+
+  const tip = el('div', 'render-toc-tip');
+  tip.hidden = true;
+  document.body.append(tip);
+
+  const place = link => {
+    const rect = link.getBoundingClientRect();
+    const gap = 12;
+    let left = rect.right + gap;
+    let top = rect.top - 8;
+    if (left + tip.offsetWidth > window.innerWidth - gap) left = Math.max(gap, rect.left - tip.offsetWidth - gap);
+    if (top + tip.offsetHeight > window.innerHeight - gap) top = window.innerHeight - tip.offsetHeight - gap;
+    tip.style.left = `${Math.max(gap, left)}px`;
+    tip.style.top = `${Math.max(gap, top)}px`;
+  };
+
+  const show = async link => {
+    tip.hidden = false;
+    tip.innerHTML = link._tocHtml;
+    if (window.MathJax?.typesetPromise) await window.MathJax.typesetPromise([tip]).catch(() => {});
+    place(link);
+  };
+
+  const hide = () => {
+    tip.hidden = true;
+    tip.replaceChildren();
+  };
+
+  links.forEach(link => {
+    link.addEventListener('mouseenter', () => show(link));
+    link.addEventListener('focus', () => show(link));
+    link.addEventListener('mouseleave', hide);
+    link.addEventListener('blur', hide);
+  });
+  addEventListener('scroll', hide, { passive: true });
 }
 
 function bindTocState(toc, items) {
@@ -405,9 +466,10 @@ async function renderArticle() {
     layout.append(body, toc);
     root.replaceChildren(back, header, layout);
 
-    await window.MathJax.typesetPromise([body, toc]);
+    await window.MathJax.typesetPromise([body]);
     enhanceCodeBlocks(body);
     bindTocState(toc, headings);
+    bindTocTooltips(toc);
   } catch (e) {
     const box = el('article', 'render-body');
     box.append(el('h1', '', 'Load failed'));

@@ -205,12 +205,85 @@
     node.setAttribute(name, String(value));
   }
 
+  function musicStateKey(id) {
+    return `tdk-music:${id}`;
+  }
+
+  function readMusicState(id) {
+    try {
+      const state = JSON.parse(sessionStorage.getItem(musicStateKey(id)) || 'null');
+      return state && state.id === id ? state : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveMusicState(id, ap) {
+    if (!ap?.audio) return;
+    const state = {
+      id,
+      index: Number(ap.list?.index || 0),
+      currentTime: Number(ap.audio.currentTime || 0),
+      paused: Boolean(ap.audio.paused),
+      volume: Number(ap.audio.volume || 0.45),
+      savedAt: Date.now()
+    };
+    try {
+      sessionStorage.setItem(musicStateKey(id), JSON.stringify(state));
+    } catch { }
+  }
+
+  function waitForAPlayer(player) {
+    const start = Date.now();
+    return new Promise((resolve, reject) => {
+      const tick = () => {
+        const ap = player.aplayer;
+        if (ap?.audio && Array.isArray(ap.list?.audios) && ap.list.audios.length) return resolve(ap);
+        if (Date.now() - start > 15000) return reject(new Error('APlayer not ready'));
+        setTimeout(tick, 80);
+      };
+      tick();
+    });
+  }
+
+  function bindMusicState(id, ap, config, savedState) {
+    const desiredOrder = config.order || 'random';
+    const save = () => saveMusicState(id, ap);
+
+    if (Number.isFinite(savedState?.volume)) ap.audio.volume = savedState.volume;
+    if (Number.isFinite(savedState?.index)) ap.list.switch(Math.max(0, Math.min(savedState.index, ap.list.audios.length - 1)));
+    else if (desiredOrder === 'random') ap.list.switch(Math.floor(Math.random() * ap.list.audios.length));
+
+    if (Number.isFinite(savedState?.currentTime) && savedState.currentTime > 0) {
+      setTimeout(() => ap.seek(savedState.currentTime), 250);
+    }
+    ap.options.order = desiredOrder;
+
+    if (savedState && !savedState.paused) {
+      setTimeout(() => {
+        const result = ap.play();
+        result?.catch?.(() => {});
+      }, 350);
+    }
+
+    ap.on?.('play', save);
+    ap.on?.('pause', save);
+    ap.on?.('listswitch', save);
+    ap.audio.addEventListener('timeupdate', () => {
+      if (Math.floor(ap.audio.currentTime) % 5 === 0) save();
+    });
+    ap.audio.addEventListener('volumechange', save);
+    addEventListener('pagehide', save);
+    save();
+  }
+
   async function initMusicPlayer() {
     try {
       const config = await loadMusicConfig();
       if (config.enabled === false) return;
       const id = neteasePlaylistId(config);
       if (!id) return;
+      const savedState = readMusicState(id);
 
       await loadStyleOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css');
       await loadScriptOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js');
@@ -223,7 +296,7 @@
       attr(player, 'fixed', config.fixed ?? true);
       attr(player, 'mini', config.mini ?? true);
       attr(player, 'autoplay', config.autoplay ?? false);
-      attr(player, 'order', config.order || 'random');
+      attr(player, 'order', 'list');
       attr(player, 'loop', config.loop || 'all');
       attr(player, 'preload', config.preload || 'none');
       attr(player, 'volume', config.volume ?? 0.45);
@@ -231,6 +304,7 @@
       attr(player, 'list-folded', config.listFolded ?? true);
       attr(player, 'list-max-height', config.listMaxHeight || '320px');
       document.body.append(player);
+      bindMusicState(id, await waitForAPlayer(player), config, savedState);
     } catch {
       // Music is optional; the site should stay quiet if the config or CDN is unavailable.
     }
