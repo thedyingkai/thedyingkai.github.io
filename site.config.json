@@ -1,10 +1,10 @@
 {
   "site": {
-    "title": "thedyingkai",
-    "description": "个人博客、项目和成长记录。",
-    "brand": "thedyingkai",
-    "brandSub": "Notebook",
-    "copyright": "© 2026 thedyingkai."
+    "title": "TDK 的小窝",
+    "description": "thedyingkai_ 的个人博客、项目和成长记录。",
+    "brand": "TDK 的小窝",
+    "brandSub": "thedyingkai_",
+    "copyright": "© 2026 TDK 的小窝."
   },
   "nav": [
     [
@@ -33,8 +33,8 @@
     ]
   ],
   "home": {
-    "eyebrow": "Personal Archive",
-    "title": "华风夏韵，洛水天依。",
+    "eyebrow": "thedyingkai_ / TDK",
+    "title": "TDK 的小窝",
     "actions": [
       [
         "阅读文章",
@@ -60,31 +60,93 @@
         "auto"
       ],
       [
+        "Nickname",
+        "TDK"
+      ],
+      [
         "Focus",
         "XCPC"
       ],
       [
-        "Accent",
-        "#66ccff"
-      ],
-      [
-        "Build",
-        "Long Run"
+        "Signal",
+        "洛天依 / 乐正绫"
       ]
     ]
   },
   "about": {
-    "eyebrow": "About",
-    "title": "华风夏韵，洛水天依",
+    "eyebrow": "About TDK",
+    "title": "TDK / thedyingkai_",
+    "lead": "算法竞赛、工程项目、成长记录，以及一束蓝色和红色的舞台光。",
+    "profile": {
+      "intro": "我是 thedyingkai_，可以叫我 TDK。现在就读于北京电子科技学院，主要在打 XCPC，同时把 Rust Web、曾经学过的 Java Web、在线评测系统和训练工具慢慢整理成自己的工程体系。",
+      "note": "这个小窝不是简历页，更像一间长期打磨的工作台：题解、模板、VP、项目复盘会放在前排；洛天依、乐正绫和一点 Vocaloid 气质则藏在颜色、文案和站点性格里。",
+      "facts": [
+        "BESTI",
+        "XCPC",
+        "Rust Web",
+        "Online Judge",
+        "洛天依",
+        "乐正绫"
+      ],
+      "links": [
+        [
+          "GitHub",
+          "https://github.com/thedyingkai",
+          "@thedyingkai"
+        ],
+        [
+          "Bilibili",
+          "https://space.bilibili.com/646304256/",
+          "thedyingkai"
+        ],
+        [
+          "知乎",
+          "https://www.zhihu.com/people/thedyingkai-",
+          "thedyingkai_"
+        ],
+        [
+          "AtCoder",
+          "https://atcoder.jp/users/thedyingkai_",
+          "thedyingkai_"
+        ],
+        [
+          "Codeforces",
+          "https://codeforces.com/profile/thedyingkai_",
+          "thedyingkai_"
+        ],
+        [
+          "洛谷",
+          "https://clist.by/account/1450404/resource/luogu.com.cn/",
+          "thedyingkai"
+        ],
+        [
+          "Email",
+          "mailto:1474039695@qq.com",
+          "1474039695@qq.com"
+        ]
+      ]
+    },
     "cards": [
       [
-        "Profile",
-        "我是谁",
-        "准大二生，就读于北京电子科技学院，网名 thedyingkai_，可以简称 TDK 喵。",
+        "Contest",
+        "算法竞赛",
+        "持续训练 XCPC，写题解、补模板、复盘 VP，把比赛里的想法沉淀成可检索的文章。",
         [
           "XCPC",
           "OI",
-          "Backend"
+          "AtCoder",
+          "Codeforces"
+        ]
+      ],
+      [
+        "Engineering",
+        "工程构建",
+        "围绕在线评测、训练脚本和个人知识库做长期项目，把想法写成能跑、能维护的东西。",
+        [
+          "Rust",
+          "Java",
+          "OJ",
+          "Scripts"
         ]
       ],
       [
@@ -246,11 +308,12 @@
   "projects": {
     "eyebrow": "Projects",
     "title": "项目",
+    "lead": "主要围绕在线评测、训练工具、脚本自动化和个人知识库展开。",
     "featured": [
       [
         "Backend / Judge",
         "Untitled-OJ",
-        "分布式、模块化、可扩展的在线评测平台。",
+        "TDK 目前最核心的工程方向：分布式、模块化、可扩展的在线评测平台。",
         "https://github.com/thedyingkai/Untitled-OJ",
         [
           "Go",
@@ -262,7 +325,7 @@
       [
         "Browser Tools",
         "Tampermonkey Scripts",
-        "面向洛谷的刷题辅助脚本集合。",
+        "面向洛谷等训练平台的刷题辅助脚本集合。",
         "https://github.com/thedyingkai/tampermonkey",
         [
           "JavaScript",
@@ -293,7 +356,7 @@
       [
         "03",
         "学习归档",
-        "课程复习、算法笔记、实验报告和题解的可检索体系。",
+        "把 TDK 的课程复习、算法笔记、实验报告和题解组织成可检索体系。",
         [
           "Archive",
           "Blog"
@@ -304,32 +367,15 @@
   "friends": {
     "eyebrow": "Friends",
     "title": "友链",
+    "lead": "这里放朋友们的站点，也欢迎用下面的信息交换友链。",
     "links": [
       [
         "Friend",
-        "朋友站点 A",
-        "等待添加。",
-        "#",
+        "ChaceWebsite",
+        "朋友的个人博客。",
+        "https://blog.chacewebsite.cn/",
         [
           "Blog"
-        ]
-      ],
-      [
-        "Friend",
-        "朋友站点 B",
-        "等待添加。",
-        "#",
-        [
-          "OI / XCPC"
-        ]
-      ],
-      [
-        "Friend",
-        "朋友站点 C",
-        "等待添加。",
-        "#",
-        [
-          "Personal Site"
         ]
       ]
     ],
@@ -337,7 +383,7 @@
       [
         "Info",
         "友链信息格式",
-        "站点名称、站点链接、头像链接、简介、标签。",
+        "站点名称、站点链接、头像链接、简介、标签。我的站点名可以写 TDK 的小窝。",
         [
           "Name",
           "URL",
@@ -348,7 +394,7 @@
       [
         "Notice",
         "交换说明",
-        "按上面的格式整理好信息后联系我。",
+        "按上面的格式整理好信息后，通过 QQ 1474039695 或邮箱联系我。",
         [
           "Exchange",
           "Contact"

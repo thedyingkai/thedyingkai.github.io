@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="description" content="thedyingkai 的项目索引。">
-    <title>项目 · thedyingkai</title>
+    <meta name="description" content="TDK 的项目索引。">
+    <title>项目 · TDK 的小窝</title>
     <link rel="icon" href="/ico.png">
     <link rel="stylesheet" href="/assets/site.css">
     <link rel="stylesheet" href="/assets/fonts.css?v=1.1">
@@ -13,17 +13,11 @@
 
 <body>
     <div class="progress"></div>
-    <header class="topbar">
-        <div class="wrap topbar__inner"><a class="brand" href="/"><span class="brand__mark">thedyingkai<span
-                        class="brand__dot">.</span></span><span class="brand__sub">Notebook</span></a>
-            <nav class="nav"><a href="/">首页</a><a href="/blog/">文章</a><a class="is-active" href="/projects/">项目</a><a
-                    href="/friends/">友链</a><a href="/about/">关于</a><a href="https://github.com/thedyingkai"
-                    target="_blank" rel="noreferrer">GitHub</a></nav>
-        </div>
-    </header>
+    <header class="topbar" data-site-header></header>
     <main>
         <section class="page-head wrap"><span class="eyebrow" data-config="projects.eyebrow">Projects</span>
             <h1 data-config="projects.title">项目</h1>
+            <p data-config="projects.lead"></p>
             <p data-config-error></p>
         </section>
         <section class="band">
@@ -47,10 +41,7 @@
             </div>
         </section>
     </main>
-    <footer class="footer">
-        <div class="wrap footer__inner"><span>© 2026 thedyingkai.</span><span><a href="/blog/">Blog</a> / <a
-                    href="/friends/">Friends</a> / <a href="/about/">About</a></span></div>
-    </footer>
+    <footer class="footer" data-site-footer></footer>
     <script src="/assets/site.js"></script>
     <script type="module" src="/assets/runtime-config.js?v=1.1"></script>
 </body>
