@@ -29,6 +29,12 @@ const clionDark = {
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+const buttonStyle = 'position:absolute;top:8px;right:10px;left:auto;bottom:auto;z-index:5;height:24px;padding:0 10px;border:1px solid rgba(102,204,255,.35);border-radius:999px;background:rgba(21,28,41,.78);color:#b6c7dc;font:700 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px);';
+const codeStyle = 'display:block;padding:0;white-space:normal;line-height:1.2;tab-size:4;background:transparent;color:#bcbec4;';
+const lineStyle = 'display:grid;grid-template-columns:3.8em minmax(0,max-content);min-width:max-content;line-height:1.2;min-height:1.2em;';
+const lnStyle = 'display:block;padding:0 1em 0 0;text-align:right;color:#66707d;user-select:none;border-right:1px solid rgba(102,204,255,.16);background:linear-gradient(90deg,rgba(43,45,48,.38),rgba(43,45,48,.14));font-variant-numeric:tabular-nums;';
+const srcStyle = 'display:block;padding:0 22px;white-space:pre;';
+
 function detectLang(code) {
   const cls = code.className || '';
   const m = /language-([^\s]+)/.exec(cls);
@@ -50,16 +56,18 @@ function codeInner(html) {
 
 function lineHtml(inner) {
   const lines = inner.replace(/\n$/, '').split('\n');
-  return lines.map((line, i) => `<span class="code-line"><span class="code-ln">${i + 1}</span><span class="code-src">${line || '&#8203;'}</span></span>`).join('');
+  return lines.map((line, i) => `<span class="code-line" style="${lineStyle}"><span class="code-ln" style="${lnStyle}">${i + 1}</span><span class="code-src" style="${srcStyle}">${line || '&#8203;'}</span></span>`).join('');
 }
 
 function addCopy(pre, raw) {
   if (pre.querySelector('.copy-code-btn')) return;
   pre.classList.add('has-copy');
+  pre.style.position = 'relative';
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'copy-code-btn';
   btn.textContent = 'COPY';
+  btn.setAttribute('style', buttonStyle);
   btn.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(raw);
@@ -102,10 +110,7 @@ async function enhanceCodeBlock(code) {
 
   code.dataset.shikiEnhanced = '1';
   code.classList.add('shiki-code', 'line-numbered-code', `language-${lang}`);
-  code.style.display = 'block';
-  code.style.padding = '0';
-  code.style.whiteSpace = 'normal';
-  code.style.lineHeight = '1.2';
+  code.setAttribute('style', codeStyle);
 }
 
 function enhance(root = document) {
