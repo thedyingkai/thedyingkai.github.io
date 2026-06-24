@@ -103,6 +103,7 @@ async function renderArticle() {
 
   try {
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
+    await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
 
     const response = await fetch(RAW_POST_BASE + encodeURIComponent(fileName), { cache: 'no-store' });
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
@@ -127,6 +128,7 @@ async function renderArticle() {
     body.innerHTML = window.texme.render(postBody);
 
     root.replaceChildren(back, header, body);
+    await window.MathJax.typesetPromise([body]);
     markCodeBlocks(body, codeLanguages);
   } catch (error) {
     const box = element('article', 'render-body');
