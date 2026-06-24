@@ -49,36 +49,6 @@ function parsePost(fileName, rawText) {
   }
 }
 
-function lintMarkdownMath(markdown) {
-  const errors = [];
-  let line = 1;
-  let i = 0;
-  while (i < markdown.length) {
-    if (markdown.slice(i, i + 3) === '```') {
-      const end = markdown.indexOf('```', i + 3);
-      const chunk = end < 0 ? markdown.slice(i) : markdown.slice(i, end + 3);
-      line += (chunk.match(/\n/g) || []).length;
-      if (end < 0) break;
-      i = end + 3;
-      continue;
-    }
-
-    if (markdown.startsWith('\\[', i)) errors.push([line, '禁止使用 \\[...\\]，请改成 $...$ 或 $$...$$。']);
-    if (markdown.startsWith('\\(', i)) errors.push([line, '禁止使用 \\(...\\)，请改成 $...$。']);
-    if (markdown[i] === '$') {
-      const end = markdown.indexOf('$', i + 1);
-      if (end < 0) errors.push([line, '发现未闭合的 $...$ 数学公式。']);
-      else i = end;
-    }
-    if (markdown[i] === '\n') line++;
-    i++;
-  }
-  if (errors.length) {
-    const detail = errors.slice(0, 10).map(([ln, msg]) => `第 ${ln} 行：${msg}`).join('\n');
-    throw new Error(`Markdown 数学写法不规范：\n${detail}`);
-  }
-}
-
 function collectFenceLanguages(markdown) {
   const langs = [];
   const re = /^```\s*([^\s`]*)/gm;
@@ -133,13 +103,11 @@ async function renderArticle() {
 
   try {
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
-    await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
 
     const response = await fetch(RAW_POST_BASE + encodeURIComponent(fileName), { cache: 'no-store' });
     if (!response.ok) throw new Error(`Markdown ${response.status}`);
 
     parsePost(fileName, await response.text());
-    lintMarkdownMath(postBody);
     const codeLanguages = collectFenceLanguages(postBody);
     document.title = `${postTitle} · thedyingkai`;
 
@@ -159,7 +127,6 @@ async function renderArticle() {
     body.innerHTML = window.texme.render(postBody);
 
     root.replaceChildren(back, header, body);
-    await window.MathJax.typesetPromise([body]);
     markCodeBlocks(body, codeLanguages);
   } catch (error) {
     const box = element('article', 'render-body');
