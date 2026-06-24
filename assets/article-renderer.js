@@ -50,14 +50,95 @@ function parsePost(fileName, rawText) {
 }
 
 function fixEscapedLatexInMath(text) {
-  return text.split('\\_').join('_').split('\\*').join('*');
+  return text.split('\\_').join('_').split('\\*').join('*').trim();
 }
 
-function normalizeMathSegment(text) {
-  return text
-    .replace(/\\\(([^\n]*?)\\\)/g, (_, body) => `$${fixEscapedLatexInMath(body)}$`)
-    .replace(/\\\[([^\n]*?)\\\]((?:\\?_\{[^}]+\}|\\?_[A-Za-z0-9]+)?)/g, (_, body, suffix) => `$[${fixEscapedLatexInMath(body)}]${fixEscapedLatexInMath(suffix || '')}$`)
-    .replace(/\$([A-Za-z][A-Za-z0-9_{}^]*?)\\(?=\s|$|[，。,.；;、)])/g, (_, body) => `$${fixEscapedLatexInMath(body)}$`);
+function isShortInlineMath(body) {
+  const s = body.trim();
+  if (s.length > 80) return false;
+  if (/\\begin|\\end|\\\\|\\sum|\\prod|\\int|\\frac\s*\{/.test(s)) return false;
+  return true;
+}
+
+function readEscapedMath(markdown, start, open, close) {
+  const end = markdown.indexOf(close, start + open.length);
+  if (end < 0) return null;
+  const body = fixEscapedLatexInMath(markdown.slice(start + open.length, end));
+  let pos = end + close.length;
+  let suffix = '';
+  if (markdown[pos] === '\\' && markdown[pos + 1] === '_') {
+    suffix += '_';
+    pos += 2;
+    if (markdown[pos] === '{') {
+      const closeBrace = markdown.indexOf('}', pos + 1);
+      if (closeBrace >= 0) {
+        suffix += markdown.slice(pos, closeBrace + 1);
+        pos = closeBrace + 1;
+      }
+    } else {
+      while (/[A-Za-z0-9]/.test(markdown[pos] || '')) suffix += markdown[pos++];
+    }
+  } else if (markdown[pos] === '_') {
+    suffix += markdown[pos++];
+    if (markdown[pos] === '{') {
+      const closeBrace = markdown.indexOf('}', pos + 1);
+      if (closeBrace >= 0) {
+        suffix += markdown.slice(pos, closeBrace + 1);
+        pos = closeBrace + 1;
+      }
+    } else {
+      while (/[A-Za-z0-9]/.test(markdown[pos] || '')) suffix += markdown[pos++];
+    }
+  }
+  if (open === '\\[' && isShortInlineMath(body)) return { text: `$[${body}]${suffix}$`, pos };
+  if (open === '\\[') return { text: `$$${body}$$`, pos };
+  return { text: `$${body}$`, pos };
+}
+
+function readDollarMath(markdown, start) {
+  const end = markdown.indexOf('$', start + 1);
+  if (end >= 0) {
+    const body = fixEscapedLatexInMath(markdown.slice(start + 1, end));
+    return { text: `$${body}$`, pos: end + 1 };
+  }
+
+  let pos = start + 1;
+  while (pos < markdown.length && !/[\n，。,.；;、)）\s]/.test(markdown[pos])) pos++;
+  let body = markdown.slice(start + 1, pos);
+  body = body.replace(/\\+$/, '');
+  if (/^[A-Za-z0-9_{}^\\]+$/.test(body)) return { text: `$${fixEscapedLatexInMath(body)}$`, pos };
+  return { text: markdown[start], pos: start + 1 };
+}
+
+function normalizeMathSegment(markdown) {
+  let out = '';
+  let i = 0;
+  while (i < markdown.length) {
+    if (markdown.startsWith('\\[', i)) {
+      const res = readEscapedMath(markdown, i, '\\[', '\\]');
+      if (res) {
+        out += res.text;
+        i = res.pos;
+        continue;
+      }
+    }
+    if (markdown.startsWith('\\(', i)) {
+      const res = readEscapedMath(markdown, i, '\\(', '\\)');
+      if (res) {
+        out += res.text;
+        i = res.pos;
+        continue;
+      }
+    }
+    if (markdown[i] === '$') {
+      const res = readDollarMath(markdown, i);
+      out += res.text;
+      i = res.pos;
+      continue;
+    }
+    out += markdown[i++];
+  }
+  return out;
 }
 
 function normalizeMathOnly(markdown) {
@@ -76,31 +157,7 @@ function normalizeMathOnly(markdown) {
     }
     const nextFence = markdown.indexOf('```', i);
     const end = nextFence < 0 ? markdown.length : nextFence;
-    let seg = normalizeMathSegment(markdown.slice(i, end));
-    let j = 0;
-    while (j < seg.length) {
-      if (seg.slice(j, j + 2) === '$$') {
-        const k = seg.indexOf('$$', j + 2);
-        if (k < 0) {
-          out += seg.slice(j);
-          break;
-        }
-        out += '$$' + fixEscapedLatexInMath(seg.slice(j + 2, k)) + '$$';
-        j = k + 2;
-        continue;
-      }
-      if (seg[j] === '$') {
-        const k = seg.indexOf('$', j + 1);
-        if (k < 0) {
-          out += seg[j++];
-          continue;
-        }
-        out += '$' + fixEscapedLatexInMath(seg.slice(j + 1, k)) + '$';
-        j = k + 1;
-        continue;
-      }
-      out += seg[j++];
-    }
+    out += normalizeMathSegment(markdown.slice(i, end));
     i = end;
   }
   return out;
