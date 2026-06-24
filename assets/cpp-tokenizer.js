@@ -3,9 +3,9 @@
   const TYPES = new Set('auto void bool char char8_t char16_t char32_t wchar_t short int long signed unsigned float double size_t ptrdiff_t string i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 ll ull pii pll vi vll vector pair tuple array map set multiset unordered_map unordered_set priority_queue queue stack deque bitset complex'.split(' '));
   const CONSTS = new Set('true false nullptr NULL nullopt cin cout cerr clog endl INF LINF MOD mod EPS PI N M YES NO Yes No yes no'.split(' '));
   const STL = new Set('abs acos asin atan atan2 ceil cos exp fabs floor log log10 pow sin sqrt tan min max swap sort stable_sort reverse unique lower_bound upper_bound binary_search count find fill memset memcpy iota gcd lcm push_back pop_back emplace_back insert erase clear resize reserve begin end rbegin rend size empty front back top pop push emplace make_pair tie tuple_cat'.split(' '));
-  const OPS = ['>>=','<<=','->*','...','++','--','->','==','!=','<=','>=','&&','||','+=','-=','*=','/=','%=','&=','|=','^=','<<','>>','::','<=>'];
+  const OPS = ['>>=', '<<=', '->*', '...', '++', '--', '->', '==', '!=', '<=', '>=', '&&', '||', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<', '>>', '::', '<=>'];
 
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const span = (c, s) => `<span class="${c}">${esc(s)}</span>`;
   const id0 = c => /[A-Za-z_]/.test(c || '');
   const id = c => /[A-Za-z0-9_]/.test(c || '');
