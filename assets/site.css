@@ -1565,6 +1565,25 @@ a.card--with-image:hover .post-card__thumb img {
   gap: 36px
 }
 
+.footer__beian {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(102, 204, 255, .16);
+  display: flex;
+  justify-content: center;
+  text-align: center
+}
+
+.footer__beian a {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 700
+}
+
+.footer__beian a:hover {
+  color: var(--cyan-deep)
+}
+
 .footer__identity {
   display: grid;
   gap: 4px;

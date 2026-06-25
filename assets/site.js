@@ -184,7 +184,17 @@
     });
 
     inner.append(identity, groups);
-    footer.replaceChildren(inner);
+
+    const children = [inner];
+    const beian = site.footer?.beian;
+    if (beian?.label && beian?.href) {
+      const beianRow = document.createElement('div');
+      beianRow.className = 'wrap footer__beian';
+      beianRow.append(makeLink(beian, ''));
+      children.push(beianRow);
+    }
+
+    footer.replaceChildren(...children);
   }
 
   function initPageMotion() {

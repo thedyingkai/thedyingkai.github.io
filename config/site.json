@@ -83,6 +83,11 @@
           }
         ]
       }
-    ]
+    ],
+    "beian": {
+      "label": "京ICP备2024101516号-1",
+      "href": "https://beian.miit.gov.cn/",
+      "external": true
+    }
   }
 }
