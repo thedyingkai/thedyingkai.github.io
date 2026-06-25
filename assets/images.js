@@ -22,10 +22,10 @@
 
   function stackStyle(item, index) {
     const patterns = [
-      { x: 68, y: 56, width: 39, rotate: 5, opacity: .48, ratio: '13 / 20' },
-      { x: 28, y: 58, width: 32, rotate: -9, opacity: .34, ratio: '1 / 1' },
-      { x: 52, y: 43, width: 29, rotate: 11, opacity: .28, ratio: '4 / 5' },
-      { x: 15, y: 66, width: 24, rotate: -13, opacity: .22, ratio: '3 / 4' }
+      { x: 72, y: 55, width: 42, rotate: 5, opacity: .52, ratio: '13 / 20' },
+      { x: 35, y: 61, width: 33, rotate: -9, opacity: .34, ratio: '1 / 1' },
+      { x: 84, y: 45, width: 31, rotate: 11, opacity: .3, ratio: '4 / 5' },
+      { x: 18, y: 67, width: 25, rotate: -13, opacity: .22, ratio: '3 / 4' }
     ];
     const p = patterns[index % patterns.length];
     const drift = Math.floor(index / patterns.length) * 7;
@@ -37,15 +37,20 @@
     const ratio = item.ratio || p.ratio;
 
     const depth = Math.max(.38, 1 - index * .16);
-    return `--stack-x:${x};--stack-y:${y};--stack-width:${width};--stack-rotate:${rotate}deg;--stack-opacity:${opacity};--stack-ratio:${esc(ratio)};--stack-z:${10 - index};--stack-depth:${depth}`;
+    return `--stack-x:${x}%;--stack-y:${y}%;--stack-width:${width}%;--stack-rotate:${rotate}deg;--stack-opacity:${opacity};--stack-ratio:${esc(ratio)};--stack-z:${10 - index};--stack-depth:${depth}`;
   }
 
   function imageStack(slot, basePath) {
-    return imageItems(slot).map((item, index) => {
+    const items = imageItems(slot);
+    const images = items.map((item, index) => {
       const src = resolveSrc(item.src, basePath);
       if (!src) return '';
       return `<img class="hero__stack-image" data-stack-index="${index}" style="${stackStyle(item, index)}" src="${esc(src)}" alt="${esc(item.alt || '')}" loading="${index === 0 ? 'eager' : 'lazy'}">`;
     }).join('');
+    const dots = items.length > 1
+      ? `<div class="hero__stack-dots">${items.map((_, index) => `<span class="hero__stack-dot" data-stack-dot="${index}"></span>`).join('')}</div>`
+      : '';
+    return images + dots;
   }
 
   function carouselOffset(index, active, total) {
@@ -56,15 +61,15 @@
   }
 
   function carouselStyle(offset) {
-    if (offset === 0) return { x: 61, y: 54, width: 40, rotate: 5, opacity: .52, z: 14, depth: 1 };
-    if (offset === -1) return { x: 30, y: 58, width: 32, rotate: -9, opacity: .35, z: 10, depth: .82 };
-    if (offset === 1) return { x: 78, y: 61, width: 31, rotate: 10, opacity: .33, z: 9, depth: .78 };
+    if (offset === 0) return { x: 72, y: 55, width: 44, rotate: 5, opacity: .58, z: 18, depth: 1 };
+    if (offset === -1) return { x: 36, y: 62, width: 34, rotate: -10, opacity: .36, z: 11, depth: .8 };
+    if (offset === 1) return { x: 86, y: 44, width: 32, rotate: 11, opacity: .34, z: 10, depth: .76 };
 
     const side = offset < 0 ? -1 : 1;
     const magnitude = Math.min(3, Math.abs(offset));
     return {
-      x: 52 + side * (10 + magnitude * 5),
-      y: 36 + magnitude * 9,
+      x: 54 + side * (14 + magnitude * 6),
+      y: 34 + magnitude * 10,
       width: Math.max(19, 27 - magnitude * 2),
       rotate: side * (12 + magnitude * 3),
       opacity: Math.max(.1, .22 - magnitude * .04),
@@ -77,9 +82,9 @@
     const total = images.length;
     images.forEach((image, index) => {
       const style = carouselStyle(carouselOffset(index, activeIndex, total));
-      image.style.setProperty('--stack-x', style.x);
-      image.style.setProperty('--stack-y', style.y);
-      image.style.setProperty('--stack-width', style.width);
+      image.style.setProperty('--stack-x', `${style.x}%`);
+      image.style.setProperty('--stack-y', `${style.y}%`);
+      image.style.setProperty('--stack-width', `${style.width}%`);
       image.style.setProperty('--stack-rotate', `${style.rotate}deg`);
       image.style.setProperty('--stack-opacity', style.opacity);
       image.style.setProperty('--stack-z', style.z);
@@ -91,38 +96,44 @@
   function bindHeroStackMotion(target) {
     const host = target.closest('.hero__copy') || target;
     const images = [...target.querySelectorAll('.hero__stack-image')];
+    const dots = [...target.querySelectorAll('[data-stack-dot]')];
     if (!images.length) return;
     let activeIndex = 0;
     let lastSlide = 0;
-    let nextAutoAt = performance.now() + 3400;
     let hovering = false;
     let lastMove = 0;
     let currentX = 0;
     let currentY = 0;
     let nextX = 0;
     let nextY = 0;
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     target.classList.add('is-carousel');
 
     const setActive = index => {
       activeIndex = (index + images.length) % images.length;
       applyCarousel(images, activeIndex);
+      dots.forEach((dot, dotIndex) => dot.classList.toggle('is-active', dotIndex === activeIndex));
+      target.classList.add('is-switching');
+      clearTimeout(target._switchTimer);
+      target._switchTimer = setTimeout(() => target.classList.remove('is-switching'), 720);
     };
 
     setActive(0);
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const setMotion = (x, y, active) => {
-      target.style.setProperty('--tilt-x', `${(-y * 18).toFixed(2)}deg`);
-      target.style.setProperty('--tilt-y', `${(x * 22).toFixed(2)}deg`);
+      const tilt = reduceMotion ? .35 : 1;
+      target.style.setProperty('--tilt-x', `${(-y * 18 * tilt).toFixed(2)}deg`);
+      target.style.setProperty('--tilt-y', `${(x * 22 * tilt).toFixed(2)}deg`);
       target.style.setProperty('--shine-x', `${(50 + x * 45).toFixed(2)}%`);
       target.style.setProperty('--shine-y', `${(46 + y * 40).toFixed(2)}%`);
       images.forEach((image, index) => {
         const depth = parseFloat(image.style.getPropertyValue('--stack-depth')) || 1;
         const phase = index % 2 ? -1 : 1;
-        image.style.setProperty('--image-x', `${(x * (56 + index * 8) * depth + phase * y * 8).toFixed(2)}px`);
-        image.style.setProperty('--image-y', `${(y * (42 + index * 7) * depth + phase * x * 5).toFixed(2)}px`);
-        image.style.setProperty('--image-scale', (1 + (active ? .055 : .018) * depth).toFixed(3));
+        const move = reduceMotion ? .32 : 1;
+        image.style.setProperty('--image-x', `${((x * (56 + index * 8) * depth + phase * y * 8) * move).toFixed(2)}px`);
+        image.style.setProperty('--image-y', `${((y * (42 + index * 7) * depth + phase * x * 5) * move).toFixed(2)}px`);
+        image.style.setProperty('--image-scale', (1 + (active ? .06 : .02) * depth).toFixed(3));
       });
     };
 
@@ -135,7 +146,6 @@
       lastMove = now;
       nextX = px * 2;
       nextY = py * 2;
-      nextAutoAt = now + 4600;
       if (images.length > 1 && now - lastSlide > 180) {
         const zone = Math.max(0, Math.min(images.length - 1, Math.floor((px + .5) * images.length)));
         if (zone !== activeIndex) {
@@ -148,22 +158,24 @@
 
     host.addEventListener('pointerleave', () => {
       hovering = false;
-      nextAutoAt = performance.now() + 1800;
       target.classList.remove('is-interacting');
     });
 
+    if (images.length > 1) {
+      setInterval(() => {
+        if (!hovering && document.visibilityState === 'visible') setActive(activeIndex + 1);
+      }, reduceMotion ? 5200 : 3600);
+    }
+
     const tick = now => {
-      if (!hovering && images.length > 1 && now >= nextAutoAt) {
-        setActive(activeIndex + 1);
-        nextAutoAt = now + 4200;
-      }
       if (!hovering || now - lastMove > 1400) {
-        nextX = Math.sin(now / 1800) * .34 + Math.cos(now / 3100) * .16;
-        nextY = Math.cos(now / 2200) * .28 + Math.sin(now / 2700) * .12;
+        const drift = reduceMotion ? .42 : 1;
+        nextX = (Math.sin(now / 1800) * .34 + Math.cos(now / 3100) * .16) * drift;
+        nextY = (Math.cos(now / 2200) * .28 + Math.sin(now / 2700) * .12) * drift;
         target.classList.remove('is-interacting');
       }
-      currentX += (nextX - currentX) * .095;
-      currentY += (nextY - currentY) * .095;
+      currentX += (nextX - currentX) * (reduceMotion ? .055 : .095);
+      currentY += (nextY - currentY) * (reduceMotion ? .055 : .095);
       setMotion(currentX, currentY, hovering);
       requestAnimationFrame(tick);
     };

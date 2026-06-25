@@ -5,7 +5,7 @@
   "server": "netease",
   "type": "playlist",
   "fixed": true,
-  "mini": true,
+  "mini": false,
   "autoplay": false,
   "order": "random",
   "loop": "all",
