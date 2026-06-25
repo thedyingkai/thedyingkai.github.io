@@ -1,0 +1,21 @@
+{
+  "versions": {
+    "/assets/site.css": "3.1",
+    "/assets/fonts.css": "1.1",
+    "/assets/post-renderer.css": "1.10",
+    "/assets/texme-render.css": "2.3",
+    "/highlight/styles/atom-one-dark.css": "11.11.1",
+    "/assets/site.js": "2.8",
+    "/assets/runtime-config.js": "1.8",
+    "/assets/images.js": "1.8",
+    "/assets/post-list.js": "1.7",
+    "/assets/cloud.js": "1.0",
+    "/assets/article-renderer.js": "5.6",
+    "/highlight/highlight.js": "11.11.1",
+    "/highlight/languages/c.js": "11.11.1",
+    "/highlight/languages/cpp.js": "11.11.1",
+    "/highlight/languages/python.js": "11.11.1",
+    "/highlight/languages/java.js": "11.11.1",
+    "/highlight/languages/bash.js": "11.11.1"
+  }
+}

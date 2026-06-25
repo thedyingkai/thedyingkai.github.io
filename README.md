@@ -108,6 +108,22 @@ coverAlt: 图片描述
 }
 ```
 
+## 更新静态资源版本
+
+本地 CSS/JS 的缓存版本统一维护在 `config/asset-versions.json`。修改 `assets/` 或 `highlight/` 下的样式、脚本后，只需要在这个文件里提升对应资源的版本号，然后运行：
+
+```bash
+node scripts/sync-asset-versions.mjs
+```
+
+这个脚本会把所有 HTML 里的 `?v=` 自动同步到版本清单。只想检查是否同步时运行：
+
+```bash
+node scripts/sync-asset-versions.mjs --check
+```
+
+GitHub Pages 部署流程也会运行同步脚本，确保线上构建使用同一份版本清单。
+
 ## 更新项目
 
 项目页内容在 `config/projects.json`。新增项目时追加一个对象，常用字段包括 `title`、`meta`、`text`、`href`、`tags`。页面会自动按配置渲染卡片。
