@@ -15,63 +15,9 @@
 
 你可以这样将你的友链填写到我的网站：
 
-1.  点击 GitHub 仓库右上角的 Fork 按钮，这会把整个项目复制一份到你自己的 GitHub 账号下。
+- Fork 我的项目，找到友链文件 `config/friends.json`，在 `"links":` 内部加上你的信息。保存文件，提交、推送、PR
 
-2. 打开你电脑的终端 (或 Git Bash)，输入下面的命令，把你的项目副本下载到本地。
-
-```bash
-# 把 "YourGitHubID" 换成你的 GitHub 用户名
-git clone https://github.com/YourGitHubID/thedyingkai.github.io
-.git
-
-# 进入项目文件夹
-cd thedyingkai.github.io
-```
-
-3.  新建一个分支。
-
-```bash
-# 分支名可以自定义，比如 add-my-name
-git checkout -b add-my-name
-```
-
-4.  找到友链文件 `config/friends.json`，用你常用的文本编辑器 (比如 VS Code) 打开它。
-
-5.  在文件的 `"links":` 内部，找到最后一个 `}`，加上你的信息。格式如下：
-
-```json
-"links": [
-    {
-      "meta": "Friend",
-      "title": "站点名称",
-      "text": "描述",
-      "href": "站点 URL",
-      "tags": [
-        "Blog"
-      ],
-      "avatar": "头像 URL",
-    },
-    {
-        // 新的友链信息，注意前面的 } 后需要加一个 ,
-    }
-  ],
-```
-
-6.  保存文件。然后回到终端，用 `git add` 命令告诉 Git 你修改了这个文件：
-
-```bash
-git add config/friends.json
-```
-
-7.  提交你的修改，把你的修改推送到 GitHub 上的个人副本，并写一条说明（即引号内容），告诉别人你做了什么：
-
-```bash
-git commit -m "friends: add my blog link"
-# "add-my-name" 是你刚刚创建的分支名
-git push origin add-my-name
-```
-
-8.  回到你在 GitHub 上的项目副本页面 (`https://github.com/YourGitHubID/thedyingkai.github.io`)，页面上会出现一个黄色的提示，旁边有一个绿色的 Compare & pull request 按钮，点击它。然后在新页面检查一下信息，然后点击 Create pull request 按钮。
+- 如果你还不清楚上面的操作如何完成，请查看 [友链·TDK 的小窝](https://blog.thedyingkai.cn/friends/) 页面，上面有详细教程。
 
 ## 更新文章
 
