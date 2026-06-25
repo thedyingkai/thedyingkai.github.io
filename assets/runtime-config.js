@@ -67,6 +67,19 @@ async function loadConfig() {
   return Object.fromEntries(parts);
 }
 
+async function updatePostCounts() {
+  const targets = [...document.querySelectorAll('[data-post-count]')];
+  if (!targets.length) return;
+  try {
+    const res = await fetch(`/config/posts.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`config/posts.json ${res.status}`);
+    const manifest = await res.json();
+    const files = Array.isArray(manifest) ? manifest : manifest.files;
+    const count = (files || []).filter(name => typeof name === 'string' && name.endsWith('.md') && !name.includes('/') && !name.startsWith('_')).length;
+    targets.forEach(target => target.textContent = count);
+  } catch { }
+}
+
 function setText(selector, value) {
   const node = document.querySelector(selector);
   if (node && value != null) node.textContent = value;
@@ -127,6 +140,7 @@ loadConfig().then(cfg => {
   renderProjectPage(cfg);
   renderAboutPage(cfg);
   renderFriendsPage(cfg);
+  updatePostCounts();
 }).catch(e => {
   document.querySelectorAll('[data-config-error]').forEach(x => x.textContent = e.message);
 });

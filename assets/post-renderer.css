@@ -269,10 +269,15 @@
     box-shadow: var(--shadow-md)
 }
 
-.render-body mjx-container {
+.render-body mjx-container[display="true"] {
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden
+}
+
+.render-body mjx-container:not([display="true"]) {
+    max-width: none;
+    overflow: visible
 }
 
 .render-body blockquote {

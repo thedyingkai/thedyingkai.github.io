@@ -44,20 +44,73 @@
     return imageItems(slot).map((item, index) => {
       const src = resolveSrc(item.src, basePath);
       if (!src) return '';
-      return `<img class="hero__stack-image" style="${stackStyle(item, index)}" src="${esc(src)}" alt="${esc(item.alt || '')}" loading="${index === 0 ? 'eager' : 'lazy'}">`;
+      return `<img class="hero__stack-image" data-stack-index="${index}" style="${stackStyle(item, index)}" src="${esc(src)}" alt="${esc(item.alt || '')}" loading="${index === 0 ? 'eager' : 'lazy'}">`;
     }).join('');
   }
 
+  function carouselOffset(index, active, total) {
+    let offset = index - active;
+    if (offset > total / 2) offset -= total;
+    if (offset < -total / 2) offset += total;
+    return offset;
+  }
+
+  function carouselStyle(offset) {
+    if (offset === 0) return { x: 61, y: 54, width: 40, rotate: 5, opacity: .52, z: 14, depth: 1 };
+    if (offset === -1) return { x: 30, y: 58, width: 32, rotate: -9, opacity: .35, z: 10, depth: .82 };
+    if (offset === 1) return { x: 78, y: 61, width: 31, rotate: 10, opacity: .33, z: 9, depth: .78 };
+
+    const side = offset < 0 ? -1 : 1;
+    const magnitude = Math.min(3, Math.abs(offset));
+    return {
+      x: 52 + side * (10 + magnitude * 5),
+      y: 36 + magnitude * 9,
+      width: Math.max(19, 27 - magnitude * 2),
+      rotate: side * (12 + magnitude * 3),
+      opacity: Math.max(.1, .22 - magnitude * .04),
+      z: 7 - magnitude,
+      depth: Math.max(.42, .68 - magnitude * .08)
+    };
+  }
+
+  function applyCarousel(images, activeIndex) {
+    const total = images.length;
+    images.forEach((image, index) => {
+      const style = carouselStyle(carouselOffset(index, activeIndex, total));
+      image.style.setProperty('--stack-x', style.x);
+      image.style.setProperty('--stack-y', style.y);
+      image.style.setProperty('--stack-width', style.width);
+      image.style.setProperty('--stack-rotate', `${style.rotate}deg`);
+      image.style.setProperty('--stack-opacity', style.opacity);
+      image.style.setProperty('--stack-z', style.z);
+      image.style.setProperty('--stack-depth', style.depth);
+      image.classList.toggle('is-active', index === activeIndex);
+    });
+  }
+
   function bindHeroStackMotion(target) {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const host = target.closest('.hero__copy') || target;
     const images = [...target.querySelectorAll('.hero__stack-image')];
+    if (!images.length) return;
+    let activeIndex = 0;
+    let lastSlide = 0;
+    let nextAutoAt = performance.now() + 3400;
     let hovering = false;
     let lastMove = 0;
     let currentX = 0;
     let currentY = 0;
     let nextX = 0;
     let nextY = 0;
+
+    target.classList.add('is-carousel');
+
+    const setActive = index => {
+      activeIndex = (index + images.length) % images.length;
+      applyCarousel(images, activeIndex);
+    };
+
+    setActive(0);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const setMotion = (x, y, active) => {
       target.style.setProperty('--tilt-x', `${(-y * 18).toFixed(2)}deg`);
@@ -77,19 +130,33 @@
       const rect = host.getBoundingClientRect();
       const px = Math.max(-.5, Math.min(.5, (event.clientX - rect.left) / rect.width - .5));
       const py = Math.max(-.5, Math.min(.5, (event.clientY - rect.top) / rect.height - .5));
+      const now = performance.now();
       hovering = true;
-      lastMove = performance.now();
+      lastMove = now;
       nextX = px * 2;
       nextY = py * 2;
+      nextAutoAt = now + 4600;
+      if (images.length > 1 && now - lastSlide > 180) {
+        const zone = Math.max(0, Math.min(images.length - 1, Math.floor((px + .5) * images.length)));
+        if (zone !== activeIndex) {
+          setActive(zone);
+          lastSlide = now;
+        }
+      }
       target.classList.add('is-interacting');
     });
 
     host.addEventListener('pointerleave', () => {
       hovering = false;
+      nextAutoAt = performance.now() + 1800;
       target.classList.remove('is-interacting');
     });
 
     const tick = now => {
+      if (!hovering && images.length > 1 && now >= nextAutoAt) {
+        setActive(activeIndex + 1);
+        nextAutoAt = now + 4200;
+      }
       if (!hovering || now - lastMove > 1400) {
         nextX = Math.sin(now / 1800) * .34 + Math.cos(now / 3100) * .16;
         nextY = Math.cos(now / 2200) * .28 + Math.sin(now / 2700) * .12;

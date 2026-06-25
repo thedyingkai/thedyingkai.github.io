@@ -171,7 +171,8 @@
       link.href = href;
       link.onload = resolve;
       link.onerror = reject;
-      document.head.append(link);
+      const siteStyle = href.includes('aplayer') ? document.querySelector('link[href^="/assets/site.css"]') : null;
+      document.head.insertBefore(link, siteStyle || null);
     });
   }
 
@@ -226,7 +227,11 @@
       currentTime: Number(ap.audio.currentTime || 0),
       paused: Boolean(ap.audio.paused),
       volume: Number(ap.audio.volume || 0.45),
-      settings: { ...settings },
+      settings: {
+        ...settings,
+        order: ['list', 'random'].includes(ap.options?.order) ? ap.options.order : settings.order,
+        loop: ap.options?.loop === 'one' ? 'one' : 'all'
+      },
       savedAt: Date.now()
     };
     try {
@@ -250,82 +255,24 @@
 
   function musicSettings(config, savedState) {
     const saved = savedState?.settings || {};
-    const order = ['list', 'reverse', 'random'].includes(saved.order) ? saved.order : (config.order || 'random');
+    const configuredOrder = ['list', 'random'].includes(config.order) ? config.order : 'random';
+    const order = ['list', 'random'].includes(saved.order) ? saved.order : configuredOrder;
     const loop = saved.loop === 'one' ? 'one' : 'all';
-    const lrcVisible = saved.lrcVisible !== false;
     const volume = Number.isFinite(savedState?.volume) ? savedState.volume : Number(config.volume ?? 0.45);
-    return { order, loop, lrcVisible, volume: Math.max(0, Math.min(1, volume)) };
+    return { order, loop, volume: Math.max(0, Math.min(1, volume)) };
+  }
+
+  function showAPlayerLyrics(ap) {
+    document.body.classList.remove('music-lrc-off');
+    ap?.lrc?.show?.();
+    ap?.template?.lrcButton?.classList.remove('aplayer-icon-lrc-inactivity');
   }
 
   function applyMusicSettings(ap, settings) {
-    ap.options.order = settings.order === 'random' ? 'random' : 'list';
+    ap.options.order = settings.order;
     ap.options.loop = settings.loop === 'one' ? 'one' : 'all';
     if (Number.isFinite(settings.volume)) ap.audio.volume = settings.volume;
-    document.body.classList.toggle('music-lrc-off', !settings.lrcVisible);
-  }
-
-  function musicButton(text, pressed) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = text;
-    button.setAttribute('aria-pressed', String(Boolean(pressed)));
-    return button;
-  }
-
-  function renderMusicPanel(id, ap, settings, save) {
-    document.querySelector('[data-music-panel]')?.remove();
-    const panel = document.createElement('div');
-    panel.className = 'music-panel';
-    panel.dataset.musicPanel = id;
-
-    const orderLabel = { list: '顺序', reverse: '倒序', random: '随机' };
-    const orderButton = musicButton(orderLabel[settings.order] || '顺序', false);
-    const loopButton = musicButton(settings.loop === 'one' ? '单曲' : '列表', settings.loop === 'one');
-    const lrcButton = musicButton(settings.lrcVisible ? '歌词开' : '歌词关', settings.lrcVisible);
-    const volume = document.createElement('input');
-    volume.type = 'range';
-    volume.min = '0';
-    volume.max = '1';
-    volume.step = '0.01';
-    volume.value = String(settings.volume);
-    volume.setAttribute('aria-label', '音乐音量');
-
-    const setOrder = value => {
-      settings.order = value;
-      orderButton.textContent = orderLabel[value] || '顺序';
-      applyMusicSettings(ap, settings);
-      save();
-    };
-
-    orderButton.addEventListener('click', () => {
-      const modes = ['list', 'reverse', 'random'];
-      setOrder(modes[(modes.indexOf(settings.order) + 1) % modes.length]);
-    });
-
-    loopButton.addEventListener('click', () => {
-      settings.loop = settings.loop === 'one' ? 'all' : 'one';
-      loopButton.textContent = settings.loop === 'one' ? '单曲' : '列表';
-      loopButton.setAttribute('aria-pressed', String(settings.loop === 'one'));
-      applyMusicSettings(ap, settings);
-      save();
-    });
-
-    lrcButton.addEventListener('click', () => {
-      settings.lrcVisible = !settings.lrcVisible;
-      lrcButton.textContent = settings.lrcVisible ? '歌词开' : '歌词关';
-      lrcButton.setAttribute('aria-pressed', String(settings.lrcVisible));
-      applyMusicSettings(ap, settings);
-      save();
-    });
-
-    volume.addEventListener('input', () => {
-      settings.volume = Number(volume.value);
-      applyMusicSettings(ap, settings);
-      save();
-    });
-
-    panel.append(orderButton, loopButton, lrcButton, volume);
-    document.body.append(panel);
+    showAPlayerLyrics(ap);
   }
 
   function bindMusicState(id, ap, config, savedState) {
@@ -365,11 +312,17 @@
       }, 700);
     }
 
-    renderMusicPanel(id, ap, settings, saveNow);
-
     ap.on?.('play', saveSoon);
     ap.on?.('pause', saveSoon);
     ap.on?.('listswitch', saveSoon);
+    ap.template?.order?.addEventListener?.('click', () => {
+      settings.order = ['list', 'random'].includes(ap.options?.order) ? ap.options.order : settings.order;
+      saveSoon();
+    });
+    ap.template?.loop?.addEventListener?.('click', () => {
+      settings.loop = ap.options?.loop === 'one' ? 'one' : 'all';
+      saveSoon();
+    });
     ap.audio.addEventListener('timeupdate', () => {
       const second = Math.floor(ap.audio.currentTime || 0);
       if (second !== lastSecond && second % 3 === 0) {
@@ -380,15 +333,6 @@
     ap.audio.addEventListener('volumechange', () => {
       settings.volume = Number(ap.audio.volume || settings.volume);
       saveSoon();
-    });
-    ap.audio.addEventListener('ended', () => {
-      if (settings.order !== 'reverse' || settings.loop === 'one') return;
-      const from = Number(ap.list?.index || 0);
-      setTimeout(() => {
-        const target = (from - 1 + ap.list.audios.length) % ap.list.audios.length;
-        ap.list.switch(target);
-        ap.play()?.catch?.(() => {});
-      }, 120);
     });
     addEventListener('pagehide', saveNow);
     setTimeout(() => {
@@ -403,6 +347,8 @@
       if (config.enabled === false) return;
       const id = neteasePlaylistId(config);
       if (!id) return;
+      document.querySelector('[data-music-panel]')?.remove();
+      document.body.classList.remove('music-lrc-off');
       const savedState = readMusicState(id);
       const savedSettings = musicSettings(config, savedState);
 

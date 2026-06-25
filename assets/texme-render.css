@@ -12,7 +12,9 @@
     display: inline-block !important;
     vertical-align: -.12em !important;
     margin: 0 .04em !important;
-    line-height: 1 !important
+    line-height: 1 !important;
+    max-width: none !important;
+    overflow: visible !important
 }
 
 .texme-body mjx-container[display="true"] {
