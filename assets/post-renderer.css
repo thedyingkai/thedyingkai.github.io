@@ -35,9 +35,9 @@
 
 .render-head h1 {
     font-family: var(--serif);
-    font-size: clamp(40px, 6vw, 68px);
+    font-size: clamp(34px, 5.5vw, 58px);
     line-height: 1.06;
-    letter-spacing: -.04em;
+    letter-spacing: 0;
     margin: 14px 0;
     background: linear-gradient(115deg, var(--ink) 0%, var(--gold-deep) 28%, var(--gold) 60%, var(--cyan-deep) 100%);
     -webkit-background-clip: text;
@@ -48,7 +48,7 @@
 .render-desc {
     max-width: 68ch;
     color: var(--ink-2);
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.85;
     margin: 0 0 18px
 }
@@ -58,7 +58,7 @@
     gap: 9px;
     flex-wrap: wrap;
     color: var(--ink-3);
-    font-size: 13px
+    font-size: 12px
 }
 
 .render-meta span {
@@ -100,8 +100,8 @@
 }
 
 .render-body {
-    font-size: 16px;
-    line-height: 1.98;
+    font-size: 15px;
+    line-height: 1.9;
     color: var(--ink);
     background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .18));
     border: 1px solid rgba(102, 204, 255, .13);
@@ -129,7 +129,7 @@
 .render-toc__title {
     margin: 0 0 12px;
     color: var(--gold-deep);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 900;
     letter-spacing: .18em;
     text-transform: uppercase
@@ -145,7 +145,7 @@
     border-left: 2px solid transparent;
     padding: 7px 0 7px 12px;
     color: var(--ink-2);
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.45
 }
 
@@ -179,15 +179,19 @@
     background: rgba(255, 255, 255, .96);
     color: var(--ink);
     box-shadow: 0 18px 46px -24px rgba(33, 150, 212, .62), 0 8px 18px -16px rgba(122, 77, 16, .34);
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.65;
     pointer-events: none
 }
 
 .render-toc-tip mjx-container {
     max-width: 100%;
-    overflow-x: auto;
+    overflow-x: visible;
     overflow-y: hidden
+}
+
+.render-toc-tip mjx-container.is-overflowing {
+    overflow-x: auto
 }
 
 .render-toc__link--3 {
@@ -205,17 +209,17 @@
 .render-body h4 {
     font-family: var(--serif);
     line-height: 1.25;
-    letter-spacing: -.02em;
+    letter-spacing: 0;
     scroll-margin-top: 92px
 }
 
 .render-body h1 {
-    font-size: 40px;
+    font-size: 34px;
     margin: 34px 0 18px
 }
 
 .render-body h2 {
-    font-size: 31px;
+    font-size: 27px;
     margin: 42px 0 14px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--line);
@@ -225,13 +229,13 @@
 }
 
 .render-body h3 {
-    font-size: 24px;
+    font-size: 21px;
     margin: 32px 0 10px;
     color: var(--ink)
 }
 
 .render-body h4 {
-    font-size: 19px;
+    font-size: 17px;
     margin: 26px 0 8px;
     color: var(--gold-deep)
 }
@@ -271,8 +275,12 @@
 
 .render-body mjx-container[display="true"] {
     max-width: 100%;
-    overflow-x: auto;
+    overflow-x: visible;
     overflow-y: hidden
+}
+
+.render-body mjx-container[display="true"].is-overflowing {
+    overflow-x: auto
 }
 
 .render-body mjx-container:not([display="true"]) {
@@ -516,7 +524,7 @@
     }
 
     .render-head h1 {
-        font-size: 38px
+        font-size: 32px
     }
 
     .code-pre code,

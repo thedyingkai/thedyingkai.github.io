@@ -194,6 +194,7 @@ function bindTocTooltips(toc) {
     tip.hidden = false;
     tip.innerHTML = link._tocHtml;
     if (window.MathJax?.typesetPromise) await window.MathJax.typesetPromise([tip]).catch(() => {});
+    updateMathOverflow(tip);
     place(link);
   };
 
@@ -216,6 +217,12 @@ function hydrateTocTooltips(toc, items) {
     const link = toc.querySelector(`[data-target="${CSS.escape(item.id)}"]`);
     if (link) link._tocHtml = item.node.innerHTML;
   }
+}
+
+function updateMathOverflow(root = document) {
+  root.querySelectorAll('mjx-container[display="true"], .render-toc-tip mjx-container').forEach(node => {
+    node.classList.toggle('is-overflowing', node.scrollWidth > node.clientWidth + 2);
+  });
 }
 
 function bindTocState(toc, items) {
@@ -474,6 +481,12 @@ async function renderArticle() {
     root.replaceChildren(back, header, layout);
 
     await window.MathJax.typesetPromise([body]);
+    const refreshMathOverflow = () => updateMathOverflow(body);
+    requestAnimationFrame(() => {
+      refreshMathOverflow();
+      requestAnimationFrame(refreshMathOverflow);
+    });
+    addEventListener('resize', refreshMathOverflow, { passive: true });
     hydrateTocTooltips(toc, headings);
     enhanceCodeBlocks(body);
     bindTocState(toc, headings);

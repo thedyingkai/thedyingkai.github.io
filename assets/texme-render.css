@@ -1,11 +1,11 @@
 .texme-body {
-    font-size: 16px;
-    line-height: 2.05
+    font-size: 15px;
+    line-height: 1.95
 }
 
 .texme-body p,
 .texme-body li {
-    line-height: 2.1
+    line-height: 2
 }
 
 .texme-body mjx-container:not([display="true"]) {
@@ -19,11 +19,15 @@
 
 .texme-body mjx-container[display="true"] {
     display: block !important;
-    overflow-x: auto;
+    overflow-x: visible;
     overflow-y: hidden;
     max-width: 100%;
     padding: .75rem 0;
     margin: 1.35rem 0
+}
+
+.texme-body mjx-container[display="true"].is-overflowing {
+    overflow-x: auto
 }
 
 .texme-body code:not(pre code) {
