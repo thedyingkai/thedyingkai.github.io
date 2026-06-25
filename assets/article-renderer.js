@@ -221,7 +221,20 @@ function hydrateTocTooltips(toc, items) {
 
 function updateMathOverflow(root = document) {
   root.querySelectorAll('mjx-container[display="true"], .render-toc-tip mjx-container').forEach(node => {
-    node.classList.toggle('is-overflowing', node.scrollWidth > node.clientWidth + 2);
+    node.classList.remove('is-overflowing');
+    const parentWidth = node.parentElement?.clientWidth || node.clientWidth || 0;
+    const ownWidth = node.getBoundingClientRect().width;
+    const contentWidth = Math.max(
+      node.scrollWidth,
+      ...[...node.children].map(child => child.getBoundingClientRect().width)
+    );
+    const sourceLength = (node.getAttribute('data-tex') || node.textContent || '').replace(/\s+/g, '').length;
+    const overflowing = parentWidth > 0 && (
+      ownWidth > parentWidth + 2 ||
+      contentWidth > parentWidth + 2 ||
+      sourceLength > 42
+    );
+    node.classList.toggle('is-overflowing', overflowing);
   });
 }
 

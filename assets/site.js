@@ -279,14 +279,36 @@
 
   function saveMusicState(id, ap, settings) {
     if (!ap?.audio) return;
+    const track = currentTrack(ap);
+    const audioVolume = Number(ap.audio.volume);
+    const audioTime = Number(ap.audio.currentTime);
+    const audioDuration = Number(ap.audio.duration || ap.duration);
     const state = {
       id,
-      index: Number(ap.list?.index || 0),
-      currentTime: Number(ap.audio.currentTime || 0),
+      version: 2,
+      index: track.index,
+      currentUrl: normalizedAudioUrl(track.audio?.url || ap.audio.currentSrc || ap.audio.src || ''),
+      currentTime: Number.isFinite(audioTime) ? audioTime : 0,
+      duration: Number.isFinite(audioDuration) ? audioDuration : 0,
       paused: Boolean(ap.audio.paused),
-      volume: Number(ap.audio.volume || 0.45),
+      playing: !ap.audio.paused && !ap.audio.ended,
+      ended: Boolean(ap.audio.ended),
+      volume: Number.isFinite(audioVolume) ? audioVolume : Number(settings.volume || 0.45),
+      muted: Boolean(ap.audio.muted),
+      playbackRate: Number(ap.audio.playbackRate || 1),
+      randomOrder: Array.isArray(ap.randomOrder) ? ap.randomOrder.slice() : null,
+      listLength: ap.list?.audios?.length || 0,
+      track: {
+        name: track.audio?.name || track.audio?.title || '',
+        artist: track.audio?.artist || track.audio?.author || '',
+        cover: track.audio?.cover || track.audio?.pic || '',
+        lrc: track.audio?.lrc || ''
+      },
       settings: {
         ...settings,
+        volume: Number.isFinite(audioVolume) ? audioVolume : Number(settings.volume || 0.45),
+        muted: Boolean(ap.audio.muted),
+        playbackRate: Number(ap.audio.playbackRate || 1),
         order: ['list', 'random'].includes(ap.options?.order) ? ap.options.order : settings.order,
         loop: ['all', 'one', 'none'].includes(ap.options?.loop) ? ap.options.loop : settings.loop
       },
@@ -317,10 +339,22 @@
     const order = ['list', 'random'].includes(saved.order) ? saved.order : configuredOrder;
     const configuredLoop = ['all', 'one', 'none'].includes(config.loop) ? config.loop : 'all';
     const loop = ['all', 'one', 'none'].includes(saved.loop) ? saved.loop : configuredLoop;
-    const lrcVisible = config.lrcVisible !== false;
+    const lrcVisible = typeof saved.lrcVisible === 'boolean' ? saved.lrcVisible : config.lrcVisible !== false;
     const collapsed = saved.collapsed === true;
-    const volume = Number.isFinite(savedState?.volume) ? savedState.volume : Number(config.volume ?? 0.45);
-    return { order, loop, lrcVisible, collapsed, listVisible: false, volume: Math.max(0, Math.min(1, volume)) };
+    const listVisible = saved.listVisible === true && !collapsed;
+    const savedVolume = Number.isFinite(saved.volume) ? saved.volume : savedState?.volume;
+    const volume = Number.isFinite(savedVolume) ? savedVolume : Number(config.volume ?? 0.45);
+    const playbackRate = Number.isFinite(saved.playbackRate) ? saved.playbackRate : Number(savedState?.playbackRate || 1);
+    return {
+      order,
+      loop,
+      lrcVisible,
+      collapsed,
+      listVisible,
+      muted: saved.muted === true || savedState?.muted === true,
+      playbackRate: Number.isFinite(playbackRate) ? playbackRate : 1,
+      volume: Math.max(0, Math.min(1, volume))
+    };
   }
 
   function showAPlayerLyrics(ap) {
@@ -344,6 +378,8 @@
     ap.options.order = settings.order;
     ap.options.loop = ['all', 'one', 'none'].includes(settings.loop) ? settings.loop : 'all';
     if (Number.isFinite(settings.volume)) ap.audio.volume = settings.volume;
+    ap.audio.muted = settings.muted === true;
+    if (Number.isFinite(settings.playbackRate) && settings.playbackRate > 0) ap.audio.playbackRate = settings.playbackRate;
     applyLyricVisibility(ap, settings.lrcVisible);
   }
 
@@ -817,10 +853,24 @@
     return dock;
   }
 
+  function savedTrackIndex(ap, savedState) {
+    const audios = ap.list?.audios || [];
+    const savedUrl = normalizedAudioUrl(savedState?.currentUrl || '');
+    if (savedUrl) {
+      const matched = audios.findIndex(audio => normalizedAudioUrl(audio.url) === savedUrl);
+      if (matched >= 0) return matched;
+    }
+    if (Number.isFinite(savedState?.index)) return Math.max(0, Math.min(savedState.index, audios.length - 1));
+    return 0;
+  }
+
   function bindMusicState(id, ap, config, savedState) {
     const settings = musicSettings(config, savedState);
     let restoring = true;
     let saveTimer = 0;
+    let lastProgressSave = 0;
+    let restoredPosition = false;
+    const shouldResume = savedState?.playing === true || savedState?.paused === false;
 
     const saveNow = () => saveMusicState(id, ap, settings);
     const saveSoon = () => {
@@ -828,18 +878,59 @@
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveNow, 240);
     };
+    const saveProgress = () => {
+      if (restoring) return;
+      const now = Date.now();
+      if (now - lastProgressSave < 900) return;
+      lastProgressSave = now;
+      saveNow();
+    };
     const keepLyricsVisible = () => {
       if (!settings.lrcVisible) return;
       setTimeout(() => applyLyricVisibility(ap, true), 120);
     };
+    const resumePlayback = () => {
+      if (!shouldResume || !ap.audio.paused) return;
+      const result = ap.play?.();
+      if (result?.catch) result.catch(() => {
+        saveNow();
+      });
+    };
+    const restorePosition = () => {
+      if (restoredPosition) return;
+      const savedTime = Number(savedState?.currentTime || 0);
+      if (!Number.isFinite(savedTime) || savedTime <= 0) {
+        restoredPosition = true;
+        resumePlayback();
+        return;
+      }
+      const duration = Number(ap.audio.duration || ap.duration || savedState?.duration || 0);
+      const elapsed = shouldResume && Number.isFinite(savedState?.savedAt)
+        ? Math.max(0, Math.min(30, (Date.now() - savedState.savedAt) / 1000))
+        : 0;
+      const target = duration > 1 ? Math.min(savedTime + elapsed, Math.max(0, duration - .8)) : savedTime + elapsed;
+      try {
+        ap.seek?.(target);
+      } catch {
+        try { ap.audio.currentTime = target; } catch { }
+      }
+      restoredPosition = true;
+      setTimeout(resumePlayback, 80);
+      setTimeout(saveNow, 500);
+    };
 
     applyMusicSettings(ap, settings);
+    if (Array.isArray(savedState?.randomOrder) && savedState.randomOrder.length === ap.list.audios.length) {
+      ap.randomOrder = savedState.randomOrder.slice();
+    }
 
-    if (Number.isFinite(savedState?.index)) {
-      ap.list.switch(Math.max(0, Math.min(savedState.index, ap.list.audios.length - 1)));
+    if (savedState) {
+      ap.list.switch(savedTrackIndex(ap, savedState));
     }
 
     renderMusicPanel(id, ap, settings, saveNow);
+    setTimeout(restorePosition, 180);
+    setTimeout(restorePosition, 700);
 
     ap.on?.('play', saveSoon);
     ap.on?.('pause', saveSoon);
@@ -847,7 +938,11 @@
       keepLyricsVisible();
       saveSoon();
     });
-    ap.on?.('loadedmetadata', keepLyricsVisible);
+    ap.on?.('loadedmetadata', () => {
+      keepLyricsVisible();
+      restorePosition();
+    });
+    ap.on?.('canplay', restorePosition);
     ap.template?.order?.addEventListener?.('click', () => {
       settings.order = ['list', 'random'].includes(ap.options?.order) ? ap.options.order : settings.order;
       saveSoon();
@@ -857,12 +952,26 @@
       saveSoon();
     });
     ap.audio.addEventListener('volumechange', () => {
-      settings.volume = Number(ap.audio.volume || settings.volume);
+      const value = Number(ap.audio.volume);
+      settings.volume = Number.isFinite(value) ? value : settings.volume;
+      settings.muted = ap.audio.muted;
       saveSoon();
     });
+    ap.audio.addEventListener('timeupdate', saveProgress);
+    ap.audio.addEventListener('seeked', saveNow);
+    ap.audio.addEventListener('ratechange', () => {
+      settings.playbackRate = Number(ap.audio.playbackRate || 1);
+      saveSoon();
+    });
+    ap.audio.addEventListener('canplay', restorePosition);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) saveNow();
+    });
     addEventListener('pagehide', saveNow);
+    addEventListener('beforeunload', saveNow);
     setTimeout(() => {
       restoring = false;
+      restorePosition();
       saveNow();
     }, 1200);
   }
@@ -906,13 +1015,13 @@
     }
   }
 
+  initMusicPlayer();
   loadSiteConfig().then(site => {
     renderHeader(site);
     renderFooter(site);
     setProgress();
     schedulePageMotion();
   });
-  initMusicPlayer();
   addEventListener('tdk:content-rendered', schedulePageMotion);
   schedulePageMotion();
   setProgress();

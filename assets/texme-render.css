@@ -1,11 +1,11 @@
 .texme-body {
-    font-size: 15px;
-    line-height: 1.95
+    font-size: 14px;
+    line-height: 1.86
 }
 
 .texme-body p,
 .texme-body li {
-    line-height: 2
+    line-height: 1.92
 }
 
 .texme-body mjx-container:not([display="true"]) {
@@ -19,7 +19,8 @@
 
 .texme-body mjx-container[display="true"] {
     display: block !important;
-    overflow-x: visible;
+    font-size: .94em;
+    overflow-x: clip;
     overflow-y: hidden;
     max-width: 100%;
     padding: .75rem 0;
@@ -27,7 +28,15 @@
 }
 
 .texme-body mjx-container[display="true"].is-overflowing {
-    overflow-x: auto
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: .25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin
+}
+
+.texme-body mjx-container[display="true"].is-overflowing > mjx-math {
+    min-width: max-content
 }
 
 .texme-body code:not(pre code) {
@@ -37,4 +46,22 @@
     border-radius: 6px;
     padding: .12em .42em;
     color: #bcbec4
+}
+
+@media(max-width:680px) {
+    .texme-body {
+        font-size: 13px;
+        line-height: 1.72
+    }
+
+    .texme-body p,
+    .texme-body li {
+        line-height: 1.78
+    }
+
+    .texme-body mjx-container[display="true"] {
+        font-size: .86em;
+        margin: 1rem 0;
+        padding: .55rem 0
+    }
 }

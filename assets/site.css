@@ -42,7 +42,7 @@ body {
   background: radial-gradient(circle at 8% 0%, rgba(102, 204, 255, .24), transparent 30%), radial-gradient(circle at 88% 12%, rgba(255, 224, 128, .30), transparent 28%), linear-gradient(180deg, #fbfdff 0%, var(--paper) 46%, #f7fbff 100%);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility
@@ -115,7 +115,7 @@ a {
 .brand__mark {
   font-family: var(--serif);
   font-weight: 800;
-  font-size: 19px;
+  font-size: 18px;
   letter-spacing: 0;
   background: var(--gold-grad);
   -webkit-background-clip: text;
@@ -146,7 +146,7 @@ a {
 .nav a {
   padding: 7px 14px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink-2);
   transition: .2s;
@@ -446,7 +446,7 @@ a {
 
 .hero h1 {
   font-family: var(--serif);
-  font-size: clamp(42px, 7vw, 80px);
+  font-size: clamp(36px, 6.4vw, 68px);
   line-height: 1.02;
   letter-spacing: 0;
   margin: 18px 0 24px;
@@ -460,7 +460,7 @@ a {
 .hero__lead {
   max-width: 62ch;
   color: var(--ink-2);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.85
 }
 
@@ -546,7 +546,7 @@ a {
   border-radius: 12px;
   background: rgba(255, 255, 255, .78);
   color: var(--ink);
-  font: 600 14px/1.4 var(--mono);
+  font: 600 13px/1.4 var(--mono);
   padding: 10px 14px;
   box-shadow: var(--shadow-sm);
   outline: none
@@ -649,7 +649,7 @@ button.cloud-entry {
 
 .stat-card__title {
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   margin: 0 0 18px;
   background: var(--gold-grad);
@@ -797,7 +797,7 @@ button.cloud-entry {
 
 .section-head h2 {
   font-family: var(--serif);
-  font-size: 33px;
+  font-size: 29px;
   line-height: 1.1;
   margin: 10px 0 0;
   letter-spacing: 0;
@@ -825,7 +825,7 @@ button.cloud-entry {
   gap: 12px;
   max-width: 76ch;
   color: var(--ink-2);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.9
 }
 
@@ -947,7 +947,7 @@ a.card:hover {
 
 .card h3 {
   font-family: var(--serif);
-  font-size: 21px;
+  font-size: 19px;
   line-height: 1.25;
   margin: 0 0 12px
 }
@@ -999,7 +999,7 @@ a.card--with-image:hover .post-card__thumb img {
   background: linear-gradient(135deg, rgba(102, 204, 255, .18), rgba(214, 165, 51, .16));
   color: var(--gold-deep);
   font-family: var(--serif);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
   overflow: hidden
 }
@@ -1043,7 +1043,7 @@ a.card--with-image:hover .post-card__thumb img {
   margin: 8px 0 0;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.3
 }
 
@@ -1269,7 +1269,7 @@ a.card--with-image:hover .post-card__thumb img {
 
 .timeline__item h3 {
   font-family: var(--serif);
-  font-size: 21px;
+  font-size: 19px;
   margin: 6px 0 8px
 }
 
@@ -1284,7 +1284,7 @@ a.card--with-image:hover .post-card__thumb img {
 
 .page-head h1 {
   font-family: var(--serif);
-  font-size: clamp(40px, 6vw, 62px);
+  font-size: clamp(34px, 5.4vw, 52px);
   line-height: 1.04;
   margin: 16px 0 18px;
   letter-spacing: 0;
@@ -1298,7 +1298,7 @@ a.card--with-image:hover .post-card__thumb img {
 .page-head p {
   max-width: 62ch;
   color: var(--ink-2);
-  font-size: 15px
+  font-size: 14px
 }
 
 .page-head--split {
@@ -1456,7 +1456,7 @@ a.card--with-image:hover .post-card__thumb img {
 .footer__identity strong {
   color: var(--ink);
   font-family: var(--serif);
-  font-size: 15px
+  font-size: 14px
 }
 
 .footer__groups {
@@ -2209,18 +2209,52 @@ a.card--with-image:hover .post-card__thumb img {
 }
 
 @media(max-width:620px) {
+  body {
+    font-size: 12px;
+    line-height: 1.55
+  }
+
+  .wrap {
+    padding-left: 16px;
+    padding-right: 16px
+  }
+
+  .topbar {
+    min-height: 0
+  }
+
   .topbar__inner {
     height: auto;
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding-top: 12px;
+    padding-bottom: 12px;
     align-items: flex-start;
     flex-direction: column;
-    gap: 10px
+    gap: 8px
+  }
+
+  .brand__mark {
+    font-size: 17px
   }
 
   .nav {
     margin-left: 0;
-    flex-wrap: wrap
+    flex-wrap: wrap;
+    gap: 3px
+  }
+
+  .nav a {
+    padding: 5px 10px;
+    font-size: 11px
+  }
+
+  .nav__icon {
+    width: 30px;
+    height: 30px
+  }
+
+  .nav__icon svg {
+    width: 16px;
+    height: 16px
   }
 
   .cloud-form__row {
@@ -2241,7 +2275,17 @@ a.card--with-image:hover .post-card__thumb img {
   }
 
   .hero {
-    padding-top: 54px
+    padding: 38px 0 46px
+  }
+
+  .hero h1 {
+    font-size: clamp(30px, 9vw, 44px);
+    margin: 12px 0 16px
+  }
+
+  .hero__lead {
+    font-size: 13px;
+    line-height: 1.7
   }
 
   .post-masonry {
@@ -2259,11 +2303,43 @@ a.card--with-image:hover .post-card__thumb img {
   }
 
   .hero__copy {
-    min-height: 560px
+    min-height: 460px
   }
 
   .hero__content {
-    padding: 18px 0 74px
+    padding: 12px 0 62px
+  }
+
+  .section-head {
+    margin-bottom: 20px
+  }
+
+  .section-head h2 {
+    font-size: 24px
+  }
+
+  .page-head {
+    padding-top: 44px;
+    padding-bottom: 26px
+  }
+
+  .page-head h1 {
+    font-size: clamp(28px, 8.4vw, 40px);
+    margin: 10px 0 12px
+  }
+
+  .page-head p,
+  .profile-copy {
+    font-size: 13px;
+    line-height: 1.72
+  }
+
+  .card {
+    padding: 18px
+  }
+
+  .card h3 {
+    font-size: 18px
   }
 
   .hero__stack-image {
@@ -2330,47 +2406,66 @@ a.card--with-image:hover .post-card__thumb img {
     left: 10px;
     bottom: 10px;
     width: calc(100vw - 20px);
-    grid-template-columns: 52px minmax(0, 1fr);
-    gap: 10px;
-    padding: 9px;
+    min-height: 0;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
     border-radius: 16px
   }
 
   .music-dock__cover {
-    width: 50px;
+    width: 44px;
     border-radius: 12px
+  }
+
+  .music-dock__main {
+    gap: 6px
+  }
+
+  .music-dock__meta strong {
+    font-size: 12px
+  }
+
+  .music-dock__meta span {
+    font-size: 10px
+  }
+
+  .music-dock__progress {
+    grid-template-columns: 34px minmax(86px, 1fr) 34px;
+    gap: 6px;
+    font-size: 10px
   }
 
   .music-dock__controls {
     grid-column: 1 / -1;
     justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 6px
+    gap: 5px
   }
 
   .music-dock__button {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     padding: 0
   }
 
   .music-dock__button--play {
-    width: 34px;
-    min-width: 34px
+    width: 32px;
+    min-width: 32px
   }
 
   .music-dock__button svg {
-    width: 15px;
-    height: 15px
+    width: 14px;
+    height: 14px
   }
 
   .music-dock__volume {
-    width: 78px
+    width: 68px
   }
 
   .music-dock__lyrics {
-    font-size: 12px
+    font-size: 11px
   }
 
   .music-dock__list-item {

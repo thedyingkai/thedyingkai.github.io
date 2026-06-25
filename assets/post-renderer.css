@@ -35,7 +35,7 @@
 
 .render-head h1 {
     font-family: var(--serif);
-    font-size: clamp(34px, 5.5vw, 58px);
+    font-size: clamp(30px, 4.8vw, 50px);
     line-height: 1.06;
     letter-spacing: 0;
     margin: 14px 0;
@@ -48,8 +48,8 @@
 .render-desc {
     max-width: 68ch;
     color: var(--ink-2);
-    font-size: 15px;
-    line-height: 1.85;
+    font-size: 14px;
+    line-height: 1.75;
     margin: 0 0 18px
 }
 
@@ -100,8 +100,8 @@
 }
 
 .render-body {
-    font-size: 15px;
-    line-height: 1.9;
+    font-size: 14px;
+    line-height: 1.82;
     color: var(--ink);
     background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .18));
     border: 1px solid rgba(102, 204, 255, .13);
@@ -179,19 +179,27 @@
     background: rgba(255, 255, 255, .96);
     color: var(--ink);
     box-shadow: 0 18px 46px -24px rgba(33, 150, 212, .62), 0 8px 18px -16px rgba(122, 77, 16, .34);
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.65;
     pointer-events: none
 }
 
 .render-toc-tip mjx-container {
     max-width: 100%;
-    overflow-x: visible;
+    overflow-x: clip;
     overflow-y: hidden
 }
 
 .render-toc-tip mjx-container.is-overflowing {
-    overflow-x: auto
+    display: block !important;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin
+}
+
+.render-toc-tip mjx-container.is-overflowing > mjx-math {
+    min-width: max-content
 }
 
 .render-toc__link--3 {
@@ -214,12 +222,12 @@
 }
 
 .render-body h1 {
-    font-size: 34px;
+    font-size: 29px;
     margin: 34px 0 18px
 }
 
 .render-body h2 {
-    font-size: 27px;
+    font-size: 23px;
     margin: 42px 0 14px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--line);
@@ -229,13 +237,13 @@
 }
 
 .render-body h3 {
-    font-size: 21px;
+    font-size: 19px;
     margin: 32px 0 10px;
     color: var(--ink)
 }
 
 .render-body h4 {
-    font-size: 17px;
+    font-size: 16px;
     margin: 26px 0 8px;
     color: var(--gold-deep)
 }
@@ -274,13 +282,23 @@
 }
 
 .render-body mjx-container[display="true"] {
+    font-size: .94em;
     max-width: 100%;
-    overflow-x: visible;
+    overflow-x: clip;
     overflow-y: hidden
 }
 
 .render-body mjx-container[display="true"].is-overflowing {
-    overflow-x: auto
+    display: block !important;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: .25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin
+}
+
+.render-body mjx-container[display="true"].is-overflowing > mjx-math {
+    min-width: max-content
 }
 
 .render-body mjx-container:not([display="true"]) {
@@ -506,25 +524,77 @@
 
 @media(max-width:680px) {
     .render-shell {
-        padding-top: 42px
+        padding: 28px 10px 88px
     }
 
     .render-head {
-        padding: 38px 14px 34px;
-        border-radius: 22px
+        padding: 26px 12px 24px;
+        margin-bottom: 22px;
+        border-radius: 18px
+    }
+
+    .render-desc {
+        font-size: 12px;
+        line-height: 1.65
+    }
+
+    .render-meta {
+        gap: 6px;
+        font-size: 11px
+    }
+
+    .render-meta span {
+        height: 23px;
+        padding: 0 8px
     }
 
     .render-body {
-        padding: 18px;
-        border-radius: 16px
-    }
-
-    .render-toc {
+        font-size: 13px;
+        line-height: 1.72;
+        padding: 14px;
         border-radius: 14px
     }
 
+    .render-toc {
+        padding: 14px;
+        border-radius: 12px
+    }
+
     .render-head h1 {
-        font-size: 32px
+        font-size: 26px;
+        line-height: 1.12
+    }
+
+    .render-body h1 {
+        font-size: 24px
+    }
+
+    .render-body h2 {
+        font-size: 20px;
+        margin: 30px 0 10px
+    }
+
+    .render-body h3 {
+        font-size: 17px;
+        margin: 24px 0 8px
+    }
+
+    .render-body h4 {
+        font-size: 15px
+    }
+
+    .render-body p,
+    .render-body ul,
+    .render-body ol,
+    .render-body blockquote,
+    .render-body table {
+        margin: 13px 0
+    }
+
+    .render-body mjx-container[display="true"] {
+        font-size: .86em;
+        margin: 1rem 0;
+        padding: .55rem 0
     }
 
     .code-pre code,
