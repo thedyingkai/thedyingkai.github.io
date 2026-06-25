@@ -2,44 +2,75 @@
 
 这是 thedyingkai_ 的个人静态博客，部署在 GitHub Pages。站点主要用于整理算法竞赛题解、数学与模板笔记、项目复盘和成长记录。
 
-## 目录
+## 交换友链
 
-```text
-.
-├── index.html              # 首页
-├── blog/                   # 文章列表与文章阅读页
-├── posts/                  # Markdown 文章源文件
-├── projects/               # 项目页
-├── cloud/                  # 云盘入口
-├── friends/                # 友链页
-├── about/                  # 关于页
-├── assets/                 # 站点脚本、样式和图片
-├── config/                 # 页面内容配置
-├── highlight/              # 站内代码高亮资源
-├── scripts/                # 自动生成 RSS、sitemap、文章清单
-├── rss.xml                 # RSS 输出
-└── sitemap.xml             # 搜索引擎站点地图
+你可以这样在你的网站填写我的友链：
+|项目|值|
+|-----|-----|
+|站点名称|TDK 的小窝|
+|站点 URL|https://thedyingkai.github.io|
+|头像 URL|https://thedyingkai.github.io/assets/images/site/ico.png|
+|RSS URL|https://thedyingkai.github.io/rss.xml|
+|描述|华风夏韵，洛水天依。|
+
+你可以这样将你的友链填写到我的网站：
+
+1.  点击 GitHub 仓库右上角的 Fork 按钮，这会把整个项目复制一份到你自己的 GitHub 账号下。
+
+2. 打开你电脑的终端 (或 Git Bash)，输入下面的命令，把你的项目副本下载到本地。
+
+```bash
+# 把 "YourGitHubID" 换成你的 GitHub 用户名
+git clone https://github.com/YourGitHubID/thedyingkai.github.io
+.git
+
+# 进入项目文件夹
+cd thedyingkai.github.io
 ```
 
-`.nojekyll` 用来关闭 GitHub Pages 的 Jekyll 处理，保证 `posts/*.md` 可以作为原始 Markdown 被前端读取。
+3.  新建一个分支。
 
-## 本地预览
-
-```powershell
-python -m http.server 8787 --bind 127.0.0.1
+```bash
+# 分支名可以自定义，比如 add-my-name
+git checkout -b add-my-name
 ```
 
-然后访问：
+4.  找到友链文件 `config/friends.json`，用你常用的文本编辑器 (比如 VS Code) 打开它。
 
-```text
-http://127.0.0.1:8787/
+5.  在文件的 `"links":` 内部，找到最后一个 `}`，加上你的信息。格式如下：
+
+```json
+"links": [
+    {
+      "meta": "Friend",
+      "title": "站点名称",
+      "text": "描述",
+      "href": "站点 URL",
+      "tags": [
+        "Blog"
+      ]
+    },
+    {
+        ... // 新的友链，注意前面的 } 后需要加一个 ,
+    }
+  ],
 ```
 
-如果新增或删除了文章，先运行：
+6.  保存文件。然后回到终端，用 `git add` 命令告诉 Git 你修改了这个文件：
 
-```powershell
-node scripts/generate-site-data.mjs
+```bash
+git add config/friends.json
 ```
+
+7.  提交你的修改，把你的修改推送到 GitHub 上的个人副本，并写一条说明（即引号内容），告诉别人你做了什么：
+
+```bash
+git commit -m "friends: add my blog link"
+# "add-my-name" 是你刚刚创建的分支名
+git push origin add-my-name
+```
+
+8.  回到你在 GitHub 上的项目副本页面 (`https://github.com/YourGitHubID/thedyingkai.github.io`)，页面上会出现一个黄色的提示，旁边有一个绿色的 Compare & pull request 按钮，点击它。然后在新页面检查一下信息，然后点击 Create pull request 按钮。
 
 ## 更新文章
 
@@ -54,10 +85,6 @@ description: 简短摘要
 date: 2026.06.24
 tags: [算法, 笔记]
 ---
-
-## 正文标题
-
-这里写正文。
 ```
 
 文章封面默认不显示。需要封面时，在 front matter 里额外写：
@@ -67,34 +94,15 @@ cover: 1.jpg
 coverAlt: 图片描述
 ```
 
-封面文件从 `assets/images/anime/` 读取，也可以写完整 URL。代码块建议标注语言：
-
-````markdown
-```cpp
-void solve() {
-    // ...
-}
-```
-````
-
-线上部署时，GitHub Actions 会自动运行 `scripts/generate-site-data.mjs`，生成 `config/posts.json`、`rss.xml` 和 `sitemap.xml`。也就是说，正常更新文章只需要提交 `posts/*.md`；本地预览时才需要手动运行生成脚本。
+封面文件从 `assets/images/anime/` 读取，也可以写完整 URL。
 
 ## 更新图片
 
-二次元图片统一放在 `assets/images/anime/`。
-
-当前约定：
-
-```json
-"aboutProfile": { "src": "0.jpg" },
-"homeHero": { "images": [{ "src": "1.jpg" }, { "src": "2.jpg" }] }
-```
-
-`0.jpg` 用于 About 页头像图；首页底层叠放图由 `config/images.json` 的 `homeHero.images` 控制。想加更多首页图片时，把图片放进 `assets/images/anime/`，再追加：
+图片统一放在 `assets/images`。首页底层叠放图由 `config/images.json` 的 `homeHero.images` 控制。想加更多首页图片时，把图片放进 `assets/images/anime/`，再追加：
 
 ```json
 {
-  "src": "3.jpg",
+  "src": "*.jpg",
   "alt": "图片描述"
 }
 ```
@@ -115,16 +123,6 @@ void solve() {
 
 友链页内容在 `config/friends.json`。新增友链时追加站点名、链接、描述和头像地址；没有头像时页面会使用文字占位。
 
-## 更新 RSS 和 Sitemap
-
-RSS 与 sitemap 由 `scripts/generate-site-data.mjs` 自动生成：
-
-```powershell
-node scripts/generate-site-data.mjs
-```
-
-GitHub Pages 工作流会在每次部署前运行该脚本，所以线上一般不需要手动维护 `rss.xml`、`sitemap.xml` 和 `config/posts.json`。
-
 ## 代码高亮
 
-站内使用 Highlight.js 完整版核心 `highlight/highlight.js`，并保留 `c`、`cpp`、`java`、`python`、`bash` 的完整版语言文件。主题使用 `highlight/styles/atom-one-dark.css`。压缩版入口和未使用主题不参与页面加载。
+支持 `c`、`cpp`、`java`、`python`、`bash`。主题使用 `highlight/styles/atom-one-dark.css`。
