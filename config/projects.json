@@ -1,7 +1,7 @@
 {
   "eyebrow": "Projects",
   "title": "项目",
-  "lead": "主要围绕在线评测、训练工具、脚本自动化和个人知识库展开。",
+  "lead": "主要围绕在线评测、训练工具、算法模板、脚本自动化和个人知识库展开。",
   "featured": [
     {
       "meta": "Backend / Judge",
@@ -25,6 +25,18 @@
         "Luogu",
         "Userscript"
       ]
+    },
+    {
+      "meta": "Algorithm / Template",
+      "title": "XCPC Template",
+      "text": "使用 Typst 编写和渲染的 XCPC 算法模板，当前版本 v3.3，并通过 GitHub Releases 发布 PDF。",
+      "href": "https://github.com/thedyingkai/XCPC-Template-by-thedyingkai_",
+      "tags": [
+        "Typst",
+        "XCPC",
+        "Template",
+        "PDF"
+      ]
     }
   ],
   "directions": [
@@ -40,7 +52,7 @@
     {
       "meta": "02",
       "title": "竞赛工具",
-      "text": "围绕刷题平台做更贴近训练流程的增强。",
+      "text": "围绕刷题平台、算法模板和赛前资料整理做更贴近训练流程的增强。",
       "tags": [
         "Training",
         "Automation"
@@ -49,7 +61,7 @@
     {
       "meta": "03",
       "title": "学习归档",
-      "text": "课程复习、算法笔记、实验报告和题解。",
+      "text": "课程复习、算法笔记、模板 PDF、实验报告和题解。",
       "tags": [
         "Archive",
         "Blog"
