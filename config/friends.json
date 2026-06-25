@@ -5,12 +5,14 @@
   "links": [
     {
       "meta": "Friend",
-      "title": "ChaceWebsite",
-      "text": "朋友的个人博客。",
+      "title": "恬炘的小屋",
+      "text": "这不是一个很热闹的地方，更像一间小屋，灯开着，东西各自安放。",
       "href": "https://blog.chacewebsite.cn/",
       "tags": [
-        "Blog"
-      ]
+        "Blog",
+        "恬炘"
+      ],
+      "avatar": "https://blog.chacewebsite.cn/favicon.svg"
     }
   ],
   "apply": [
