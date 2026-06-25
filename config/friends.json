@@ -13,6 +13,19 @@
         "恬炘"
       ],
       "avatar": "https://blog.chacewebsite.cn/favicon.svg"
+    },
+    {
+      "meta": "Friend",
+      "title": "知行网络学堂",
+      "text": "Jason乱开发的有无穷bug的计网agent学堂。",
+      "href": "https://www.jasonsome.cn",
+      "rss": "https://www.jasonsome.cn/rss.xml",
+      "tags": [
+        "AI",
+        "计网",
+        "Agent"
+      ],
+      "avatar": "https://www.jasonsome.cn/assets/images/friends/jasonsome-network-study.png"
     }
   ],
   "apply": [
