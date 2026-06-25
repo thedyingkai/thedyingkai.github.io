@@ -318,8 +318,9 @@
     const configuredLoop = ['all', 'one', 'none'].includes(config.loop) ? config.loop : 'all';
     const loop = ['all', 'one', 'none'].includes(saved.loop) ? saved.loop : configuredLoop;
     const lrcVisible = config.lrcVisible !== false;
+    const collapsed = saved.collapsed === true;
     const volume = Number.isFinite(savedState?.volume) ? savedState.volume : Number(config.volume ?? 0.45);
-    return { order, loop, lrcVisible, volume: Math.max(0, Math.min(1, volume)) };
+    return { order, loop, lrcVisible, collapsed, listVisible: false, volume: Math.max(0, Math.min(1, volume)) };
   }
 
   function showAPlayerLyrics(ap) {
@@ -351,6 +352,29 @@
     const minutes = Math.floor(safe / 60);
     const rest = Math.floor(safe % 60);
     return `${minutes}:${String(rest).padStart(2, '0')}`;
+  }
+
+  function normalizedAudioUrl(value) {
+    try {
+      return new URL(value || '', location.href).href.split('#')[0].split('?')[0];
+    } catch {
+      return String(value || '').split('#')[0].split('?')[0];
+    }
+  }
+
+  function currentTrack(ap) {
+    const audios = ap.list?.audios || [];
+    const listIndex = Number.isFinite(ap.list?.index) ? ap.list.index : 0;
+    const currentSrc = normalizedAudioUrl(ap.audio?.currentSrc || ap.audio?.src || '');
+    const srcIndex = currentSrc
+      ? audios.findIndex(item => normalizedAudioUrl(item.url) === currentSrc)
+      : -1;
+    const index = srcIndex >= 0 ? srcIndex : Math.max(0, Math.min(listIndex, audios.length - 1));
+    return { index, audio: audios[index] || {} };
+  }
+
+  function rangeFill(input, percent) {
+    input.style.setProperty('--range-fill', `${Math.max(0, Math.min(100, percent))}%`);
   }
 
   function dockButton(text, title, className = '') {
@@ -549,6 +573,307 @@
     return dock;
   }
 
+  function renderMusicPanel(id, ap, settings, save) {
+    document.querySelector('[data-music-dock]')?.remove();
+    document.body.classList.add('music-dock-ready');
+
+    const dock = document.createElement('section');
+    dock.className = 'music-dock';
+    dock.dataset.musicDock = id;
+    dock.setAttribute('aria-label', '音乐播放器');
+
+    const cover = document.createElement('div');
+    cover.className = 'music-dock__cover';
+
+    const main = document.createElement('div');
+    main.className = 'music-dock__main';
+
+    const meta = document.createElement('div');
+    meta.className = 'music-dock__meta';
+    const title = document.createElement('strong');
+    const artist = document.createElement('span');
+    meta.append(title, artist);
+
+    const progressRow = document.createElement('div');
+    progressRow.className = 'music-dock__progress';
+    const current = document.createElement('span');
+    current.textContent = '0:00';
+    const progress = document.createElement('input');
+    progress.type = 'range';
+    progress.min = '0';
+    progress.max = '1000';
+    progress.step = '1';
+    progress.value = '0';
+    progress.setAttribute('aria-label', '播放进度');
+    const duration = document.createElement('span');
+    duration.textContent = '0:00';
+    progressRow.append(current, progress, duration);
+
+    const lyricBox = document.createElement('button');
+    lyricBox.type = 'button';
+    lyricBox.className = 'music-dock__lyrics';
+    lyricBox.setAttribute('aria-label', '切换歌词显示');
+    const lyricLine = document.createElement('span');
+    lyricLine.textContent = '歌词加载中';
+    const lyricNext = document.createElement('small');
+    lyricBox.append(lyricLine, lyricNext);
+
+    main.append(meta, progressRow, lyricBox);
+
+    const controls = document.createElement('div');
+    controls.className = 'music-dock__controls';
+    const prev = dockButton('上一首', '上一首');
+    const play = dockButton('播放', '播放或暂停', 'music-dock__button--play');
+    const next = dockButton('下一首', '下一首');
+    const list = dockButton('列表', '打开或收起播放列表');
+    const order = dockButton('随机', '切换顺序或随机播放');
+    const loop = dockButton('循环', '切换循环模式');
+    const lrc = dockButton('歌词', '打开或关闭歌词');
+    const mute = dockButton('静音', '静音或恢复音量');
+    const volume = document.createElement('input');
+    volume.className = 'music-dock__volume';
+    volume.type = 'range';
+    volume.min = '0';
+    volume.max = '1';
+    volume.step = '0.01';
+    volume.value = String(settings.volume);
+    volume.setAttribute('aria-label', '音量');
+    const fold = dockButton('收起', '折叠或展开播放器', 'music-dock__button--fold');
+    controls.append(prev, play, next, list, order, loop, lrc, mute, volume, fold);
+
+    const playlist = document.createElement('div');
+    playlist.className = 'music-dock__list';
+    playlist.setAttribute('aria-label', '播放列表');
+
+    dock.append(cover, main, controls, playlist);
+    document.body.append(dock);
+
+    let seeking = false;
+    let lastLyricText = '';
+
+    const lyricAt = () => {
+      const lines = Array.isArray(ap.lrc?.current) ? ap.lrc.current : [];
+      if (!lines.length) return { text: ap.audio.readyState ? '暂无歌词' : '歌词加载中', next: '' };
+      const now = ap.audio.currentTime || 0;
+      let index = 0;
+      for (let i = 0; i < lines.length; i += 1) {
+        if (now >= Number(lines[i][0] || 0)) index = i;
+        else break;
+      }
+      return {
+        text: String(lines[index]?.[1] || '').trim() || '♪',
+        next: String(lines[index + 1]?.[1] || '').trim()
+      };
+    };
+
+    const syncTrack = () => {
+      const { audio } = currentTrack(ap);
+      title.textContent = audio.name || audio.title || '未知曲目';
+      artist.textContent = audio.artist || audio.author || '未知艺术家';
+      cover.style.backgroundImage = audio.cover ? `url("${String(audio.cover).replace(/"/g, '\\"')}")` : '';
+    };
+
+    const syncLyrics = () => {
+      const lyric = lyricAt();
+      if (lyric.text !== lastLyricText) {
+        lyricLine.textContent = lyric.text;
+        lyricNext.textContent = lyric.next;
+        lastLyricText = lyric.text;
+      }
+    };
+
+    function syncAllSoon() {
+      setTimeout(syncAll, 80);
+      setTimeout(syncAll, 500);
+      setTimeout(syncAll, 1200);
+      setTimeout(syncAll, 2500);
+      setTimeout(syncAll, 5000);
+    }
+
+    const renderPlaylist = () => {
+      const audios = ap.list?.audios || [];
+      const currentIndex = currentTrack(ap).index;
+      playlist.replaceChildren(...audios.map((audio, index) => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'music-dock__list-item';
+        row.classList.toggle('is-active', index === currentIndex);
+        row.setAttribute('aria-current', index === currentIndex ? 'true' : 'false');
+        const name = document.createElement('span');
+        name.textContent = audio.name || audio.title || `曲目 ${index + 1}`;
+        const author = document.createElement('small');
+        author.textContent = audio.artist || audio.author || '';
+        row.append(name, author);
+        row.addEventListener('click', () => {
+          const wasPaused = ap.audio.paused;
+          ap.list.switch(index);
+          if (!wasPaused) ap.play();
+          settings.listVisible = false;
+          syncAllSoon();
+          save();
+        });
+        return row;
+      }));
+    };
+
+    const syncButtons = () => {
+      dock.classList.toggle('is-playing', !ap.audio.paused);
+      dock.classList.toggle('is-collapsed', settings.collapsed);
+      dock.classList.toggle('is-list-open', settings.listVisible && !settings.collapsed);
+      dock.classList.toggle('is-lyrics-off', !settings.lrcVisible);
+      play.textContent = ap.audio.paused ? '播放' : '暂停';
+      play.setAttribute('aria-pressed', String(!ap.audio.paused));
+      list.setAttribute('aria-pressed', String(settings.listVisible));
+      order.textContent = settings.order === 'random' ? '随机' : '顺序';
+      order.setAttribute('aria-pressed', String(settings.order === 'random'));
+      loop.textContent = ({ all: '列表循环', one: '单曲', none: '不循环' }[settings.loop] || '列表循环');
+      loop.setAttribute('aria-pressed', String(settings.loop !== 'none'));
+      lrc.textContent = settings.lrcVisible ? '歌词' : '无歌词';
+      lrc.setAttribute('aria-pressed', String(settings.lrcVisible));
+      mute.textContent = ap.audio.muted || ap.audio.volume === 0 ? '恢复' : '静音';
+      mute.setAttribute('aria-pressed', String(ap.audio.muted || ap.audio.volume === 0));
+      fold.textContent = settings.collapsed ? '展开' : '收起';
+      fold.setAttribute('aria-pressed', String(settings.collapsed));
+    };
+
+    const syncProgress = () => {
+      const total = ap.duration || ap.audio.duration || 0;
+      const now = ap.audio.currentTime || 0;
+      const pct = total > 0 ? Math.max(0, Math.min(100, now / total * 100)) : 0;
+      if (!seeking) progress.value = total > 0 ? String(Math.round(pct * 10)) : '0';
+      rangeFill(progress, pct);
+      current.textContent = timeLabel(now);
+      duration.textContent = timeLabel(total);
+      syncLyrics();
+    };
+
+    const syncVolume = () => {
+      const value = Number(ap.audio.volume || 0);
+      volume.value = String(value);
+      rangeFill(volume, Math.max(0, Math.min(1, value)) * 100);
+      syncButtons();
+    };
+
+    function syncAll() {
+      syncTrack();
+      syncButtons();
+      syncProgress();
+      syncVolume();
+      renderPlaylist();
+    }
+
+    prev.addEventListener('click', () => {
+      const wasPaused = ap.audio.paused;
+      ap.skipBack();
+      if (!wasPaused) ap.play();
+      syncAllSoon();
+    });
+
+    play.addEventListener('click', () => {
+      if (ap.audio.paused) ap.play();
+      else ap.pause();
+    });
+
+    next.addEventListener('click', () => {
+      const wasPaused = ap.audio.paused;
+      ap.skipForward();
+      if (!wasPaused) ap.play();
+      syncAllSoon();
+    });
+
+    list.addEventListener('click', () => {
+      settings.listVisible = !settings.listVisible;
+      syncButtons();
+      save();
+    });
+
+    order.addEventListener('click', () => {
+      settings.order = settings.order === 'random' ? 'list' : 'random';
+      ap.options.order = settings.order;
+      syncButtons();
+      save();
+    });
+
+    loop.addEventListener('click', () => {
+      const modes = ['all', 'one', 'none'];
+      settings.loop = modes[(modes.indexOf(settings.loop) + 1) % modes.length] || 'all';
+      ap.options.loop = settings.loop;
+      syncButtons();
+      save();
+    });
+
+    lrc.addEventListener('click', () => {
+      settings.lrcVisible = !settings.lrcVisible;
+      applyLyricVisibility(ap, settings.lrcVisible);
+      syncButtons();
+      syncLyrics();
+      save();
+    });
+
+    lyricBox.addEventListener('click', () => lrc.click());
+
+    mute.addEventListener('click', () => {
+      if (ap.audio.muted || ap.audio.volume === 0) {
+        ap.audio.muted = false;
+        ap.volume(settings.volume || 0.45);
+      } else {
+        settings.volume = Number(ap.audio.volume || settings.volume || 0.45);
+        ap.audio.muted = true;
+      }
+      syncVolume();
+      save();
+    });
+
+    volume.addEventListener('input', () => {
+      settings.volume = Number(volume.value);
+      ap.audio.muted = false;
+      ap.volume(settings.volume);
+      save();
+    });
+
+    progress.addEventListener('input', () => {
+      seeking = true;
+      const total = ap.duration || ap.audio.duration || 0;
+      const target = total * Number(progress.value) / 1000;
+      rangeFill(progress, Math.max(0, Math.min(100, Number(progress.value) / 10)));
+      current.textContent = timeLabel(target);
+    });
+
+    progress.addEventListener('change', () => {
+      const total = ap.duration || ap.audio.duration || 0;
+      if (total > 0) ap.seek(total * Number(progress.value) / 1000);
+      seeking = false;
+      syncProgress();
+      save();
+    });
+
+    fold.addEventListener('click', () => {
+      settings.collapsed = !settings.collapsed;
+      if (settings.collapsed) settings.listVisible = false;
+      syncButtons();
+      save();
+    });
+
+    ap.on?.('play', syncButtons);
+    ap.on?.('pause', syncButtons);
+    ap.on?.('timeupdate', syncProgress);
+    ap.on?.('durationchange', syncProgress);
+    ap.on?.('loadedmetadata', syncAll);
+    ap.on?.('listswitch', syncAllSoon);
+    ap.on?.('canplay', syncAll);
+    ap.audio.addEventListener('timeupdate', syncProgress);
+    ap.audio.addEventListener('durationchange', syncProgress);
+    ap.audio.addEventListener('loadedmetadata', syncAll);
+    ap.audio.addEventListener('playing', syncAll);
+    ap.audio.addEventListener('canplay', syncAll);
+    ap.audio.addEventListener('volumechange', syncVolume);
+
+    applyLyricVisibility(ap, settings.lrcVisible);
+    syncAll();
+    syncAllSoon();
+    return dock;
+  }
+
   function bindMusicState(id, ap, config, savedState) {
     const settings = musicSettings(config, savedState);
     let restoring = true;
@@ -570,6 +895,8 @@
     if (Number.isFinite(savedState?.index)) {
       ap.list.switch(Math.max(0, Math.min(savedState.index, ap.list.audios.length - 1)));
     }
+
+    renderMusicPanel(id, ap, settings, saveNow);
 
     ap.on?.('play', saveSoon);
     ap.on?.('pause', saveSoon);
