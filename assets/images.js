@@ -121,5 +121,5 @@
       target.innerHTML = imageStack(slot, cfg.basePath);
       bindHeroStackMotion(target);
     });
-  }).catch(() => {});
+  }).catch(() => { });
 })();

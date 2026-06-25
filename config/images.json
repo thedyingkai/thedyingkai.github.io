@@ -3,7 +3,7 @@
   "slots": {
     "aboutProfile": {
       "src": "0.jpg",
-      "alt": "洛天依与乐正绫同人图",
+      "alt": "0",
       "title": "Profile",
       "caption": "华风夏韵，洛水天依。"
     },
@@ -11,11 +11,19 @@
       "images": [
         {
           "src": "1.jpg",
-          "alt": "蓝色舞台上的洛天依视觉图"
+          "alt": "1"
         },
         {
           "src": "2.jpg",
-          "alt": "浅蓝色洛天依线稿视觉图"
+          "alt": "2"
+        },
+        {
+          "src": "3.jpg",
+          "alt": "3"
+        },
+        {
+          "src": "4.jpg",
+          "alt": "4"
         }
       ]
     }
