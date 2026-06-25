@@ -264,6 +264,8 @@ async function renderPostLists() {
     listTargets.forEach(target => {
       target.innerHTML = `<div class="card"><h3>文章加载失败</h3><p>${escapeHtml(error.message)}</p></div>`;
     });
+  } finally {
+    window.dispatchEvent(new Event('tdk:content-rendered'));
   }
 }
 

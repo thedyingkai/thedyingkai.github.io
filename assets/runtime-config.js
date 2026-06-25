@@ -141,6 +141,7 @@ loadConfig().then(cfg => {
   renderAboutPage(cfg);
   renderFriendsPage(cfg);
   updatePostCounts();
+  window.dispatchEvent(new Event('tdk:content-rendered'));
 }).catch(e => {
   document.querySelectorAll('[data-config-error]').forEach(x => x.textContent = e.message);
 });

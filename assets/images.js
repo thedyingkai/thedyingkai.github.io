@@ -48,7 +48,7 @@
       return `<img class="hero__stack-image" data-stack-index="${index}" style="${stackStyle(item, index)}" src="${esc(src)}" alt="${esc(item.alt || '')}" loading="${index === 0 ? 'eager' : 'lazy'}">`;
     }).join('');
     const dots = items.length > 1
-      ? `<div class="hero__stack-dots">${items.map((_, index) => `<span class="hero__stack-dot" data-stack-dot="${index}"></span>`).join('')}</div>`
+      ? `<div class="hero__stack-dots">${items.map((_, index) => `<button class="hero__stack-dot" type="button" data-stack-dot="${index}" aria-label="切换到第 ${index + 1} 张图片"></button>`).join('')}</div>`
       : '';
     return images + dots;
   }
@@ -121,6 +121,13 @@
 
     setActive(0);
 
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        setActive(index);
+        lastSlide = performance.now();
+      });
+    });
+
     const setMotion = (x, y, active) => {
       const tilt = reduceMotion ? .35 : 1;
       target.style.setProperty('--tilt-x', `${(-y * 18 * tilt).toFixed(2)}deg`);
@@ -146,13 +153,6 @@
       lastMove = now;
       nextX = px * 2;
       nextY = py * 2;
-      if (images.length > 1 && now - lastSlide > 180) {
-        const zone = Math.max(0, Math.min(images.length - 1, Math.floor((px + .5) * images.length)));
-        if (zone !== activeIndex) {
-          setActive(zone);
-          lastSlide = now;
-        }
-      }
       target.classList.add('is-interacting');
     });
 
@@ -164,7 +164,7 @@
     if (images.length > 1) {
       setInterval(() => {
         if (!hovering && document.visibilityState === 'visible') setActive(activeIndex + 1);
-      }, reduceMotion ? 5200 : 3600);
+      }, reduceMotion ? 6200 : 4800);
     }
 
     const tick = now => {
@@ -200,5 +200,6 @@
       target.innerHTML = imageStack(slot, cfg.basePath);
       bindHeroStackMotion(target);
     });
+    window.dispatchEvent(new Event('tdk:content-rendered'));
   }).catch(() => { });
 })();

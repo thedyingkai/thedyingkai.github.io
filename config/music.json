@@ -10,7 +10,7 @@
   "order": "random",
   "loop": "all",
   "lrcType": 3,
-  "preload": "metadata",
+  "preload": "auto",
   "volume": 0.45,
   "theme": "#66ccff",
   "listFolded": true,

@@ -7,7 +7,7 @@
     <meta name="description" content="TDK 的小窝友链。">
     <title>友链 · TDK 的小窝</title>
     <link rel="icon" href="/assets/images/site/ico.png">
-    <link rel="stylesheet" href="/assets/site.css?v=1.8">
+    <link rel="stylesheet" href="/assets/site.css?v=2.1">
     <link rel="stylesheet" href="/assets/fonts.css?v=1.1">
 </head>
 
@@ -37,13 +37,106 @@
                         <h2>交换友链</h2>
                     </div>
                 </div>
-                <div class="grid grid--2" data-friends-apply></div>
+                <div class="friend-exchange">
+                    <section class="friend-exchange__panel friend-exchange__panel--info">
+                        <div class="friend-exchange__intro">
+                            <span class="eyebrow">My Link</span>
+                            <h3>你可以这样在你的网站填写我的友链</h3>
+                        </div>
+                        <table class="friend-exchange__table">
+                            <tbody>
+                                <tr>
+                                    <th>站点名称</th>
+                                    <td>TDK 的小窝</td>
+                                </tr>
+                                <tr>
+                                    <th>站点 URL</th>
+                                    <td><a href="https://thedyingkai.github.io" target="_blank"
+                                            rel="noreferrer">https://thedyingkai.github.io</a></td>
+                                </tr>
+                                <tr>
+                                    <th>头像 URL</th>
+                                    <td><a href="https://thedyingkai.github.io/assets/images/site/ico.png"
+                                            target="_blank"
+                                            rel="noreferrer">https://thedyingkai.github.io/assets/images/site/ico.png</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>RSS URL</th>
+                                    <td><a href="https://thedyingkai.github.io/rss.xml" target="_blank"
+                                            rel="noreferrer">https://thedyingkai.github.io/rss.xml</a></td>
+                                </tr>
+                                <tr>
+                                    <th>描述</th>
+                                    <td>华风夏韵，洛水天依。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="friend-exchange__panel">
+                        <div class="friend-exchange__intro">
+                            <span class="eyebrow">Pull Request</span>
+                            <h3>你可以这样将你的友链填写到我的网站</h3>
+                        </div>
+                        <ol class="friend-exchange__steps">
+                            <li>
+                                <h4>Fork 仓库</h4>
+                                <p>点击 GitHub 仓库右上角的 Fork 按钮，把整个项目复制到你自己的 GitHub 账号下。</p>
+                            </li>
+                            <li>
+                                <h4>克隆你的项目副本</h4>
+                                <p>打开终端或 Git Bash，把 <code>YourGitHubID</code> 换成你的 GitHub 用户名。</p>
+                                <pre><code>git clone https://github.com/YourGitHubID/thedyingkai.github.io.git
+cd thedyingkai.github.io</code></pre>
+                            </li>
+                            <li>
+                                <h4>新建分支</h4>
+                                <p>分支名可以自定义，比如 <code>add-my-name</code>。</p>
+                                <pre><code>git checkout -b add-my-name</code></pre>
+                            </li>
+                            <li>
+                                <h4>编辑友链文件</h4>
+                                <p>找到并打开 <code>config/friends.json</code>。在文件的 <code>"links"</code> 数组内部，找到最后一个友链对象，在它后面加逗号，然后追加你的信息。</p>
+                                <pre><code>"links": [
+  {
+    "meta": "Friend",
+    "title": "站点名称",
+    "text": "描述",
+    "href": "站点 URL",
+    "tags": [
+      "Blog"
+    ],
+    "avatar": "头像 URL"
+  }
+]</code></pre>
+                            </li>
+                            <li>
+                                <h4>保存并暂存修改</h4>
+                                <pre><code>git add config/friends.json</code></pre>
+                            </li>
+                            <li>
+                                <h4>提交并推送分支</h4>
+                                <pre><code>git commit -m "friends: add my blog link"
+git push origin add-my-name</code></pre>
+                            </li>
+                            <li>
+                                <h4>创建 Pull Request</h4>
+                                <p>回到你的项目副本页面：<code>https://github.com/YourGitHubID/thedyingkai.github.io</code>。点击黄色提示旁的 <strong>Compare &amp; pull request</strong>。</p>
+                            </li>
+                            <li>
+                                <h4>检查并提交</h4>
+                                <p>在新页面检查友链信息是否正确，然后点击 <strong>Create pull request</strong>。</p>
+                            </li>
+                        </ol>
+                    </section>
+                </div>
             </div>
         </section>
     </main>
     <footer class="footer" data-site-footer></footer>
-    <script src="/assets/site.js?v=1.7"></script>
-    <script type="module" src="/assets/runtime-config.js?v=1.3"></script>
+    <script src="/assets/site.js?v=2.0"></script>
+    <script type="module" src="/assets/runtime-config.js?v=1.4"></script>
 </body>
 
 </html>

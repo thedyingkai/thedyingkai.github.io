@@ -34,6 +34,10 @@
           ]
         }
       ]
+    },
+    repo: {
+      label: 'GitHub 仓库',
+      href: 'https://github.com/thedyingkai/thedyingkai.github.io'
     }
   };
 
@@ -85,6 +89,14 @@
     return a;
   }
 
+  function githubIcon() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = '<path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.42-4.04-1.42-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.3c0 .32.22.69.83.57A12 12 0 0 0 12 .5Z"/>';
+    return svg;
+  }
+
   function renderHeader(site) {
     const header = document.querySelector('[data-site-header]');
     if (!header) return;
@@ -118,6 +130,18 @@
     nav.setAttribute('aria-label', '主导航');
     const current = activeKey();
     (site.nav || defaultSite.nav).forEach(item => nav.append(makeLink(item, current)));
+    const repo = site.repo || defaultSite.repo;
+    if (repo?.href) {
+      const repoLink = document.createElement('a');
+      repoLink.className = 'nav__icon nav__icon--github';
+      repoLink.href = repo.href;
+      repoLink.target = '_blank';
+      repoLink.rel = 'noreferrer';
+      repoLink.title = repo.label || 'GitHub';
+      repoLink.setAttribute('aria-label', repo.label || 'GitHub');
+      repoLink.append(githubIcon());
+      nav.append(repoLink);
+    }
 
     inner.append(brand, nav);
     header.replaceChildren(inner);
@@ -161,6 +185,40 @@
 
     inner.append(identity, groups);
     footer.replaceChildren(inner);
+  }
+
+  function initPageMotion() {
+    const candidates = [
+      ...document.querySelectorAll('.page-head, .section-head, .card, .stat-card, .anime-frame, .timeline__item, .post-tools, .friend-exchange__panel, .friend-exchange__steps li')
+    ].filter(node => !node.dataset.revealReady);
+    if (!candidates.length) return;
+    document.body.classList.add('motion-ready');
+
+    if (!('IntersectionObserver' in window)) {
+      candidates.forEach(node => node.classList.add('is-visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: .12 });
+
+    candidates.forEach((node, index) => {
+      node.dataset.revealReady = '1';
+      node.classList.add('reveal-item');
+      node.style.setProperty('--reveal-delay', `${Math.min(index % 8, 7) * 45}ms`);
+      observer.observe(node);
+    });
+  }
+
+  function schedulePageMotion() {
+    initPageMotion();
+    setTimeout(initPageMotion, 450);
+    setTimeout(initPageMotion, 1000);
   }
 
   function loadStyleOnce(href) {
@@ -230,7 +288,7 @@
       settings: {
         ...settings,
         order: ['list', 'random'].includes(ap.options?.order) ? ap.options.order : settings.order,
-        loop: ap.options?.loop === 'one' ? 'one' : 'all'
+        loop: ['all', 'one', 'none'].includes(ap.options?.loop) ? ap.options.loop : settings.loop
       },
       savedAt: Date.now()
     };
@@ -257,9 +315,11 @@
     const saved = savedState?.settings || {};
     const configuredOrder = ['list', 'random'].includes(config.order) ? config.order : 'random';
     const order = ['list', 'random'].includes(saved.order) ? saved.order : configuredOrder;
-    const loop = saved.loop === 'one' ? 'one' : 'all';
+    const configuredLoop = ['all', 'one', 'none'].includes(config.loop) ? config.loop : 'all';
+    const loop = ['all', 'one', 'none'].includes(saved.loop) ? saved.loop : configuredLoop;
+    const lrcVisible = config.lrcVisible !== false;
     const volume = Number.isFinite(savedState?.volume) ? savedState.volume : Number(config.volume ?? 0.45);
-    return { order, loop, volume: Math.max(0, Math.min(1, volume)) };
+    return { order, loop, lrcVisible, volume: Math.max(0, Math.min(1, volume)) };
   }
 
   function showAPlayerLyrics(ap) {
@@ -268,18 +328,231 @@
     ap?.template?.lrcButton?.classList.remove('aplayer-icon-lrc-inactivity');
   }
 
+  function applyLyricVisibility(ap, visible) {
+    document.body.classList.toggle('music-lrc-off', !visible);
+    if (visible) {
+      ap?.lrc?.show?.();
+      ap?.template?.lrcButton?.classList.remove('aplayer-icon-lrc-inactivity');
+    } else {
+      ap?.lrc?.hide?.();
+      ap?.template?.lrcButton?.classList.add('aplayer-icon-lrc-inactivity');
+    }
+  }
+
   function applyMusicSettings(ap, settings) {
     ap.options.order = settings.order;
-    ap.options.loop = settings.loop === 'one' ? 'one' : 'all';
+    ap.options.loop = ['all', 'one', 'none'].includes(settings.loop) ? settings.loop : 'all';
     if (Number.isFinite(settings.volume)) ap.audio.volume = settings.volume;
-    showAPlayerLyrics(ap);
+    applyLyricVisibility(ap, settings.lrcVisible);
+  }
+
+  function timeLabel(seconds) {
+    const safe = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+    const minutes = Math.floor(safe / 60);
+    const rest = Math.floor(safe % 60);
+    return `${minutes}:${String(rest).padStart(2, '0')}`;
+  }
+
+  function dockButton(text, title, className = '') {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `music-dock__button${className ? ` ${className}` : ''}`;
+    button.textContent = text;
+    button.title = title;
+    button.setAttribute('aria-label', title);
+    return button;
+  }
+
+  function renderMusicDock(id, ap, settings, save) {
+    document.querySelector('[data-music-dock]')?.remove();
+    document.body.classList.add('music-dock-ready');
+
+    const dock = document.createElement('section');
+    dock.className = 'music-dock';
+    dock.dataset.musicDock = id;
+    dock.setAttribute('aria-label', '音乐播放器');
+
+    const cover = document.createElement('div');
+    cover.className = 'music-dock__cover';
+
+    const main = document.createElement('div');
+    main.className = 'music-dock__main';
+
+    const meta = document.createElement('div');
+    meta.className = 'music-dock__meta';
+    const title = document.createElement('strong');
+    const artist = document.createElement('span');
+    meta.append(title, artist);
+
+    const progressRow = document.createElement('div');
+    progressRow.className = 'music-dock__progress';
+    const current = document.createElement('span');
+    current.textContent = '0:00';
+    const progress = document.createElement('input');
+    progress.type = 'range';
+    progress.min = '0';
+    progress.max = '1000';
+    progress.step = '1';
+    progress.value = '0';
+    progress.setAttribute('aria-label', '播放进度');
+    const duration = document.createElement('span');
+    duration.textContent = '0:00';
+    progressRow.append(current, progress, duration);
+
+    main.append(meta, progressRow);
+
+    const controls = document.createElement('div');
+    controls.className = 'music-dock__controls';
+    const prev = dockButton('‹', '上一首');
+    const play = dockButton('▶', '播放或暂停', 'music-dock__button--play');
+    const next = dockButton('›', '下一首');
+    const list = dockButton('列表', '打开或收起播放列表');
+    const order = dockButton('随机', '切换顺序或随机播放');
+    const loop = dockButton('循环', '切换循环模式');
+    const lrc = dockButton('歌词', '打开或关闭歌词');
+    const volume = document.createElement('input');
+    volume.className = 'music-dock__volume';
+    volume.type = 'range';
+    volume.min = '0';
+    volume.max = '1';
+    volume.step = '0.01';
+    volume.value = String(settings.volume);
+    volume.setAttribute('aria-label', '音量');
+    controls.append(prev, play, next, list, order, loop, lrc, volume);
+
+    dock.append(cover, main, controls);
+    document.body.append(dock);
+
+    let seeking = false;
+
+    const syncTrack = () => {
+      const audio = ap.list?.audios?.[ap.list.index] || {};
+      title.textContent = audio.name || audio.title || '未知曲目';
+      artist.textContent = audio.artist || audio.author || '未知艺术家';
+      cover.style.backgroundImage = audio.cover ? `url("${String(audio.cover).replace(/"/g, '\\"')}")` : '';
+    };
+
+    const syncButtons = () => {
+      play.textContent = ap.audio.paused ? '▶' : 'Ⅱ';
+      play.setAttribute('aria-pressed', String(!ap.audio.paused));
+      dock.classList.toggle('is-playing', !ap.audio.paused);
+      const listNode = ap.template?.list || ap.container?.querySelector?.('.aplayer-list');
+      const listOpen = listNode ? !listNode.classList.contains('aplayer-list-hide') : false;
+      list.setAttribute('aria-pressed', String(listOpen));
+      order.textContent = settings.order === 'random' ? '随机' : '顺序';
+      order.setAttribute('aria-pressed', String(settings.order === 'random'));
+      const loopLabel = { all: '列表循环', one: '单曲循环', none: '播完停止' }[settings.loop] || '列表循环';
+      loop.textContent = loopLabel;
+      loop.setAttribute('aria-pressed', String(settings.loop !== 'none'));
+      lrc.textContent = settings.lrcVisible ? '歌词' : '歌词关';
+      lrc.setAttribute('aria-pressed', String(settings.lrcVisible));
+    };
+
+    const syncProgress = () => {
+      const total = ap.duration || ap.audio.duration || 0;
+      const now = ap.audio.currentTime || 0;
+      const pct = total > 0 ? Math.max(0, Math.min(100, now / total * 100)) : 0;
+      if (!seeking) progress.value = total > 0 ? String(Math.round(pct * 10)) : '0';
+      progress.style.setProperty('--progress', `${pct}%`);
+      current.textContent = timeLabel(now);
+      duration.textContent = timeLabel(total);
+    };
+
+    const syncVolume = () => {
+      const value = Number(ap.audio.volume || 0);
+      volume.value = String(value);
+      volume.style.setProperty('--volume', `${Math.max(0, Math.min(1, value)) * 100}%`);
+    };
+
+    const syncAll = () => {
+      syncTrack();
+      syncButtons();
+      syncProgress();
+      syncVolume();
+    };
+
+    prev.addEventListener('click', () => {
+      const wasPaused = ap.audio.paused;
+      ap.skipBack();
+      if (!wasPaused) ap.play();
+    });
+
+    play.addEventListener('click', () => ap.toggle());
+
+    next.addEventListener('click', () => {
+      const wasPaused = ap.audio.paused;
+      ap.skipForward();
+      if (!wasPaused) ap.play();
+    });
+
+    list.addEventListener('click', () => {
+      ap.list?.toggle?.();
+      setTimeout(syncButtons, 60);
+    });
+
+    order.addEventListener('click', () => {
+      settings.order = settings.order === 'random' ? 'list' : 'random';
+      ap.options.order = settings.order;
+      syncButtons();
+      save();
+    });
+
+    loop.addEventListener('click', () => {
+      const modes = ['all', 'one', 'none'];
+      settings.loop = modes[(modes.indexOf(settings.loop) + 1) % modes.length] || 'all';
+      ap.options.loop = settings.loop;
+      syncButtons();
+      save();
+    });
+
+    lrc.addEventListener('click', () => {
+      settings.lrcVisible = !settings.lrcVisible;
+      applyLyricVisibility(ap, settings.lrcVisible);
+      syncButtons();
+      save();
+    });
+
+    volume.addEventListener('input', () => {
+      settings.volume = Number(volume.value);
+      ap.volume(settings.volume);
+      save();
+    });
+
+    progress.addEventListener('input', () => {
+      seeking = true;
+      const total = ap.duration || ap.audio.duration || 0;
+      const target = total * Number(progress.value) / 1000;
+      progress.style.setProperty('--progress', `${Math.max(0, Math.min(100, Number(progress.value) / 10))}%`);
+      current.textContent = timeLabel(target);
+    });
+
+    progress.addEventListener('change', () => {
+      const total = ap.duration || ap.audio.duration || 0;
+      if (total > 0) ap.seek(total * Number(progress.value) / 1000);
+      seeking = false;
+      syncProgress();
+      save();
+    });
+
+    ap.on?.('play', syncButtons);
+    ap.on?.('pause', syncButtons);
+    ap.on?.('timeupdate', syncProgress);
+    ap.on?.('durationchange', syncProgress);
+    ap.on?.('loadedmetadata', syncProgress);
+    ap.on?.('listswitch', syncAll);
+    ap.audio.addEventListener('timeupdate', syncProgress);
+    ap.audio.addEventListener('durationchange', syncProgress);
+    ap.audio.addEventListener('loadedmetadata', syncProgress);
+    ap.audio.addEventListener('volumechange', syncVolume);
+
+    syncAll();
+    return dock;
   }
 
   function bindMusicState(id, ap, config, savedState) {
     const settings = musicSettings(config, savedState);
     let restoring = true;
     let saveTimer = 0;
-    let lastSecond = -1;
 
     const saveNow = () => saveMusicState(id, ap, settings);
     const saveSoon = () => {
@@ -287,48 +560,31 @@
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveNow, 240);
     };
+    const keepLyricsVisible = () => {
+      if (!settings.lrcVisible) return;
+      setTimeout(() => applyLyricVisibility(ap, true), 120);
+    };
 
     applyMusicSettings(ap, settings);
 
     if (Number.isFinite(savedState?.index)) {
       ap.list.switch(Math.max(0, Math.min(savedState.index, ap.list.audios.length - 1)));
-    } else if (settings.order === 'random') {
-      ap.list.switch(Math.floor(Math.random() * ap.list.audios.length));
-    }
-
-    const resumeTime = Number(savedState?.currentTime || 0);
-    if (resumeTime > 1) {
-      const seek = () => {
-        if (Number.isFinite(ap.audio.duration) && resumeTime < ap.audio.duration - 1) ap.seek(resumeTime);
-      };
-      ap.audio.addEventListener('loadedmetadata', seek, { once: true });
-      setTimeout(seek, 500);
-    }
-
-    if (savedState && !savedState.paused) {
-      setTimeout(() => {
-        const result = ap.play();
-        result?.catch?.(() => {});
-      }, 700);
     }
 
     ap.on?.('play', saveSoon);
     ap.on?.('pause', saveSoon);
-    ap.on?.('listswitch', saveSoon);
+    ap.on?.('listswitch', () => {
+      keepLyricsVisible();
+      saveSoon();
+    });
+    ap.on?.('loadedmetadata', keepLyricsVisible);
     ap.template?.order?.addEventListener?.('click', () => {
       settings.order = ['list', 'random'].includes(ap.options?.order) ? ap.options.order : settings.order;
       saveSoon();
     });
     ap.template?.loop?.addEventListener?.('click', () => {
-      settings.loop = ap.options?.loop === 'one' ? 'one' : 'all';
+      settings.loop = ['all', 'one', 'none'].includes(ap.options?.loop) ? ap.options.loop : settings.loop;
       saveSoon();
-    });
-    ap.audio.addEventListener('timeupdate', () => {
-      const second = Math.floor(ap.audio.currentTime || 0);
-      if (second !== lastSecond && second % 3 === 0) {
-        lastSecond = second;
-        saveSoon();
-      }
     });
     ap.audio.addEventListener('volumechange', () => {
       settings.volume = Number(ap.audio.volume || settings.volume);
@@ -348,6 +604,8 @@
       const id = neteasePlaylistId(config);
       if (!id) return;
       document.querySelector('[data-music-panel]')?.remove();
+      document.querySelector('[data-music-dock]')?.remove();
+      document.body.classList.remove('music-dock-ready');
       document.body.classList.remove('music-lrc-off');
       const savedState = readMusicState(id);
       const savedSettings = musicSettings(config, savedState);
@@ -364,8 +622,8 @@
       attr(player, 'mini', config.mini ?? true);
       attr(player, 'autoplay', config.autoplay ?? false);
       attr(player, 'order', savedSettings.order === 'random' ? 'random' : 'list');
-      attr(player, 'loop', savedSettings.loop === 'one' ? 'one' : 'all');
-      attr(player, 'preload', config.preload || 'metadata');
+      attr(player, 'loop', ['all', 'one', 'none'].includes(savedSettings.loop) ? savedSettings.loop : 'all');
+      attr(player, 'preload', config.preload || 'auto');
       attr(player, 'volume', savedSettings.volume);
       attr(player, 'theme', config.theme || '#66ccff');
       attr(player, 'lrc-type', config.lrcType ?? 3);
@@ -382,8 +640,11 @@
     renderHeader(site);
     renderFooter(site);
     setProgress();
+    schedulePageMotion();
   });
   initMusicPlayer();
+  addEventListener('tdk:content-rendered', schedulePageMotion);
+  schedulePageMotion();
   setProgress();
   addEventListener('scroll', setProgress, { passive: true });
 })();
