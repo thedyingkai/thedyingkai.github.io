@@ -283,6 +283,7 @@
     const audioVolume = Number(ap.audio.volume);
     const audioTime = Number(ap.audio.currentTime);
     const audioDuration = Number(ap.audio.duration || ap.duration);
+    const manualPaused = settings.manualPaused === true && ap.audio.paused && !ap.audio.ended;
     const state = {
       id,
       version: 2,
@@ -292,6 +293,7 @@
       duration: Number.isFinite(audioDuration) ? audioDuration : 0,
       paused: Boolean(ap.audio.paused),
       playing: !ap.audio.paused && !ap.audio.ended,
+      manualPaused,
       ended: Boolean(ap.audio.ended),
       volume: Number.isFinite(audioVolume) ? audioVolume : Number(settings.volume || 0.45),
       muted: Boolean(ap.audio.muted),
@@ -310,7 +312,8 @@
         muted: Boolean(ap.audio.muted),
         playbackRate: Number(ap.audio.playbackRate || 1),
         order: ['list', 'random'].includes(ap.options?.order) ? ap.options.order : settings.order,
-        loop: ['all', 'one', 'none'].includes(ap.options?.loop) ? ap.options.loop : settings.loop
+        loop: ['all', 'one', 'none'].includes(ap.options?.loop) ? ap.options.loop : settings.loop,
+        manualPaused
       },
       savedAt: Date.now()
     };
@@ -352,6 +355,7 @@
       collapsed,
       listVisible,
       muted: saved.muted === true || savedState?.muted === true,
+      manualPaused: saved.manualPaused === true || savedState?.manualPaused === true,
       playbackRate: Number.isFinite(playbackRate) ? playbackRate : 1,
       volume: Math.max(0, Math.min(1, volume))
     };
@@ -543,7 +547,18 @@
     const lyricNext = document.createElement('small');
     lyricBox.append(lyricLine, lyricNext);
 
-    main.append(meta, progressRow, lyricBox);
+    const wave = document.createElement('div');
+    wave.className = 'music-dock__wave';
+    wave.setAttribute('aria-hidden', 'true');
+    const waveBars = Array.from({ length: 14 }, (_, index) => {
+      const bar = document.createElement('span');
+      bar.style.setProperty('--wave-delay', `${index * -90}ms`);
+      bar.style.setProperty('--wave-scale', '.24');
+      return bar;
+    });
+    wave.append(...waveBars);
+
+    main.append(meta, wave, progressRow, lyricBox);
 
     const controls = document.createElement('div');
     controls.className = 'music-dock__controls';
@@ -578,6 +593,12 @@
     let lyricKey = '';
     let activeLyrics = [];
     let lyricRequest = 0;
+    let syncTimer = 0;
+    let syncNeedsPlaylist = false;
+    let lastPlaylistIndex = -1;
+    let lastPlaylistSize = -1;
+    let waveFrame = 0;
+    let lastWaveFrame = 0;
     const lyricCache = new Map();
 
     const lyricAt = () => {
@@ -600,6 +621,7 @@
       const key = audio.lrc || audio.url || String(index);
       if (!key) return;
       if (key === lyricKey && activeLyrics.length) return;
+      if (key === lyricKey && lyricCache.has(key)) return;
       if (key !== lyricKey) {
         lyricKey = key;
         activeLyrics = [];
@@ -638,6 +660,7 @@
     };
 
     const syncLyrics = () => {
+      if (!settings.lrcVisible) return;
       const lyric = lyricAt();
       if (lyric.text !== lastLyricText) {
         lyricLine.textContent = lyric.text;
@@ -646,17 +669,23 @@
       }
     };
 
-    function syncAllSoon() {
-      setTimeout(syncAll, 80);
-      setTimeout(syncAll, 500);
-      setTimeout(syncAll, 1200);
-      setTimeout(syncAll, 2500);
-      setTimeout(syncAll, 5000);
+    function syncAllSoon(forcePlaylist = false) {
+      syncNeedsPlaylist = syncNeedsPlaylist || forcePlaylist;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        const shouldRenderPlaylist = syncNeedsPlaylist;
+        syncNeedsPlaylist = false;
+        syncAll(shouldRenderPlaylist);
+      }, 90);
     }
 
-    const renderPlaylist = () => {
+    const renderPlaylist = (force = false) => {
       const audios = ap.list?.audios || [];
       const currentIndex = currentTrack(ap).index;
+      if (!force && !settings.listVisible) return;
+      if (!force && lastPlaylistIndex === currentIndex && lastPlaylistSize === audios.length && playlist.childElementCount) return;
+      lastPlaylistIndex = currentIndex;
+      lastPlaylistSize = audios.length;
       playlist.replaceChildren(...audios.map((audio, index) => {
         const row = document.createElement('button');
         row.type = 'button';
@@ -671,7 +700,7 @@
         row.addEventListener('click', () => {
           switchTo(index, true);
           settings.listVisible = false;
-          syncAllSoon();
+          syncAllSoon(true);
           save();
         });
         return row;
@@ -683,6 +712,12 @@
       dock.classList.toggle('is-collapsed', settings.collapsed);
       dock.classList.toggle('is-list-open', settings.listVisible && !settings.collapsed);
       dock.classList.toggle('is-lyrics-off', !settings.lrcVisible);
+      lyricBox.hidden = !settings.lrcVisible;
+      if (!settings.lrcVisible) {
+        lastLyricText = '';
+        lyricLine.textContent = '';
+        lyricNext.textContent = '';
+      }
       setDockButtonIcon(play, ap.audio.paused ? 'play' : 'pause', ap.audio.paused ? '播放' : '暂停');
       play.setAttribute('aria-pressed', String(!ap.audio.paused));
       list.setAttribute('aria-pressed', String(settings.listVisible));
@@ -711,19 +746,49 @@
       syncLyrics();
     };
 
+    const syncWave = (timestamp = 0) => {
+      if (timestamp && timestamp - lastWaveFrame < 70) {
+        waveFrame = requestAnimationFrame(syncWave);
+        return;
+      }
+      lastWaveFrame = timestamp || performance.now();
+      const volume = ap.audio.muted ? 0 : Number(ap.audio.volume || 0);
+      const time = Number(ap.audio.currentTime || 0);
+      const energy = ap.audio.paused ? .16 : Math.max(.26, Math.min(1, .24 + volume * .76));
+      dock.style.setProperty('--wave-energy', String(energy.toFixed(2)));
+      waveBars.forEach((bar, index) => {
+        const pulse = Math.abs(Math.sin(time * (2.2 + index * .17) + index * .85));
+        const ripple = Math.abs(Math.cos(time * 1.35 + index * .43));
+        const scale = ap.audio.paused ? .18 + index % 3 * .04 : .18 + (pulse * .58 + ripple * .24) * energy;
+        bar.style.setProperty('--wave-scale', scale.toFixed(2));
+      });
+      if (!ap.audio.paused) waveFrame = requestAnimationFrame(syncWave);
+    };
+
+    const startWave = () => {
+      cancelAnimationFrame(waveFrame);
+      waveFrame = requestAnimationFrame(syncWave);
+    };
+
+    const stopWave = () => {
+      cancelAnimationFrame(waveFrame);
+      syncWave();
+    };
+
     const syncVolume = () => {
       const value = Number(ap.audio.volume || 0);
       volume.value = String(value);
       rangeFill(volume, Math.max(0, Math.min(1, value)) * 100);
       syncButtons();
+      syncWave();
     };
 
-    function syncAll() {
+    function syncAll(forcePlaylist = false) {
       syncTrack();
       syncButtons();
       syncProgress();
       syncVolume();
-      renderPlaylist();
+      renderPlaylist(forcePlaylist);
     }
 
     const targetIndex = direction => {
@@ -741,9 +806,10 @@
     const switchTo = (index, shouldPlay = !ap.audio.paused) => {
       const audios = ap.list?.audios || [];
       if (!audios[index]) return;
+      if (shouldPlay) settings.manualPaused = false;
       ap.list.switch(index);
       if (shouldPlay) setTimeout(() => ap.play(), 80);
-      syncAllSoon();
+      syncAllSoon(true);
       save();
     };
 
@@ -752,8 +818,14 @@
     });
 
     play.addEventListener('click', () => {
-      if (ap.audio.paused) ap.play();
-      else ap.pause();
+      if (ap.audio.paused) {
+        settings.manualPaused = false;
+        ap.play();
+      } else {
+        settings.manualPaused = true;
+        ap.pause();
+      }
+      save();
     });
 
     next.addEventListener('click', () => {
@@ -763,6 +835,7 @@
     list.addEventListener('click', () => {
       settings.listVisible = !settings.listVisible;
       syncButtons();
+      if (settings.listVisible) renderPlaylist(true);
       save();
     });
 
@@ -833,23 +906,28 @@
       save();
     });
 
-    ap.on?.('play', syncButtons);
-    ap.on?.('pause', syncButtons);
-    ap.on?.('timeupdate', syncProgress);
-    ap.on?.('durationchange', syncProgress);
-    ap.on?.('loadedmetadata', syncAll);
-    ap.on?.('listswitch', syncAllSoon);
-    ap.on?.('canplay', syncAll);
+    ap.on?.('play', () => {
+      syncButtons();
+      startWave();
+    });
+    ap.on?.('pause', () => {
+      syncButtons();
+      stopWave();
+    });
+    ap.on?.('listswitch', () => syncAllSoon(true));
     ap.audio.addEventListener('timeupdate', syncProgress);
     ap.audio.addEventListener('durationchange', syncProgress);
-    ap.audio.addEventListener('loadedmetadata', syncAll);
-    ap.audio.addEventListener('playing', syncAll);
-    ap.audio.addEventListener('canplay', syncAll);
+    ap.audio.addEventListener('loadedmetadata', () => syncAllSoon(false));
+    ap.audio.addEventListener('canplay', syncProgress);
     ap.audio.addEventListener('volumechange', syncVolume);
+    ap.audio.addEventListener('play', startWave);
+    ap.audio.addEventListener('pause', stopWave);
+    ap.audio.addEventListener('ended', stopWave);
 
     applyLyricVisibility(ap, settings.lrcVisible);
-    syncAll();
-    syncAllSoon();
+    syncAll(false);
+    syncAllSoon(false);
+    stopWave();
     return dock;
   }
 
@@ -870,9 +948,20 @@
     let saveTimer = 0;
     let lastProgressSave = 0;
     let restoredPosition = false;
-    const shouldResume = savedState?.playing === true || savedState?.paused === false;
+    let restoreAttempts = 0;
+    let resumeAttempts = 0;
+    let resumeTimer = 0;
+    const shouldResume = savedState?.playing === true && savedState?.manualPaused !== true;
+    const wantsResume = () => shouldResume && settings.manualPaused !== true;
+    const savedTime = Number(savedState?.currentTime || 0);
+    const savedDuration = Number(savedState?.duration || 0);
+    const shouldRestoreTime = Number.isFinite(savedTime) && savedTime > .5;
 
-    const saveNow = () => saveMusicState(id, ap, settings);
+    const writeState = () => saveMusicState(id, ap, settings);
+    const saveNow = () => {
+      if (restoring) return;
+      writeState();
+    };
     const saveSoon = () => {
       if (restoring) return;
       clearTimeout(saveTimer);
@@ -881,42 +970,84 @@
     const saveProgress = () => {
       if (restoring) return;
       const now = Date.now();
-      if (now - lastProgressSave < 900) return;
+      if (now - lastProgressSave < 4500) return;
       lastProgressSave = now;
-      saveNow();
+      const persist = () => {
+        if (!restoring) writeState();
+      };
+      if ('requestIdleCallback' in window) requestIdleCallback(persist, { timeout: 1600 });
+      else setTimeout(persist, 0);
     };
     const keepLyricsVisible = () => {
       if (!settings.lrcVisible) return;
       setTimeout(() => applyLyricVisibility(ap, true), 120);
     };
     const resumePlayback = () => {
-      if (!shouldResume || !ap.audio.paused) return;
-      const result = ap.play?.();
-      if (result?.catch) result.catch(() => {
-        saveNow();
-      });
+      if (!wantsResume() || !ap.audio.paused) return;
+      clearTimeout(resumeTimer);
+      resumeAttempts += 1;
+      let result;
+      try {
+        result = ap.play?.();
+      } catch { }
+      if (!result?.then) {
+        try {
+          result = ap.audio.play?.();
+        } catch { }
+      }
+      if (result?.catch) {
+        result.catch(() => {
+          if (resumeAttempts < 10) {
+            resumeTimer = setTimeout(resumePlayback, Math.min(2200, 220 + resumeAttempts * 180));
+          }
+        });
+      } else if (resumeAttempts < 4) {
+        resumeTimer = setTimeout(resumePlayback, 420);
+      }
+    };
+    const finishRestore = (shouldSave = true) => {
+      restoring = false;
+      if (shouldSave) writeState();
     };
     const restorePosition = () => {
-      if (restoredPosition) return;
-      const savedTime = Number(savedState?.currentTime || 0);
-      if (!Number.isFinite(savedTime) || savedTime <= 0) {
+      if (restoredPosition) return true;
+      if (!shouldRestoreTime) {
         restoredPosition = true;
+        finishRestore(false);
         resumePlayback();
-        return;
+        return true;
       }
-      const duration = Number(ap.audio.duration || ap.duration || savedState?.duration || 0);
-      const elapsed = shouldResume && Number.isFinite(savedState?.savedAt)
-        ? Math.max(0, Math.min(30, (Date.now() - savedState.savedAt) / 1000))
+      const duration = Number(ap.audio.duration || ap.duration || savedDuration || 0);
+      const hasSeekableRange = Boolean(ap.audio.seekable?.length);
+      const canSeek = ap.audio.readyState >= 1 || (Number.isFinite(duration) && duration > 0) || hasSeekableRange;
+      if (!canSeek) {
+        restoreAttempts += 1;
+        if (restoreAttempts < 42) setTimeout(restorePosition, 150);
+        return false;
+      }
+      const elapsed = wantsResume() && Number.isFinite(savedState?.savedAt)
+        ? Math.max(0, Math.min(6, (Date.now() - savedState.savedAt) / 1000))
         : 0;
       const target = duration > 1 ? Math.min(savedTime + elapsed, Math.max(0, duration - .8)) : savedTime + elapsed;
       try {
-        ap.seek?.(target);
+        ap.audio.currentTime = target;
       } catch {
-        try { ap.audio.currentTime = target; } catch { }
+        try { ap.seek?.(target); } catch { }
       }
-      restoredPosition = true;
-      setTimeout(resumePlayback, 80);
-      setTimeout(saveNow, 500);
+      setTimeout(() => {
+        const current = Number(ap.audio.currentTime || 0);
+        const closeEnough = Math.abs(current - target) < 2 || current >= target - 2;
+        if (!closeEnough && restoreAttempts < 42) {
+          restoreAttempts += 1;
+          setTimeout(restorePosition, 150);
+          return;
+        }
+        restoredPosition = true;
+        finishRestore(true);
+        setTimeout(resumePlayback, 80);
+        setTimeout(writeState, 800);
+      }, 80);
+      return true;
     };
 
     applyMusicSettings(ap, settings);
@@ -931,8 +1062,12 @@
     renderMusicPanel(id, ap, settings, saveNow);
     setTimeout(restorePosition, 180);
     setTimeout(restorePosition, 700);
+    setTimeout(restorePosition, 1400);
 
-    ap.on?.('play', saveSoon);
+    ap.on?.('play', () => {
+      settings.manualPaused = false;
+      saveSoon();
+    });
     ap.on?.('pause', saveSoon);
     ap.on?.('listswitch', () => {
       keepLyricsVisible();
@@ -966,14 +1101,25 @@
     ap.audio.addEventListener('canplay', restorePosition);
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) saveNow();
+      else if (wantsResume() && ap.audio.paused) resumePlayback();
+    });
+    const resumeOnGesture = () => {
+      if (!wantsResume() || !ap.audio.paused) return;
+      resumePlayback();
+    };
+    ['pointerdown', 'keydown', 'touchstart'].forEach(type => {
+      addEventListener(type, resumeOnGesture, { passive: true });
     });
     addEventListener('pagehide', saveNow);
     addEventListener('beforeunload', saveNow);
     setTimeout(() => {
-      restoring = false;
+      if (!restoring) return;
       restorePosition();
-      saveNow();
-    }, 1200);
+      if (!shouldRestoreTime || Number(ap.audio.currentTime || 0) > .5) finishRestore(true);
+    }, 6500);
+    setTimeout(() => {
+      if (restoring) finishRestore(false);
+    }, 10000);
   }
 
   async function initMusicPlayer() {
@@ -994,12 +1140,15 @@
       await loadScriptOnce('https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js');
 
       const player = document.createElement('meting-js');
+      const shouldAutoplay = savedState
+        ? savedState.playing === true && savedState.manualPaused !== true
+        : config.autoplay ?? false;
       attr(player, 'server', config.server || 'netease');
       attr(player, 'type', config.type || 'playlist');
       attr(player, 'id', id);
       attr(player, 'fixed', config.fixed ?? true);
       attr(player, 'mini', config.mini ?? true);
-      attr(player, 'autoplay', config.autoplay ?? false);
+      attr(player, 'autoplay', shouldAutoplay);
       attr(player, 'order', savedSettings.order === 'random' ? 'random' : 'list');
       attr(player, 'loop', ['all', 'one', 'none'].includes(savedSettings.loop) ? savedSettings.loop : 'all');
       attr(player, 'preload', config.preload || 'auto');

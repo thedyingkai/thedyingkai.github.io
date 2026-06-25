@@ -39,9 +39,96 @@ function friendCard(item) {
   return `<a class="card friend-card" href="${cfgEsc(x.href)}"${isExt(x.href) ? ' target="_blank" rel="noreferrer"' : ''}><div class="friend-card__avatar">${avatarHtml}</div><div><div class="card__meta"><span>${cfgEsc(x.meta)}</span></div><h3>${cfgEsc(x.title)}</h3><p>${cfgEsc(x.text)}</p><div class="tags">${tagHtml(x.tags)}</div></div></a>`;
 }
 
-function timelineItem(item) {
-  const x = Array.isArray(item) ? { date: item[0], title: item[1] } : item;
-  return `<div class="timeline__item"><span class="timeline__time">${cfgEsc(x.date)}</span><h3>${cfgEsc(x.title)}</h3></div>`;
+function timelineData(item) {
+  if (!Array.isArray(item)) return item || {};
+  return { date: item[0], title: item[1], level: item[2] };
+}
+
+function normalizeTimelineLevel(value) {
+  const key = String(value ?? '').trim().toLowerCase();
+  const map = {
+    0: 'dot',
+    dot: 'dot',
+    tiny: 'dot',
+    point: 'dot',
+    none: 'dot',
+    '点': 'dot',
+    '最小': 'dot',
+    1: 'minor',
+    minor: 'minor',
+    small: 'minor',
+    '小': 'minor',
+    2: 'mid',
+    mid: 'mid',
+    medium: 'mid',
+    middle: 'mid',
+    normal: 'mid',
+    '中': 'mid',
+    3: 'major',
+    major: 'major',
+    large: 'major',
+    big: 'major',
+    important: 'major',
+    '大': 'major',
+    '重点': 'major'
+  };
+  return map[key] || '';
+}
+
+function timelineLevel(item, index = 0) {
+  const x = timelineData(item);
+  const manualLevel = normalizeTimelineLevel(x.level ?? x.size ?? x.importance);
+  if (manualLevel) return manualLevel;
+  const text = `${x.title} ${x.date}`;
+  if (x.important === true || /(国一|金牌|银牌|铜牌|ICPC|CCPC|线下|邀请赛)/.test(text)) return 'major';
+  if (/(第一次|过审|红名|蓝名|青名|校赛|400 AC|500 AC)/.test(text)) return 'mid';
+  if (/(注册|300 AC)/.test(text) || index % 7 === 0) return 'minor';
+  if (/(200 AC|100 AC|绿名|橙名)/.test(text)) return 'dot';
+  return 'dot';
+}
+
+function timelineHeight(count = 0) {
+  return `${Math.max(760, count * 54)}px`;
+}
+
+function timelineWave(t) {
+  const main = Math.sin((t * 4.18 - 0.18) * Math.PI);
+  const fine = Math.sin((t * 9.4 + 0.2) * Math.PI) * 0.12;
+  return Math.max(12, Math.min(88, 50 + (main + fine) * 31));
+}
+
+function timelinePoint(index = 0, total = 1) {
+  const t = total <= 1 ? 0.5 : index / (total - 1);
+  return {
+    x: timelineWave(t),
+    y: 4 + t * 92
+  };
+}
+
+function timelinePath(total = 1) {
+  const samples = 180;
+  return Array.from({ length: samples }, (_, i) => {
+    const t = samples <= 1 ? 0 : i / (samples - 1);
+    const x = timelineWave(t).toFixed(2);
+    const y = (4 + t * 92).toFixed(2);
+    return `${i ? 'L' : 'M'}${x} ${y}`;
+  }).join(' ');
+}
+
+function timelineItem(item, index = 0, items = []) {
+  const x = timelineData(item);
+  const level = timelineLevel(item, index);
+  const point = timelinePoint(index, items.length || 1);
+  const labelSide = point.x < 50 ? 'right' : 'left';
+  const delay = (index % 12) * 90;
+  const style = `--timeline-x:${point.x.toFixed(2)}%;--timeline-y:${point.y.toFixed(2)}%;--timeline-delay:${delay}ms`;
+  return `<div class="timeline__item timeline__item--${cfgEsc(level)} timeline__item--${labelSide}" style="${style}" tabindex="0" aria-label="${cfgEsc(`${x.date} ${x.title}`)}"><span class="timeline__dot" aria-hidden="true"></span><span class="timeline__text"><span class="timeline__time">${cfgEsc(x.date)}</span><h3>${cfgEsc(x.title)}</h3></span></div>`;
+}
+
+function timelineHtml(items = []) {
+  const list = [...items].sort((a, b) => String(timelineData(a).date || '').localeCompare(String(timelineData(b).date || '')));
+  const path = timelinePath(list.length || 1);
+  return `<svg class="timeline__curve" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path class="timeline__curve-shadow" d="${path}"></path><path class="timeline__curve-main" d="${path}"></path><path class="timeline__curve-gold" d="${path}"></path></svg>${list.map(timelineItem).join('')}`;
 }
 
 function actionLink(item) {
@@ -120,7 +207,11 @@ function renderAboutPage(cfg) {
   const timeline = document.querySelector('[data-about-timeline]');
   if (profile) profile.innerHTML = renderProfileBlock(a.profile);
   if (cards) cards.innerHTML = (a.cards || []).map(cfgCard).join('');
-  if (timeline) timeline.innerHTML = (a.timeline || []).map(timelineItem).join('');
+  if (timeline) {
+    const items = a.timeline || [];
+    timeline.style.setProperty('--timeline-height', timelineHeight(items.length));
+    timeline.innerHTML = timelineHtml(items);
+  }
 }
 
 function renderFriendsPage(cfg) {
