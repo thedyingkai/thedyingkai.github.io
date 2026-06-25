@@ -2,15 +2,15 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>TDK 的小窝</title>
-    <link>https://thedyingkai.github.io/</link>
-    <atom:link href="https://thedyingkai.github.io/rss.xml" rel="self" type="application/rss+xml"/>
+    <link>https://blog.thedyingkai.cn/</link>
+    <atom:link href="https://blog.thedyingkai.cn/rss.xml" rel="self" type="application/rss+xml"/>
     <description>thedyingkai_ 的个人博客、算法笔记、项目归档和成长记录。</description>
     <language>zh-CN</language>
     <lastBuildDate>Wed, 24 Jun 2026 22:24:57 GMT</lastBuildDate>
     <item>
       <title>树状数组线段树</title>
-      <link>https://thedyingkai.github.io/blog/post/?file=tree-templates.md</link>
-      <guid isPermaLink="true">https://thedyingkai.github.io/blog/post/?file=tree-templates.md</guid>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=tree-templates.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=tree-templates.md</guid>
       <pubDate>Sun, 03 Aug 2025 16:00:00 GMT</pubDate>
       <description>树状数组与线段树模板。</description>
       <category>数据结构</category>
@@ -19,8 +19,8 @@
     </item>
     <item>
       <title>生成函数</title>
-      <link>https://thedyingkai.github.io/blog/post/?file=generating-functions.md</link>
-      <guid isPermaLink="true">https://thedyingkai.github.io/blog/post/?file=generating-functions.md</guid>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=generating-functions.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=generating-functions.md</guid>
       <pubDate>Fri, 01 Aug 2025 16:00:00 GMT</pubDate>
       <description>普通生成函数、指数生成函数、狄利克雷生成函数和卷积关系。</description>
       <category>数学</category>
@@ -29,8 +29,8 @@
     </item>
     <item>
       <title>斐波那契数列</title>
-      <link>https://thedyingkai.github.io/blog/post/?file=fib-sequence.md</link>
-      <guid isPermaLink="true">https://thedyingkai.github.io/blog/post/?file=fib-sequence.md</guid>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=fib-sequence.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=fib-sequence.md</guid>
       <pubDate>Wed, 30 Jul 2025 16:00:00 GMT</pubDate>
       <description>斐波那契性质、快速倍增、卢卡斯数列与齐肯多夫定理。</description>
       <category>数学</category>
@@ -39,8 +39,8 @@
     </item>
     <item>
       <title>快速幂杂谈</title>
-      <link>https://thedyingkai.github.io/blog/post/?file=quick-power.md</link>
-      <guid isPermaLink="true">https://thedyingkai.github.io/blog/post/?file=quick-power.md</guid>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=quick-power.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=quick-power.md</guid>
       <pubDate>Wed, 30 Jul 2025 16:00:00 GMT</pubDate>
       <description>普通快速幂、逆元、矩阵快速幂、高精度快速幂和群论视角。</description>
       <category>快速幂</category>
@@ -50,8 +50,8 @@
     </item>
     <item>
       <title>线性代数模板</title>
-      <link>https://thedyingkai.github.io/blog/post/?file=post-5.md</link>
-      <guid isPermaLink="true">https://thedyingkai.github.io/blog/post/?file=post-5.md</guid>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=post-5.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=post-5.md</guid>
       <pubDate>Wed, 09 Jul 2025 16:00:00 GMT</pubDate>
       <description>矩阵快速幂、逆矩阵、高斯消元、线性方程组和行列式。</description>
       <category>数学</category>
@@ -60,8 +60,8 @@
     </item>
     <item>
       <title>Codeforces-1034-Div.3 题解</title>
-      <link>https://thedyingkai.github.io/blog/post/?file=post-6-a-d.md</link>
-      <guid isPermaLink="true">https://thedyingkai.github.io/blog/post/?file=post-6-a-d.md</guid>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=post-6-a-d.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=post-6-a-d.md</guid>
       <pubDate>Wed, 02 Jul 2025 16:00:00 GMT</pubDate>
       <description>Codeforces Round 1034 Div.3 A-G 题解。</description>
       <category>Codeforces</category>
@@ -70,8 +70,8 @@
     </item>
     <item>
       <title>ABC 404 A - E</title>
-      <link>https://thedyingkai.github.io/blog/post/?file=post-7.md</link>
-      <guid isPermaLink="true">https://thedyingkai.github.io/blog/post/?file=post-7.md</guid>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=post-7.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=post-7.md</guid>
       <pubDate>Fri, 27 Jun 2025 16:00:00 GMT</pubDate>
       <description>AtCoder ABC 404 A-E 题解。</description>
       <category>ABC</category>

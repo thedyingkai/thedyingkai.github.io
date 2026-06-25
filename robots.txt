@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://thedyingkai.github.io/sitemap.xml
+Sitemap: https://blog.thedyingkai.cn/sitemap.xml

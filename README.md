@@ -8,9 +8,9 @@
 |项目|值|
 |-----|-----|
 |站点名称|TDK 的小窝|
-|站点 URL|https://thedyingkai.github.io|
-|头像 URL|https://thedyingkai.github.io/assets/images/site/ico.png|
-|RSS URL|https://thedyingkai.github.io/rss.xml|
+|站点 URL|https://blog.thedyingkai.cn|
+|头像 URL|https://blog.thedyingkai.cn/assets/images/site/ico.png|
+|RSS URL|https://blog.thedyingkai.cn/rss.xml|
 |描述|华风夏韵，洛水天依。|
 
 你可以这样将你的友链填写到我的网站：

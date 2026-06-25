@@ -2,7 +2,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const root = process.cwd();
-const site = 'https://thedyingkai.github.io';
+const site = 'https://blog.thedyingkai.cn';
 const postsDir = path.join(root, 'posts');
 
 function escapeXml(value) {
