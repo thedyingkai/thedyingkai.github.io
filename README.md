@@ -38,7 +38,7 @@ git checkout -b add-my-name
 4.  找到友链文件 `config/friends.json`，用你常用的文本编辑器 (比如 VS Code) 打开它。
 
 5.  在文件的 `"links":` 内部，找到最后一个 `}`，加上你的信息。格式如下：
-
+ meta: item[0], title: item[1], text: item[2], href: item[3], tags: item[4] || [], avatar: item[5] || ''
 ```json
 "links": [
     {
@@ -49,6 +49,7 @@ git checkout -b add-my-name
       "tags": [
         "Blog"
       ]
+      "avatar": "头像 URL",
     },
     {
         ... // 新的友链，注意前面的 } 后需要加一个 ,
