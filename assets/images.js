@@ -68,13 +68,13 @@
     const side = offset < 0 ? -1 : 1;
     const magnitude = Math.min(3, Math.abs(offset));
     return {
-      x: 54 + side * (14 + magnitude * 6),
-      y: 34 + magnitude * 10,
-      width: Math.max(19, 27 - magnitude * 2),
-      rotate: side * (12 + magnitude * 3),
-      opacity: Math.max(.1, .22 - magnitude * .04),
-      z: 7 - magnitude,
-      depth: Math.max(.42, .68 - magnitude * .08)
+      x: side < 0 ? 24 : 94,
+      y: 50 + magnitude * 4,
+      width: Math.max(18, 26 - magnitude * 2),
+      rotate: side * (10 + magnitude * 4),
+      opacity: Math.max(.04, .14 - magnitude * .04),
+      z: 5 - magnitude,
+      depth: Math.max(.4, .64 - magnitude * .08)
     };
   }
 
@@ -99,13 +99,12 @@
     const dots = [...target.querySelectorAll('[data-stack-dot]')];
     if (!images.length) return;
     let activeIndex = 0;
-    let lastSlide = 0;
-    let hovering = false;
-    let lastMove = 0;
     let currentX = 0;
     let currentY = 0;
     let nextX = 0;
     let nextY = 0;
+    let hovering = false;
+    let hoverAmount = 0;
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     target.classList.add('is-carousel');
@@ -116,7 +115,7 @@
       dots.forEach((dot, dotIndex) => dot.classList.toggle('is-active', dotIndex === activeIndex));
       target.classList.add('is-switching');
       clearTimeout(target._switchTimer);
-      target._switchTimer = setTimeout(() => target.classList.remove('is-switching'), 720);
+      target._switchTimer = setTimeout(() => target.classList.remove('is-switching'), 1500);
     };
 
     setActive(0);
@@ -124,23 +123,23 @@
     dots.forEach((dot, index) => {
       dot.addEventListener('click', () => {
         setActive(index);
-        lastSlide = performance.now();
       });
     });
 
-    const setMotion = (x, y, active) => {
+    const setMotion = (x, y, now, hoverMix) => {
       const tilt = reduceMotion ? .35 : 1;
       target.style.setProperty('--tilt-x', `${(-y * 18 * tilt).toFixed(2)}deg`);
       target.style.setProperty('--tilt-y', `${(x * 22 * tilt).toFixed(2)}deg`);
-      target.style.setProperty('--shine-x', `${(50 + x * 45).toFixed(2)}%`);
-      target.style.setProperty('--shine-y', `${(46 + y * 40).toFixed(2)}%`);
       images.forEach((image, index) => {
         const depth = parseFloat(image.style.getPropertyValue('--stack-depth')) || 1;
         const phase = index % 2 ? -1 : 1;
         const move = reduceMotion ? .32 : 1;
-        image.style.setProperty('--image-x', `${((x * (56 + index * 8) * depth + phase * y * 8) * move).toFixed(2)}px`);
-        image.style.setProperty('--image-y', `${((y * (42 + index * 7) * depth + phase * x * 5) * move).toFixed(2)}px`);
-        image.style.setProperty('--image-scale', (1 + (active ? .06 : .02) * depth).toFixed(3));
+        const breath = reduceMotion ? .35 : (Math.sin(now / 1450 + index * .65) + 1) / 2;
+        const idleScale = .012 + breath * .018;
+        const scaleLift = idleScale * (1 - hoverMix) + .05 * hoverMix;
+        image.style.setProperty('--image-x', `${((x * (18 + index * 3) * depth + phase * y * 3) * move).toFixed(2)}px`);
+        image.style.setProperty('--image-y', `${((y * (14 + index * 3) * depth + phase * x * 2) * move).toFixed(2)}px`);
+        image.style.setProperty('--image-scale', (1 + scaleLift * depth).toFixed(3));
       });
     };
 
@@ -148,35 +147,33 @@
       const rect = host.getBoundingClientRect();
       const px = Math.max(-.5, Math.min(.5, (event.clientX - rect.left) / rect.width - .5));
       const py = Math.max(-.5, Math.min(.5, (event.clientY - rect.top) / rect.height - .5));
-      const now = performance.now();
       hovering = true;
-      lastMove = now;
       nextX = px * 2;
       nextY = py * 2;
-      target.classList.add('is-interacting');
     });
 
     host.addEventListener('pointerleave', () => {
       hovering = false;
-      target.classList.remove('is-interacting');
+      nextX = 0;
+      nextY = 0;
     });
 
     if (images.length > 1) {
       setInterval(() => {
-        if (!hovering && document.visibilityState === 'visible') setActive(activeIndex + 1);
+        if (document.visibilityState === 'visible') setActive(activeIndex + 1);
       }, reduceMotion ? 6200 : 4800);
     }
 
     const tick = now => {
-      if (!hovering || now - lastMove > 1400) {
-        const drift = reduceMotion ? .42 : 1;
-        nextX = (Math.sin(now / 1800) * .34 + Math.cos(now / 3100) * .16) * drift;
-        nextY = (Math.cos(now / 2200) * .28 + Math.sin(now / 2700) * .12) * drift;
-        target.classList.remove('is-interacting');
+      if (!hovering) {
+        const drift = reduceMotion ? .3 : 1;
+        nextX = (Math.sin(now / 2100) * .12 + Math.cos(now / 3600) * .08) * drift;
+        nextY = (Math.cos(now / 2600) * .1 + Math.sin(now / 3300) * .06) * drift;
       }
+      hoverAmount += ((hovering ? 1 : 0) - hoverAmount) * (reduceMotion ? .06 : .12);
       currentX += (nextX - currentX) * (reduceMotion ? .055 : .095);
       currentY += (nextY - currentY) * (reduceMotion ? .055 : .095);
-      setMotion(currentX, currentY, hovering);
+      setMotion(currentX, currentY, now, hoverAmount);
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
