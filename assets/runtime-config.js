@@ -1,5 +1,30 @@
 const cfgEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const isExt = h => /^https?:\/\//.test(h || '');
+const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+
+function safeUrl(value, fallback = '') {
+  const raw = String(value ?? '').trim();
+  if (!raw) return fallback;
+  if (raw.startsWith('#')) return raw;
+  try {
+    const url = new URL(raw, location.origin);
+    if (!ALLOWED_URL_PROTOCOLS.has(url.protocol)) return fallback;
+    return raw;
+  } catch {
+    return fallback;
+  }
+}
+
+function isExt(h) {
+  const safe = safeUrl(h);
+  if (!safe) return false;
+  try {
+    const url = new URL(safe, location.origin);
+    return ['http:', 'https:'].includes(url.protocol) && url.origin !== location.origin;
+  } catch {
+    return false;
+  }
+}
+
 const tagHtml = a => (a || []).map(t => `<span class="tag">${cfgEsc(t)}</span>`).join('');
 
 function cardData(x) {
@@ -10,7 +35,7 @@ function cardData(x) {
 
 function cfgCard(item) {
   const x = cardData(item);
-  const href = x.href || '';
+  const href = safeUrl(x.href || '');
   const open = href && href !== '#' ? `<a class="card" href="${cfgEsc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>` : '<div class="card">';
   const close = href && href !== '#' ? '</a>' : '</div>';
   return `${open}<div class="card__meta"><span>${cfgEsc(x.meta)}</span></div><h3>${cfgEsc(x.title)}</h3><p>${cfgEsc(x.text)}</p><div class="tags">${tagHtml(x.tags)}</div>${close}`;
@@ -18,8 +43,10 @@ function cfgCard(item) {
 
 function inlineLink(item) {
   const x = Array.isArray(item) ? { label: item[0], href: item[1], note: item[2] } : item;
-  const external = isExt(x.href);
-  return `<a class="profile-link" href="${cfgEsc(x.href)}"${external ? ' target="_blank" rel="noreferrer"' : ''}><span>${cfgEsc(x.label)}</span>${x.note ? `<small>${cfgEsc(x.note)}</small>` : ''}</a>`;
+  const href = safeUrl(x.href);
+  const content = `<span>${cfgEsc(x.label)}</span>${x.note ? `<small>${cfgEsc(x.note)}</small>` : ''}`;
+  if (!href) return `<span class="profile-link">${content}</span>`;
+  return `<a class="profile-link" href="${cfgEsc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>${content}</a>`;
 }
 
 function renderProfileBlock(profile) {
@@ -35,8 +62,12 @@ function friendCard(item) {
     ? { meta: item[0], title: item[1], text: item[2], href: item[3], tags: item[4] || [], avatar: item[5] || '' }
     : item;
   const initial = (x.title || '?').trim().slice(0, 1).toUpperCase();
-  const avatarHtml = x.avatar ? `<img src="${cfgEsc(x.avatar)}" alt="" loading="lazy">` : `<span>${cfgEsc(initial)}</span>`;
-  return `<a class="card friend-card" href="${cfgEsc(x.href)}"${isExt(x.href) ? ' target="_blank" rel="noreferrer"' : ''}><div class="friend-card__avatar">${avatarHtml}</div><div><div class="card__meta"><span>${cfgEsc(x.meta)}</span></div><h3>${cfgEsc(x.title)}</h3><p>${cfgEsc(x.text)}</p><div class="tags">${tagHtml(x.tags)}</div></div></a>`;
+  const avatar = safeUrl(x.avatar);
+  const avatarHtml = avatar ? `<img src="${cfgEsc(avatar)}" alt="" loading="lazy">` : `<span>${cfgEsc(initial)}</span>`;
+  const href = safeUrl(x.href);
+  const content = `<div class="friend-card__avatar">${avatarHtml}</div><div><div class="card__meta"><span>${cfgEsc(x.meta)}</span></div><h3>${cfgEsc(x.title)}</h3><p>${cfgEsc(x.text)}</p><div class="tags">${tagHtml(x.tags)}</div></div>`;
+  if (!href) return `<div class="card friend-card">${content}</div>`;
+  return `<a class="card friend-card" href="${cfgEsc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>${content}</a>`;
 }
 
 function timelineData(item) {
@@ -134,7 +165,9 @@ function timelineHtml(items = []) {
 function actionLink(item) {
   const x = Array.isArray(item) ? { label: item[0], href: item[1], primary: item[2] } : item;
   const cls = x.primary ? 'btn btn--primary' : 'btn';
-  return `<a class="${cls}" href="${cfgEsc(x.href)}"${isExt(x.href) ? ' target="_blank" rel="noreferrer"' : ''}>${cfgEsc(x.label)}</a>`;
+  const href = safeUrl(x.href);
+  if (!href) return `<span class="${cls}">${cfgEsc(x.label)}</span>`;
+  return `<a class="${cls}" href="${cfgEsc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>${cfgEsc(x.label)}</a>`;
 }
 
 function statRow(item) {

@@ -1,6 +1,18 @@
 (() => {
   const root = document.documentElement;
   const progressBar = document.querySelector('.progress');
+  const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+  const MUSIC_CDN = {
+    aplayerCss: {
+      href: '/assets/vendor/aplayer/1.10.1/APlayer.min.css'
+    },
+    aplayerJs: {
+      src: '/assets/vendor/aplayer/1.10.1/APlayer.min.js'
+    },
+    metingJs: {
+      src: '/assets/vendor/meting/2.0.2/Meting.min.js'
+    }
+  };
   const defaultSite = {
     brand: 'TDK 的小窝',
     brandSub: 'thedyingkai_',
@@ -74,11 +86,34 @@
     progressBar.style.width = `${progress}%`;
   }
 
+  function safeUrl(value, fallback = '') {
+    const raw = String(value ?? '').trim();
+    if (!raw) return fallback;
+    if (raw.startsWith('#')) return raw;
+    try {
+      const url = new URL(raw, location.origin);
+      if (!ALLOWED_URL_PROTOCOLS.has(url.protocol)) return fallback;
+      return raw;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function isExternalUrl(value) {
+    try {
+      const url = new URL(value, location.origin);
+      return ['http:', 'https:'].includes(url.protocol) && url.origin !== location.origin;
+    } catch {
+      return false;
+    }
+  }
+
   function makeLink(item, current) {
     const a = document.createElement('a');
-    a.href = item.href;
+    const href = safeUrl(item.href, '#');
+    a.href = href;
     a.textContent = item.label;
-    if (item.external) {
+    if (isExternalUrl(href)) {
       a.target = '_blank';
       a.rel = 'noreferrer';
     }
@@ -131,12 +166,15 @@
     const current = activeKey();
     (site.nav || defaultSite.nav).forEach(item => nav.append(makeLink(item, current)));
     const repo = site.repo || defaultSite.repo;
-    if (repo?.href) {
+    const repoHref = safeUrl(repo?.href, '');
+    if (repoHref) {
       const repoLink = document.createElement('a');
       repoLink.className = 'nav__icon nav__icon--github';
-      repoLink.href = repo.href;
-      repoLink.target = '_blank';
-      repoLink.rel = 'noreferrer';
+      repoLink.href = repoHref;
+      if (isExternalUrl(repoHref)) {
+        repoLink.target = '_blank';
+        repoLink.rel = 'noreferrer';
+      }
       repoLink.title = repo.label || 'GitHub';
       repoLink.setAttribute('aria-label', repo.label || 'GitHub');
       repoLink.append(githubIcon());
@@ -231,12 +269,17 @@
     setTimeout(initPageMotion, 1000);
   }
 
-  function loadStyleOnce(href) {
+  function loadStyleOnce(resource) {
+    const href = typeof resource === 'string' ? resource : resource.href;
     if ([...document.styleSheets].some(sheet => sheet.href === href)) return Promise.resolve();
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = href;
+      if (resource.integrity) {
+        link.integrity = resource.integrity;
+        link.crossOrigin = resource.crossOrigin || 'anonymous';
+      }
       link.onload = resolve;
       link.onerror = reject;
       const siteStyle = href.includes('aplayer') ? document.querySelector('link[href^="/assets/site.css"]') : null;
@@ -244,13 +287,18 @@
     });
   }
 
-  function loadScriptOnce(src) {
+  function loadScriptOnce(resource) {
+    const src = typeof resource === 'string' ? resource : resource.src;
     const existing = document.querySelector(`script[src="${src}"]`);
     if (existing) return Promise.resolve();
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = src;
       script.defer = true;
+      if (resource.integrity) {
+        script.integrity = resource.integrity;
+        script.crossOrigin = resource.crossOrigin || 'anonymous';
+      }
       script.onload = resolve;
       script.onerror = reject;
       document.body.append(script);
@@ -1145,9 +1193,9 @@
       const savedState = readMusicState(id);
       const savedSettings = musicSettings(config, savedState);
 
-      await loadStyleOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css');
-      await loadScriptOnce('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js');
-      await loadScriptOnce('https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js');
+      await loadStyleOnce(MUSIC_CDN.aplayerCss);
+      await loadScriptOnce(MUSIC_CDN.aplayerJs);
+      await loadScriptOnce(MUSIC_CDN.metingJs);
 
       const player = document.createElement('meting-js');
       const shouldAutoplay = savedState

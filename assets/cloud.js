@@ -1,6 +1,15 @@
 (() => {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const isExt = h => /^https?:\/\//.test(h || '');
+  const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+  const DEFAULT_BASE_URL = 'https://dl.thedyingkai.cn/';
+  const isExt = h => {
+    try {
+      const url = new URL(h, location.origin);
+      return ['http:', 'https:'].includes(url.protocol) && url.origin !== location.origin;
+    } catch {
+      return false;
+    }
+  };
   let baseUrl = 'https://dl.thedyingkai.cn/';
   let folders = new Map();
   let rootFolder = 'root';
@@ -15,12 +24,39 @@
     return (tags || []).map(tag => `<span class="tag">${esc(tag)}</span>`).join('');
   }
 
+  function safeUrl(value, fallback = '') {
+    const raw = String(value ?? '').trim();
+    if (!raw) return fallback;
+    if (raw.startsWith('#')) return raw;
+    try {
+      const url = new URL(raw, location.origin);
+      if (!ALLOWED_URL_PROTOCOLS.has(url.protocol)) return fallback;
+      return raw;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function safeHttpUrl(value, base = location.origin) {
+    try {
+      const url = new URL(value, base);
+      return ['http:', 'https:'].includes(url.protocol) ? url : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function safeHttpHref(value, fallback = DEFAULT_BASE_URL) {
+    return safeHttpUrl(value)?.href || fallback;
+  }
+
   function toResourceUrl(pathOrHref) {
     const raw = String(pathOrHref || '/').trim();
-    if (!raw || raw === '/') return new URL(baseUrl);
-    if (isExt(raw)) return new URL(raw);
+    const safeBase = safeHttpUrl(baseUrl) || new URL(DEFAULT_BASE_URL);
+    if (!raw || raw === '/') return safeBase;
+    if (/^https?:\/\//i.test(raw)) return safeHttpUrl(raw) || safeBase;
     const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-    return new URL(raw.replace(/^\/+/, ''), base);
+    return safeHttpUrl(raw.replace(/^\/+/, ''), base) || safeBase;
   }
 
   function downloadUrl(entry) {
@@ -28,7 +64,7 @@
   }
 
   function actionUrl(action) {
-    return action.href ? action.href : toResourceUrl(action.path || '/').href;
+    return action.href ? safeUrl(action.href, toResourceUrl(action.path || '/').href) : toResourceUrl(action.path || '/').href;
   }
 
   function actionLink(action) {
@@ -168,7 +204,7 @@
   }
 
   loadCloudConfig().then(cfg => {
-    baseUrl = cfg.baseUrl || baseUrl;
+    baseUrl = safeHttpHref(cfg.baseUrl, baseUrl);
     rootFolder = cfg.rootFolder || rootFolder;
     folders = new Map((cfg.folders || []).map(folder => [folder.id, folder]));
     currentFolder = folderFromHash();
