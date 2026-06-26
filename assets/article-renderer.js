@@ -1,5 +1,7 @@
 const POST_BASE = '/posts/';
 const IMAGE_CONFIG = '/config/images.json';
+const MATHJAX_SRC = '/assets/vendor/mathjax/3.2.2/es5/tex-chtml.js';
+let mathJaxLoadPromise = null;
 
 const LANGUAGE_ALIASES = {
   'c++': 'cpp',
@@ -38,6 +40,28 @@ function waitFor(fn, name) {
   });
 }
 
+function loadMathJax() {
+  if (window.MathJax?.typesetPromise) return Promise.resolve();
+  if (!mathJaxLoadPromise) {
+    mathJaxLoadPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${MATHJAX_SRC}"]`);
+      const script = existing || document.createElement('script');
+      const done = () => {
+        waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax')
+          .then(resolve, reject);
+      };
+      script.addEventListener('load', done, { once: true });
+      script.addEventListener('error', reject, { once: true });
+      if (!existing) {
+        script.defer = true;
+        script.src = MATHJAX_SRC;
+        document.body.append(script);
+      }
+    });
+  }
+  return mathJaxLoadPromise;
+}
+
 function el(tag, cls, text) {
   const node = document.createElement(tag);
   if (cls) node.className = cls;
@@ -51,6 +75,13 @@ function parseMetaValue(value) {
     return trimmed.slice(1, -1).split(',').map(x => x.trim()).filter(Boolean);
   }
   return trimmed.replace(/^["']|["']$/g, '');
+}
+
+function hasMathMarkup(value) {
+  const text = String(value || '');
+  return /\\\(|\\\[|\\begin\{(?:align|array|bmatrix|cases|equation|gather|matrix|pmatrix|split|vmatrix)\}/.test(text) ||
+    /(^|[^\\])\$\$[\s\S]+?[^\\]\$\$/.test(text) ||
+    /(^|[^\\])\$[^\s$\n](?:[^$\n]{0,240}[^\s\\$])?\$/.test(text);
 }
 
 function parsePost(file, raw) {
@@ -454,12 +485,13 @@ async function renderArticle() {
   try {
     await waitFor(() => window.texme && typeof window.texme.render === 'function', 'texme');
     await waitFor(() => window.marked && typeof window.marked.parse === 'function', 'marked');
-    await waitFor(() => window.MathJax && typeof window.MathJax.typesetPromise === 'function', 'MathJax');
     await waitFor(() => window.hljs && typeof window.hljs.highlightElement === 'function', 'highlight.js');
 
     const res = await fetch(POST_BASE + encodeURIComponent(file), { cache: 'no-store' });
     if (!res.ok) throw new Error(`Markdown ${res.status}`);
     const post = parsePost(file, await res.text());
+    const needsMath = hasMathMarkup(post.body);
+    if (needsMath) await loadMathJax();
     const coverBasePath = post.cover ? await loadCoverBasePath().catch(() => '/assets/images/anime/') : '';
     const coverSrc = resolveImageSrc(post.cover, coverBasePath);
     document.title = `${post.title} · TDK 的小窝`;
@@ -493,13 +525,15 @@ async function renderArticle() {
     layout.append(body, toc);
     root.replaceChildren(back, header, layout);
 
-    await window.MathJax.typesetPromise([body]);
-    const refreshMathOverflow = () => updateMathOverflow(body);
-    requestAnimationFrame(() => {
-      refreshMathOverflow();
-      requestAnimationFrame(refreshMathOverflow);
-    });
-    addEventListener('resize', refreshMathOverflow, { passive: true });
+    if (needsMath) {
+      await window.MathJax.typesetPromise([body]);
+      const refreshMathOverflow = () => updateMathOverflow(body);
+      requestAnimationFrame(() => {
+        refreshMathOverflow();
+        requestAnimationFrame(refreshMathOverflow);
+      });
+      addEventListener('resize', refreshMathOverflow, { passive: true });
+    }
     hydrateTocTooltips(toc, headings);
     enhanceCodeBlocks(body);
     bindTocState(toc, headings);

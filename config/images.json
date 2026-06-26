@@ -10,19 +10,19 @@
     "homeHero": {
       "images": [
         {
-          "src": "1.jpg",
+          "src": "hero/1.jpg",
           "alt": "1"
         },
         {
-          "src": "2.jpg",
+          "src": "hero/2.jpg",
           "alt": "2"
         },
         {
-          "src": "3.jpg",
+          "src": "hero/3.jpg",
           "alt": "3"
         },
         {
-          "src": "4.jpg",
+          "src": "hero/4.jpg",
           "alt": "4"
         }
       ]

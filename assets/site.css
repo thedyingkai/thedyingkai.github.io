@@ -1702,6 +1702,39 @@ a.card--with-image:hover .post-card__thumb img {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .54), 0 16px 28px -22px rgba(36, 48, 74, .86)
 }
 
+.music-dock--launcher {
+  width: min(360px, calc(100vw - 36px));
+  min-height: 0;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  cursor: pointer
+}
+
+.music-dock--launcher .music-dock__cover {
+  display: grid;
+  place-items: center
+}
+
+.music-dock--launcher .music-dock__cover svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--cyan-deep);
+  stroke-width: 2;
+  fill: var(--cyan-soft)
+}
+
+.music-dock--launcher .music-dock__controls {
+  grid-column: auto
+}
+
+.music-dock--launcher .music-dock__button[disabled] {
+  cursor: wait;
+  opacity: .64
+}
+
+.music-dock--launcher.is-loading .music-dock__cover {
+  animation: music-cover-breathe 1.4s ease-in-out infinite
+}
+
 .music-dock.is-playing .music-dock__cover {
   animation: music-cover-breathe 3.2s ease-in-out infinite
 }

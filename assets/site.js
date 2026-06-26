@@ -989,6 +989,59 @@
     return dock;
   }
 
+  function renderMusicLauncher(id, start) {
+    document.querySelector('[data-music-panel]')?.remove();
+    document.querySelector('[data-music-dock]')?.remove();
+    document.body.classList.remove('music-dock-ready');
+    document.body.classList.remove('music-lrc-off');
+
+    const dock = document.createElement('section');
+    dock.className = 'music-dock music-dock--launcher';
+    dock.dataset.musicDock = id;
+    dock.setAttribute('aria-label', 'Music player');
+
+    const cover = document.createElement('div');
+    cover.className = 'music-dock__cover';
+    cover.append(musicIcon('play'));
+
+    const main = document.createElement('div');
+    main.className = 'music-dock__main';
+    const meta = document.createElement('div');
+    meta.className = 'music-dock__meta';
+    const title = document.createElement('strong');
+    title.textContent = 'Music';
+    const hint = document.createElement('span');
+    hint.textContent = 'Click to load player';
+    meta.append(title, hint);
+    main.append(meta);
+
+    const controls = document.createElement('div');
+    controls.className = 'music-dock__controls';
+    const button = dockButton('play', 'Load music player', 'music-dock__button--play');
+    controls.append(button);
+
+    const launch = async () => {
+      if (button.disabled) return;
+      button.disabled = true;
+      dock.classList.add('is-loading');
+      title.textContent = 'Loading';
+      hint.textContent = 'Preparing playlist';
+      try {
+        await start(true);
+      } catch {
+        button.disabled = false;
+        dock.classList.remove('is-loading');
+        title.textContent = 'Music';
+        hint.textContent = 'Click to retry';
+      }
+    };
+
+    button.addEventListener('click', launch);
+    cover.addEventListener('click', launch);
+    dock.append(cover, main, controls);
+    document.body.append(dock);
+  }
+
   function savedTrackIndex(ap, savedState) {
     const audios = ap.list?.audios || [];
     const savedUrl = normalizedAudioUrl(savedState?.currentUrl || '');
@@ -1180,12 +1233,11 @@
     }, 10000);
   }
 
-  async function initMusicPlayer() {
-    try {
-      const config = await loadMusicConfig();
-      if (config.enabled === false) return;
-      const id = neteasePlaylistId(config);
-      if (!id) return;
+  let musicPlayerPromise = null;
+
+  async function startMusicPlayer(config, id, forcePlay = false) {
+    if (musicPlayerPromise) return musicPlayerPromise;
+    musicPlayerPromise = (async () => {
       document.querySelector('[data-music-panel]')?.remove();
       document.querySelector('[data-music-dock]')?.remove();
       document.body.classList.remove('music-dock-ready');
@@ -1198,9 +1250,9 @@
       await loadScriptOnce(MUSIC_CDN.metingJs);
 
       const player = document.createElement('meting-js');
-      const shouldAutoplay = savedState
+      const shouldAutoplay = forcePlay || (savedState
         ? savedState.playing === true && savedState.manualPaused !== true
-        : config.autoplay ?? false;
+        : config.autoplay ?? false);
       attr(player, 'server', config.server || 'netease');
       attr(player, 'type', config.type || 'playlist');
       attr(player, 'id', id);
@@ -1209,7 +1261,7 @@
       attr(player, 'autoplay', shouldAutoplay);
       attr(player, 'order', savedSettings.order === 'random' ? 'random' : 'list');
       attr(player, 'loop', ['all', 'one', 'none'].includes(savedSettings.loop) ? savedSettings.loop : 'all');
-      attr(player, 'preload', config.preload || 'auto');
+      attr(player, 'preload', config.preload || 'metadata');
       attr(player, 'volume', savedSettings.volume);
       attr(player, 'theme', config.theme || '#66ccff');
       attr(player, 'lrc-type', config.lrcType ?? 3);
@@ -1217,8 +1269,29 @@
       attr(player, 'list-max-height', config.listMaxHeight || '320px');
       document.body.append(player);
       bindMusicState(id, await waitForAPlayer(player), config, savedState);
+    })();
+
+    try {
+      return await musicPlayerPromise;
+    } catch (error) {
+      musicPlayerPromise = null;
+      throw error;
+    }
+  }
+
+  async function initMusicPlayer() {
+    try {
+      const config = await loadMusicConfig();
+      if (config.enabled === false) return;
+      const id = neteasePlaylistId(config);
+      if (!id) return;
+      if (config.lazyLoad !== false) {
+        renderMusicLauncher(id, forcePlay => startMusicPlayer(config, id, forcePlay));
+        return;
+      }
+      await startMusicPlayer(config, id, false);
     } catch {
-      // Music is optional; the site should stay quiet if the config or CDN is unavailable.
+      // Music is optional; the site should stay quiet if the config or player is unavailable.
     }
   }
 
