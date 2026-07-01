@@ -1411,6 +1411,32 @@ a.card--with-image:hover .post-card__thumb img {
   font-size: 14px
 }
 
+.page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  color: var(--ink-3);
+  font-size: 12px
+}
+
+.page-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 11px;
+  border: 1px solid rgba(102, 204, 255, .28);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(102, 204, 255, .12), rgba(214, 165, 51, .11));
+  color: var(--gold-deep);
+  font-weight: 800
+}
+
+.page-meta b {
+  color: var(--cyan-deep);
+  font-variant-numeric: tabular-nums
+}
+
 .page-head--split {
   display: flex;
   justify-content: space-between;
@@ -2603,6 +2629,11 @@ a.card--with-image:hover .post-card__thumb img {
   .profile-copy {
     font-size: 13px;
     line-height: 1.72
+  }
+
+  .page-meta {
+    margin-top: 14px;
+    font-size: 11px
   }
 
   .card {

@@ -1,7 +1,6 @@
 const POST_BASE = '/posts/';
 const IMAGE_CONFIG = '/config/images.json';
 const MATHJAX_SRC = '/assets/vendor/mathjax/3.2.2/es5/tex-chtml.js';
-const BUSUANZI_SRC = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
 let mathJaxLoadPromise = null;
 
 const LANGUAGE_ALIASES = {
@@ -68,36 +67,6 @@ function el(tag, cls, text) {
   if (cls) node.className = cls;
   if (text != null) node.textContent = text;
   return node;
-}
-
-function loadBusuanzi() {
-  if (
-    (!document.getElementById('busuanzi_value_page_pv') &&
-      !document.getElementById('busuanzi_value_site_pv') &&
-      !document.getElementById('busuanzi_value_site_uv')) ||
-    document.querySelector('script[data-busuanzi-loader]')
-  ) return;
-
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = BUSUANZI_SRC;
-  script.dataset.busuanziLoader = '1';
-  document.body.append(script);
-}
-
-function pageViewMeta() {
-  const item = el('span', 'render-meta__count');
-  const container = document.createElement('span');
-  container.id = 'busuanzi_container_page_pv';
-  container.append(document.createTextNode('阅读 '));
-
-  const value = document.createElement('span');
-  value.id = 'busuanzi_value_page_pv';
-  value.textContent = '--';
-
-  container.append(value, document.createTextNode(' 次'));
-  item.append(container);
-  return item;
 }
 
 function parseMetaValue(value) {
@@ -536,7 +505,6 @@ async function renderArticle() {
     header.append(el('p', 'render-desc', post.description));
     const meta = el('div', 'render-meta');
     for (const tag of post.tags) meta.append(el('span', '', `#${tag}`));
-    meta.append(pageViewMeta());
     header.append(meta);
     if (coverSrc) {
       const cover = el('figure', 'render-cover');
@@ -556,7 +524,6 @@ async function renderArticle() {
     const layout = el('div', 'render-layout');
     layout.append(body, toc);
     root.replaceChildren(back, header, layout);
-    loadBusuanzi();
 
     if (needsMath) {
       await window.MathJax.typesetPromise([body]);

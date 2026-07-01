@@ -185,7 +185,9 @@ function statRow(item) {
 
 function loadBusuanzi() {
   if (
-    (!document.getElementById('busuanzi_value_site_pv') && !document.getElementById('busuanzi_value_site_uv'))
+    (!document.getElementById('busuanzi_value_site_pv') &&
+      !document.getElementById('busuanzi_value_site_uv') &&
+      !document.getElementById('busuanzi_value_page_pv'))
     || document.querySelector('script[data-busuanzi-loader]')
   ) return;
   const script = document.createElement('script');
