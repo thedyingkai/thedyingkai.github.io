@@ -1180,6 +1180,60 @@ a.card--with-image:hover .post-card__thumb img {
   display: none !important
 }
 
+.timeline-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 4px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .68);
+  box-shadow: var(--shadow-sm)
+}
+
+.timeline-controls__button {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 204, 255, .18), rgba(214, 165, 51, .12));
+  color: var(--cyan-deep);
+  font: 900 18px/1 var(--sans);
+  cursor: pointer;
+  transition: .18s
+}
+
+.timeline-controls__button:hover,
+.timeline-controls__button:focus-visible {
+  border-color: var(--line-strong);
+  color: var(--gold-deep);
+  transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 10px 24px -18px rgba(33, 150, 212, .7)
+}
+
+.timeline-controls__button:disabled {
+  cursor: not-allowed;
+  opacity: .36;
+  transform: none;
+  box-shadow: none
+}
+
+.timeline-controls__status {
+  min-width: 96px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap
+}
+
 .timeline {
   position: relative;
   min-height: var(--timeline-height, 1120px);
@@ -1238,8 +1292,22 @@ a.card--with-image:hover .post-card__thumb img {
   --label-width: min(260px, 28vw);
   --label-scale: 1;
   --label-hover-scale: 1.24;
+  --hit-size: 46px;
   animation: timeline-float 7.6s ease-in-out infinite;
   animation-delay: var(--timeline-delay, 0ms)
+}
+
+.timeline__item:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--hit-size);
+  height: var(--hit-size);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0);
+  transform: translate(-50%, -50%);
+  pointer-events: auto
 }
 
 .timeline__dot {
@@ -1301,10 +1369,16 @@ a.card--with-image:hover .post-card__thumb img {
   --dot-size: 7px;
   --label-width: min(180px, 24vw);
   --label-hover-scale: 1.18;
+  --hit-size: 42px;
   z-index: 1
 }
 
-.timeline__item--dot .timeline__text {
+.timeline[data-label-min-rank="1"] .timeline__item--dot:not(:hover):not(:focus-within) .timeline__text,
+.timeline[data-label-min-rank="2"] .timeline__item--dot:not(:hover):not(:focus-within) .timeline__text,
+.timeline[data-label-min-rank="2"] .timeline__item--minor:not(:hover):not(:focus-within) .timeline__text,
+.timeline[data-label-min-rank="3"] .timeline__item--dot:not(:hover):not(:focus-within) .timeline__text,
+.timeline[data-label-min-rank="3"] .timeline__item--minor:not(:hover):not(:focus-within) .timeline__text,
+.timeline[data-label-min-rank="3"] .timeline__item--mid:not(:hover):not(:focus-within) .timeline__text {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-50%) scale(.72)
@@ -1318,6 +1392,7 @@ a.card--with-image:hover .post-card__thumb img {
 
 .timeline__item--mid {
   --dot-size: 12px;
+  --hit-size: 54px;
   --label-width: min(250px, 30vw)
 }
 
@@ -1329,6 +1404,7 @@ a.card--with-image:hover .post-card__thumb img {
   --dot-size: 17px;
   --label-width: min(320px, 34vw);
   --label-hover-scale: 1.28;
+  --hit-size: 64px;
   z-index: 2
 }
 
@@ -2440,6 +2516,11 @@ a.card--with-image:hover .post-card__thumb img {
     display: block
   }
 
+  .timeline-controls {
+    margin-top: 14px;
+    margin-left: 0
+  }
+
   .page-head--split,
   .page-head--archive {
     grid-template-columns: 1fr;
@@ -2587,6 +2668,16 @@ a.card--with-image:hover .post-card__thumb img {
 
   .post-masonry {
     grid-template-columns: 1fr
+  }
+
+  .timeline-controls {
+    width: 100%;
+    justify-content: space-between
+  }
+
+  .timeline-controls__status {
+    min-width: 0;
+    flex: 1
   }
 
   .hero__actions {

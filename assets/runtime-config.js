@@ -1,6 +1,13 @@
 const cfgEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
 const BUSUANZI_SRC = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+const TIMELINE_LEVEL_RANK = { dot: 0, minor: 1, mid: 2, major: 3 };
+const TIMELINE_VIEW_STEPS = [
+  { minRank: 0, label: '全部' },
+  { minRank: 1, label: '次要以上' },
+  { minRank: 2, label: '主要以上' },
+  { minRank: 3, label: '最大层' }
+];
 
 function safeUrl(value, fallback = '') {
   const raw = String(value ?? '').trim();
@@ -119,6 +126,24 @@ function timelineLevel(item, index = 0) {
   return 'dot';
 }
 
+function timelineRank(level) {
+  return TIMELINE_LEVEL_RANK[level] ?? 0;
+}
+
+function timelineEntries(items = []) {
+  return [...items]
+    .sort((a, b) => String(timelineData(a).date || '').localeCompare(String(timelineData(b).date || '')))
+    .map((item, index) => ({
+      item,
+      data: timelineData(item),
+      level: timelineLevel(item, index)
+    }));
+}
+
+function readTimelineViewStep() {
+  return 0;
+}
+
 function timelineHeight(count = 0) {
   return `${Math.max(760, count * 54)}px`;
 }
@@ -147,9 +172,9 @@ function timelinePath(total = 1) {
   }).join(' ');
 }
 
-function timelineItem(item, index = 0, items = []) {
-  const x = timelineData(item);
-  const level = timelineLevel(item, index);
+function timelineItem(entry, index = 0, items = []) {
+  const x = entry?.data || timelineData(entry?.item || entry);
+  const level = entry?.level || timelineLevel(entry?.item || entry, index);
   const point = timelinePoint(index, items.length || 1);
   const labelSide = point.x < 50 ? 'right' : 'left';
   const delay = (index % 12) * 90;
@@ -157,10 +182,67 @@ function timelineItem(item, index = 0, items = []) {
   return `<div class="timeline__item timeline__item--${cfgEsc(level)} timeline__item--${labelSide}" style="${style}" tabindex="0" aria-label="${cfgEsc(`${x.date} ${x.title}`)}"><span class="timeline__dot" aria-hidden="true"></span><span class="timeline__text"><span class="timeline__time">${cfgEsc(x.date)}</span><h3>${cfgEsc(x.title)}</h3></span></div>`;
 }
 
-function timelineHtml(items = []) {
-  const list = [...items].sort((a, b) => String(timelineData(a).date || '').localeCompare(String(timelineData(b).date || '')));
-  const path = timelinePath(list.length || 1);
-  return `<svg class="timeline__curve" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path class="timeline__curve-shadow" d="${path}"></path><path class="timeline__curve-main" d="${path}"></path><path class="timeline__curve-gold" d="${path}"></path></svg>${list.map(timelineItem).join('')}`;
+function timelineHtml(entries = []) {
+  const path = timelinePath(entries.length || 1);
+  return `<svg class="timeline__curve" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path class="timeline__curve-shadow" d="${path}"></path><path class="timeline__curve-main" d="${path}"></path><path class="timeline__curve-gold" d="${path}"></path></svg>${entries.map(timelineItem).join('')}`;
+}
+
+function timelineButton(label, ariaLabel) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'timeline-controls__button';
+  button.textContent = label;
+  button.setAttribute('aria-label', ariaLabel);
+  button.title = ariaLabel;
+  return button;
+}
+
+function timelineControls(timeline) {
+  const head = timeline.closest('section')?.querySelector('.section-head');
+  let controls = head?.querySelector('[data-about-timeline-controls]');
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.className = 'timeline-controls';
+    controls.dataset.aboutTimelineControls = '';
+    if (head) head.append(controls);
+    else timeline.before(controls);
+  }
+
+  const collapse = timelineButton('-', '折叠一层');
+  const status = document.createElement('span');
+  status.className = 'timeline-controls__status';
+  status.setAttribute('aria-live', 'polite');
+  const expand = timelineButton('+', '展开一层');
+  controls.replaceChildren(collapse, status, expand);
+  return { collapse, status, expand };
+}
+
+function renderTimeline(timeline, items = []) {
+  const entries = timelineEntries(items);
+  const controls = timelineControls(timeline);
+  let stepIndex = readTimelineViewStep();
+  timeline.style.setProperty('--timeline-height', timelineHeight(entries.length));
+  timeline.innerHTML = timelineHtml(entries);
+
+  const update = () => {
+    const step = TIMELINE_VIEW_STEPS[stepIndex] || TIMELINE_VIEW_STEPS[0];
+    const visibleLabels = entries.filter(entry => timelineRank(entry.level) >= step.minRank).length;
+    timeline.dataset.labelMinRank = String(step.minRank);
+    controls.status.textContent = `${step.label} · ${visibleLabels}/${entries.length}`;
+    controls.collapse.disabled = stepIndex >= TIMELINE_VIEW_STEPS.length - 1;
+    controls.expand.disabled = stepIndex <= 0;
+  };
+
+  const changeStep = delta => {
+    const next = Math.max(0, Math.min(TIMELINE_VIEW_STEPS.length - 1, stepIndex + delta));
+    if (next === stepIndex) return;
+    stepIndex = next;
+    update();
+  };
+
+  controls.collapse.addEventListener('click', () => changeStep(1));
+  controls.expand.addEventListener('click', () => changeStep(-1));
+  update();
 }
 
 function actionLink(item) {
@@ -263,9 +345,7 @@ function renderAboutPage(cfg) {
   if (profile) profile.innerHTML = renderProfileBlock(a.profile);
   if (cards) cards.innerHTML = (a.cards || []).map(cfgCard).join('');
   if (timeline) {
-    const items = a.timeline || [];
-    timeline.style.setProperty('--timeline-height', timelineHeight(items.length));
-    timeline.innerHTML = timelineHtml(items);
+    renderTimeline(timeline, a.timeline || []);
   }
 }
 
