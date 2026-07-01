@@ -1,5 +1,6 @@
 const cfgEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+const BUSUANZI_SRC = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
 
 function safeUrl(value, fallback = '') {
   const raw = String(value ?? '').trim();
@@ -172,8 +173,26 @@ function actionLink(item) {
 
 function statRow(item) {
   const x = Array.isArray(item) ? { label: item[0], value: item[1] } : item;
-  const value = x.value === 'auto' ? '<b data-post-count>0</b>' : `<b>${cfgEsc(x.value)}</b>`;
+  const value = x.value === 'auto'
+    ? '<b data-post-count>0</b>'
+    : x.value === 'busuanzi_site_pv'
+      ? '<b><span id="busuanzi_container_site_pv"><span id="busuanzi_value_site_pv">--</span>次</span></b>'
+      : x.value === 'busuanzi_site_uv'
+        ? '<b><span id="busuanzi_container_site_uv"><span id="busuanzi_value_site_uv">--</span>人</span></b>'
+        : `<b>${cfgEsc(x.value)}</b>`;
   return `<div class="stat"><span>${cfgEsc(x.label)}</span>${value}</div>`;
+}
+
+function loadBusuanzi() {
+  if (
+    (!document.getElementById('busuanzi_value_site_pv') && !document.getElementById('busuanzi_value_site_uv'))
+    || document.querySelector('script[data-busuanzi-loader]')
+  ) return;
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = BUSUANZI_SRC;
+  script.dataset.busuanziLoader = '1';
+  document.body.append(script);
 }
 
 async function fetchConfig(name) {
@@ -215,6 +234,7 @@ function renderHomePage(cfg) {
   const stats = document.querySelector('[data-home-stats]');
   if (actions) actions.innerHTML = (h.actions || []).map(actionLink).join('');
   if (stats) stats.innerHTML = (h.stats || []).map(statRow).join('');
+  loadBusuanzi();
 }
 
 function renderProjectPage(cfg) {

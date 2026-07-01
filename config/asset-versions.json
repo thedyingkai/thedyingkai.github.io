@@ -2,13 +2,13 @@
   "versions": {
     "/assets/site.css": "3.5",
     "/assets/fonts.css": "1.1",
-    "/assets/post-renderer.css": "1.10",
+    "/assets/post-renderer.css": "1.11",
     "/assets/texme-render.css": "2.3",
     "/assets/site.js": "3.1",
-    "/assets/runtime-config.js": "1.9",
+    "/assets/runtime-config.js": "1.10",
     "/assets/images.js": "2.2",
     "/assets/post-list.js": "1.7",
     "/assets/cloud.js": "1.1",
-    "/assets/article-renderer.js": "5.7"
+    "/assets/article-renderer.js": "5.8"
   }
 }

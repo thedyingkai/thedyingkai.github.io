@@ -31,6 +31,14 @@
       "value": "auto"
     },
     {
+      "label": "本站总访问量",
+      "value": "busuanzi_site_pv"
+    },
+    {
+      "label": "本站总访客数",
+      "value": "busuanzi_site_uv"
+    },
+    {
       "label": "Nickname",
       "value": "TDK"
     },

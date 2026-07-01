@@ -61,7 +61,7 @@
     font-size: 12px
 }
 
-.render-meta span {
+.render-meta > span {
     display: inline-flex;
     align-items: center;
     height: 26px;
@@ -543,7 +543,7 @@
         font-size: 11px
     }
 
-    .render-meta span {
+    .render-meta > span {
         height: 23px;
         padding: 0 8px
     }
