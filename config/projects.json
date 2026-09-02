@@ -4,15 +4,16 @@
   "lead": "主要围绕在线评测、训练工具、算法模板、脚本自动化和个人知识库展开。",
   "featured": [
     {
-      "meta": "Backend / Judge",
-      "title": "Untitled-OJ",
-      "text": "分布式、模块化、可扩展的在线评测平台。",
+      "meta": "Rust / Orchestrator",
+      "title": "OJOS Orchestrator",
+      "text": "OJOS 的服务控制面，当前源码版本 v1.0.0；负责服务发布、节点放置、部署生命周期、拓扑、任务与诊断。",
       "href": "https://github.com/thedyingkai/Untitled-OJ",
       "tags": [
-        "Go",
-        "OJ",
+        "Rust",
+        "Tauri",
+        "OJOS",
         "PostgreSQL",
-        "Redis"
+        "SQLite"
       ]
     },
     {
@@ -29,7 +30,7 @@
     {
       "meta": "Algorithm / Template",
       "title": "XCPC Template",
-      "text": "使用 Typst 编写和渲染的 XCPC 算法模板，当前版本 v3.3，并通过 GitHub Releases 发布 PDF。",
+      "text": "使用 Typst 编写和渲染的 XCPC 算法模板，当前版本 v4.2，并通过 GitHub Releases 发布 PDF。",
       "href": "https://github.com/thedyingkai/XCPC-Template-by-thedyingkai_",
       "tags": [
         "Typst",

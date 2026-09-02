@@ -1,6 +1,6 @@
 {
   "eyebrow": "Cloud Drive",
-  "title": "云盘",
+  "title": "云盘（开发中）",
   "lead": "访问 dl.thedyingkai.cn 上的静态资源。这里不代理、不缓存文件，只根据配置生成 Cloudreve 资源的下载链接。",
   "baseUrl": "https://dl.thedyingkai.cn/",
   "rootFolder": "root",
