@@ -1,101 +1,45 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parsePost, comparePosts, postDate } from '../assets/lib/posts.js';
+import { isPostFile, postUrl } from '../assets/lib/urls.js';
 
-const root = process.cwd();
-const site = 'https://blog.thedyingkai.cn';
-const postsDir = path.join(root, 'posts');
+export const projectRoot = fileURLToPath(new URL('../', import.meta.url));
+const escapeXml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;'
+}[char]));
 
-function escapeXml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
+export async function buildSiteData(root = projectRoot) {
+  const domain = (await readFile(path.join(root, 'CNAME'), 'utf8')).trim();
+  if (!/^[a-z0-9.-]+$/i.test(domain)) throw new Error('CNAME must contain a domain name');
+  const site = `https://${domain}`;
+  const files = (await readdir(path.join(root, 'posts'))).filter(isPostFile).sort();
+  const posts = await Promise.all(files.map(async file => {
+    const { body, ...metadata } = parsePost(file, await readFile(path.join(root, 'posts', file), 'utf8'));
+    if (metadata.date && !postDate(metadata.date)) throw new Error(`${file}: invalid publication date`);
+    return metadata;
+  }));
+  posts.sort(comparePosts);
+  const outputs = new Map();
+  outputs.set('config/posts.json', JSON.stringify({
+    version: 2, files: posts.map(post => post.fileName), posts
+  }, null, 2) + '\n');
 
-function parseMetaValue(value) {
-  const trimmed = value.trim();
-  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-    return trimmed.slice(1, -1).split(',').map(item => item.trim()).filter(Boolean);
-  }
-  return trimmed.replace(/^["']|["']$/g, '');
-}
-
-function parseFrontMatter(fileName, raw) {
-  const normalized = raw.replace(/\r\n?/g, '\n');
-  const meta = {
-    fileName,
-    title: fileName.replace(/\.md$/i, ''),
-    description: '',
-    date: '',
-    tags: []
-  };
-
-  if (normalized.startsWith('---\n')) {
-    const end = normalized.indexOf('\n---\n', 4);
-    if (end >= 0) {
-      for (const line of normalized.slice(4, end).split('\n')) {
-        const pos = line.indexOf(':');
-        if (pos < 0) continue;
-        const key = line.slice(0, pos).trim();
-        const value = parseMetaValue(line.slice(pos + 1));
-        if (key === 'title') meta.title = value;
-        if (key === 'description') meta.description = value;
-        if (key === 'date') meta.date = value;
-        if (key === 'tags' && Array.isArray(value)) meta.tags = value;
-      }
-    }
-  }
-
-  if (!meta.description) meta.description = meta.title;
-  return meta;
-}
-
-function dateValue(post) {
-  const iso = String(post.date || '').replace(/\./g, '-');
-  const time = Date.parse(`${iso}T00:00:00+08:00`);
-  return Number.isFinite(time) ? time : 0;
-}
-
-function rssDate(post) {
-  const time = dateValue(post);
-  return new Date(time || Date.now()).toUTCString();
-}
-
-function postUrl(fileName) {
-  return `${site}/blog/post/?file=${encodeURIComponent(fileName)}`;
-}
-
-const files = (await readdir(postsDir))
-  .filter(file => file.endsWith('.md') && !file.startsWith('_'))
-  .sort();
-
-const posts = await Promise.all(files.map(async fileName => {
-  const raw = await readFile(path.join(postsDir, fileName), 'utf8');
-  return parseFrontMatter(fileName, raw);
-}));
-
-posts.sort((a, b) => dateValue(b) - dateValue(a) || a.fileName.localeCompare(b.fileName));
-
-await writeFile(
-  path.join(root, 'config', 'posts.json'),
-  `${JSON.stringify({ files: posts.map(post => post.fileName) }, null, 2)}\n`,
-  'utf8'
-);
-
-const rssItems = posts.map(post => `    <item>
+  // No wall-clock timestamps: repeated builds of unchanged content are identical.
+  // Undated notes stay undated instead of appearing newly published every deploy.
+  const lastDate = Math.max(0, ...posts.map(post => postDate(post.date)));
+  const rssItems = posts.map(post => {
+    const url = escapeXml(postUrl(post.fileName, site));
+    const date = postDate(post.date);
+    return `    <item>
       <title>${escapeXml(post.title)}</title>
-      <link>${escapeXml(postUrl(post.fileName))}</link>
-      <guid isPermaLink="true">${escapeXml(postUrl(post.fileName))}</guid>
-      <pubDate>${rssDate(post)}</pubDate>
-      <description>${escapeXml(post.description)}</description>
+      <link>${url}</link>
+      <guid isPermaLink="true">${url}</guid>
+${date ? `      <pubDate>${new Date(date).toUTCString()}</pubDate>\n` : ''}      <description>${escapeXml(post.description)}</description>
 ${post.tags.map(tag => `      <category>${escapeXml(tag)}</category>`).join('\n')}
-    </item>`).join('\n');
-
-await writeFile(
-  path.join(root, 'rss.xml'),
-  `<?xml version="1.0" encoding="UTF-8"?>
+    </item>`;
+  }).join('\n');
+  outputs.set('rss.xml', `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>TDK 的小窝</title>
@@ -103,28 +47,27 @@ await writeFile(
     <atom:link href="${site}/rss.xml" rel="self" type="application/rss+xml"/>
     <description>thedyingkai_ 的个人博客、算法笔记、项目归档和成长记录。</description>
     <language>zh-CN</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-${rssItems}
+${lastDate ? `    <lastBuildDate>${new Date(lastDate).toUTCString()}</lastBuildDate>\n` : ''}${rssItems}
   </channel>
 </rss>
-`,
-  'utf8'
-);
-
-const staticUrls = ['/', '/blog/', '/about/', '/projects/', '/cloud/', '/friends/', '/rss.xml'];
-const sitemapUrls = [
-  ...staticUrls.map(url => `${site}${url}`),
-  ...posts.map(post => postUrl(post.fileName))
-];
-
-await writeFile(
-  path.join(root, 'sitemap.xml'),
-  `<?xml version="1.0" encoding="UTF-8"?>
+`);
+  const routes = ['/', '/blog/', '/about/', '/projects/', '/cloud/', '/friends/', '/rss.xml'];
+  const urls = [...routes.map(route => site + route), ...posts.map(post => postUrl(post.fileName, site))];
+  outputs.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemapUrls.map(url => `  <url><loc>${escapeXml(url)}</loc></url>`).join('\n')}
+${urls.map(url => `  <url><loc>${escapeXml(url)}</loc></url>`).join('\n')}
 </urlset>
-`,
-  'utf8'
-);
+`);
+  return { posts, outputs };
+}
 
-console.log(`Generated site data for ${posts.length} posts.`);
+export async function generateSiteData(root = projectRoot) {
+  const { posts, outputs } = await buildSiteData(root);
+  await Promise.all([...outputs].map(([file, content]) => writeFile(path.join(root, file), content)));
+  return posts;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const posts = await generateSiteData();
+  console.log(`Generated site data for ${posts.length} posts.`);
+}

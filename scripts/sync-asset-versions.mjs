@@ -1,7 +1,8 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = process.cwd();
+const root = fileURLToPath(new URL('../', import.meta.url));
 const configPath = path.join(root, 'config', 'asset-versions.json');
 const checkOnly = process.argv.includes('--check');
 const assetRefPattern = /(<(?:link|script)\b[^>]*\b(?:href|src)=["'])(\/(?:assets|highlight)\/[^"']+\.(?:css|js))(?:\?v=[^"']*)?(["'][^>]*>)/g;
@@ -10,16 +11,16 @@ function relativePath(file) {
   return path.relative(root, file).replace(/\\/g, '/');
 }
 
-async function listHtmlFiles(dir) {
+async function listSourceFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
-    if (entry.name === '.git') continue;
+    if (['.git', 'node_modules', 'vendor', '_site', 'test-results', 'playwright-report'].includes(entry.name)) continue;
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      files.push(...await listHtmlFiles(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith('.html')) {
+      files.push(...await listSourceFiles(fullPath));
+    } else if (entry.isFile() && /\.(?:html|js)$/.test(entry.name)) {
       files.push(fullPath);
     }
   }
@@ -53,14 +54,25 @@ function syncHtml(content, versions, seen) {
   });
 }
 
+function syncModuleImports(content, file, versions, seen) {
+  const pattern = /((?:\bfrom\s*|\bimport\s*\(\s*)["'])([^"']+\.js)(?:\?v=[^"']*)?(["'])/g;
+  return content.replace(pattern, (match, prefix, specifier, suffix) => {
+    if (!specifier.startsWith('.') && !specifier.startsWith('/')) return match;
+    const assetPath = specifier.startsWith('/') ? specifier : path.posix.normalize(path.posix.join('/', path.posix.dirname(relativePath(file)), specifier));
+    if (!Object.hasOwn(versions, assetPath)) return match;
+    seen.add(assetPath);
+    return `${prefix}${specifier}?v=${versions[assetPath]}${suffix}`;
+  });
+}
+
 const versions = normalizeVersions(JSON.parse(await readFile(configPath, 'utf8')));
-const htmlFiles = await listHtmlFiles(root);
+const sourceFiles = await listSourceFiles(root);
 const changed = [];
 const seen = new Set();
 
-for (const file of htmlFiles) {
+for (const file of sourceFiles) {
   const original = await readFile(file, 'utf8');
-  const next = syncHtml(original, versions, seen);
+  const next = file.endsWith('.html') ? syncHtml(original, versions, seen) : syncModuleImports(original, file, versions, seen);
   if (next === original) continue;
   changed.push(relativePath(file));
   if (!checkOnly) await writeFile(file, next, 'utf8');
@@ -77,5 +89,5 @@ if (checkOnly && changed.length) {
 }
 
 console.log(checkOnly
-  ? `Asset versions are in sync across ${htmlFiles.length} HTML files.`
-  : `Synced asset versions in ${changed.length} HTML file(s).`);
+  ? `Asset versions are in sync across ${sourceFiles.length} HTML/JS files.`
+  : `Synced asset versions in ${changed.length} HTML/JS file(s).`);

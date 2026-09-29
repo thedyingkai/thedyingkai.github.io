@@ -101,7 +101,7 @@
 
 .render-body {
     font-size: 14px;
-    line-height: 1.82;
+    line-height: 1.86;
     color: var(--ink);
     background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .18));
     border: 1px solid rgba(102, 204, 255, .13);
@@ -141,6 +141,10 @@
 }
 
 .render-toc__link,
+.render-toc__label { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 2px 0; }
+.render-toc__label mjx-container { margin: 0 !important; }
+.render-toc__label--math { text-overflow: clip; }
+
 .render-toc__empty {
     border-left: 2px solid transparent;
     padding: 7px 0 7px 12px;
@@ -152,8 +156,6 @@
 .render-toc__link {
     display: block;
     overflow: hidden;
-    text-overflow: clip;
-    white-space: nowrap;
     border-radius: 0 8px 8px 0;
     transition: color .18s, background .18s, border-color .18s
 }
@@ -181,26 +183,13 @@
     box-shadow: 0 18px 46px -24px rgba(33, 150, 212, .62), 0 8px 18px -16px rgba(122, 77, 16, .34);
     font-size: 12px;
     line-height: 1.65;
-    pointer-events: none
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+    scrollbar-width: thin;
+    overflow-wrap: anywhere
 }
 
-.render-toc-tip mjx-container {
-    max-width: 100%;
-    overflow-x: clip;
-    overflow-y: hidden
-}
-
-.render-toc-tip mjx-container.is-overflowing {
-    display: block !important;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin
-}
-
-.render-toc-tip mjx-container.is-overflowing > mjx-math {
-    min-width: max-content
-}
+.render-toc-tip mjx-container { max-width: none; }
 
 .render-toc__link--3 {
     padding-left: 24px
@@ -262,6 +251,9 @@
     margin: 18px 0
 }
 
+.render-body p,
+.render-body li { line-height: 1.92; }
+
 .render-body li {
     margin: 7px 0
 }
@@ -282,6 +274,9 @@
 }
 
 .render-body mjx-container[display="true"] {
+    display: block !important;
+    padding: .75rem 0;
+    margin: 1.35rem 0;
     font-size: .94em;
     max-width: 100%;
     overflow-x: clip;
@@ -302,8 +297,12 @@
 }
 
 .render-body mjx-container:not([display="true"]) {
-    max-width: none;
-    overflow: visible
+    display: inline-block !important;
+    vertical-align: -.12em !important;
+    margin: 0 .04em !important;
+    line-height: 1 !important;
+    max-width: none !important;
+    overflow: visible !important
 }
 
 .render-body blockquote {
@@ -335,12 +334,12 @@
 
 .render-body code:not(pre code) {
     font-family: var(--mono);
-    background: rgba(102, 204, 255, .12);
-    border: 1px solid var(--line);
+    background: #2b2d30;
+    border: 1px solid #393b40;
     border-radius: 6px;
     padding: .12em .42em;
     font-size: .9em;
-    color: #175d83
+    color: #bcbec4
 }
 
 .render-body pre:not(.code-pre) {
@@ -354,129 +353,45 @@
 }
 
 .code-frame {
+    --code-font-size: 13px;
     max-width: 100%;
+    min-width: 0;
     margin: 26px 0;
-    border: 1px solid transparent;
-    border-radius: 16px;
-    background: linear-gradient(145deg, rgba(11, 16, 28, .98), rgba(24, 28, 44, .96)) padding-box,
-        linear-gradient(120deg, #66ccff, #d6a533, #c678dd, #98c379, #61aeee) border-box;
-    box-shadow: 0 28px 72px -42px rgba(12, 18, 32, .86), 0 0 0 1px rgba(255, 255, 255, .04) inset;
-    overflow: hidden
+    border: 1px solid #33465f;
+    border-radius: 12px;
+    background: #1d2431;
+    overflow: hidden;
 }
-
-.code-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 42px;
-    padding: 8px 10px 8px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, .08);
-    background: radial-gradient(circle at 8% 0%, rgba(102, 204, 255, .2), transparent 28%),
-        radial-gradient(circle at 88% 0%, rgba(214, 165, 51, .18), transparent 30%),
-        rgba(6, 10, 18, .58)
-}
-
-.code-lang {
-    color: #b8c7dc;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase
-}
-
-.code-copy {
-    height: 30px;
-    padding: 0 12px;
-    border: 1px solid rgba(102, 204, 255, .32);
-    border-radius: 8px;
-    background: rgba(15, 23, 42, .84);
-    color: #d6e4f4;
-    font: 800 12px/1 var(--sans);
-    cursor: pointer;
-    transition: border-color .18s, color .18s, background .18s
-}
-
-.code-copy:hover,
-.code-copy.is-copied {
-    border-color: rgba(102, 204, 255, .68);
-    color: #66ccff;
-    background: rgba(21, 31, 52, .98)
-}
-
-.code-scroller {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    overflow: auto;
-    background: radial-gradient(circle at 14% 18%, rgba(102, 204, 255, .12), transparent 34%),
-        radial-gradient(circle at 90% 8%, rgba(198, 120, 221, .14), transparent 28%),
-        #111827
-}
-
-.code-gutter {
-    position: sticky;
-    left: 0;
-    z-index: 1;
-    min-width: 3.8rem;
-    padding: 18px 0;
-    border-right: 1px solid rgba(102, 204, 255, .18);
-    background: linear-gradient(90deg, rgba(8, 13, 24, .98), rgba(17, 24, 39, .92));
-    color: #64748b;
-    font: 13px/1.62 var(--mono);
-    text-align: right;
-    user-select: none
-}
-
-.code-gutter span {
+.code-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 12px; background: #161d28; border-bottom: 1px solid #334155; }
+.code-lang { color: #d2deec; font: 600 12px/1.5 var(--mono); }
+.code-count { color: #9aabc0; font-size: 11px; }
+.code-actions { display: flex; gap: 6px; margin-left: auto; }
+.code-copy { min-height: 34px; padding: 6px 10px; border: 1px solid #43546d; border-radius: 6px; background: #202c3e; color: #dce8f6; font: 12px/1.5 var(--sans); cursor: pointer; }
+.code-copy:hover, .code-copy[aria-pressed="true"] { background: #29435b; border-color: #66ccff; }
+.code-copy:focus-visible, .code-scroller:focus-visible { outline: 2px solid #66ccff; outline-offset: -2px; }
+.code-scroller { overflow: auto; max-width: 100%; scrollbar-width: thin; scrollbar-color: #586a82 #1d2431; }
+.code-pre { width: max-content; min-width: 100%; margin: 0; padding: 14px 0; border: 0; background: transparent; overflow: visible; }
+.code-pre code, .code-pre code.hljs {
     display: block;
-    padding: 0 12px
-}
-
-.code-pre {
-    min-width: max-content;
     margin: 0;
-    border: 0;
-    background: transparent !important;
-    box-shadow: none;
-    overflow: visible
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    color: #c5cfde;
+    font: 400 var(--code-font-size)/1.7 var(--mono);
+    font-variant-ligatures: none;
+    text-align: left;
+    white-space: normal;
+    tab-size: 4;
 }
-
-.code-pre code,
-.code-pre code.hljs {
-    display: block;
-    padding: 18px 22px;
-    background: transparent !important;
-    color: #abb2bf;
-    font-family: var(--mono);
-    font-size: 13px;
-    line-height: 1.62;
-    white-space: pre;
-    tab-size: 4
-}
-
-.code-pre .hljs-operator {
-    color: #ff78c6
-}
-
-.code-pre .hljs-punctuation {
-    color: #7dd3fc
-}
-
-.code-pre .hljs-variable {
-    color: #f8fafc
-}
-
-.code-pre .hljs-comment,
-.code-pre .hljs-quote {
-    color: #39ff14;
-    font-style: italic;
-    text-shadow: 0 0 10px rgba(57, 255, 20, .28)
-}
-
-.code-pre .hljs-extra-token {
-    font-weight: 600
-}
+.code-line { display: grid; grid-template-columns: var(--code-gutter, 3ch) minmax(0, 1fr); min-height: 1.7em; }
+.code-line-number { position: sticky; left: 0; z-index: 1; align-self: stretch; padding-right: 1ch; color: #8292a9; background: #1d2431; border-right: 1px solid #344052; text-align: right; user-select: none; }
+.code-line-number:before { content: attr(data-line); }
+.code-line-content { display: block; min-width: 0; padding: 0 18px; white-space: pre; overflow-wrap: normal; }
+.code-frame.is-wrapped .code-pre { width: 100%; }
+.code-frame.is-wrapped .code-line-content { white-space: pre-wrap; overflow-wrap: anywhere; }
+.code-pre .hljs-comment, .code-pre .hljs-quote { color: #94aa87; font-style: italic; text-shadow: none; }
+.render-notice { padding: 12px; border: 1px solid #d6a533; border-radius: 8px; }
 
 .back {
     display: inline-flex;
@@ -597,9 +512,10 @@
         padding: .55rem 0
     }
 
-    .code-pre code,
-    .code-pre code.hljs,
-    .code-gutter {
-        font-size: 12px
+    .render-body p,
+    .render-body li { line-height: 1.78; }
+
+    .code-frame {
+        --code-font-size: 12px
     }
 }

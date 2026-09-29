@@ -23,6 +23,8 @@
 
 新增文章时，只需要把 Markdown 文件放到 `posts/`，文件名建议使用英文、数字和短横线，例如 `new-post.md`。
 
+保存后运行 `npm run generate` 更新文章元信息索引、RSS 和站点地图；`npm run check` 会检查是否遗漏。列表页面直接读取索引，不再逐篇下载正文。以 `_` 开头的 Markdown 文件视为草稿，不进入索引和发布目录。
+
 文章 front matter：
 
 ```markdown
@@ -62,13 +64,13 @@ coverAlt: 图片描述
 node scripts/sync-asset-versions.mjs
 ```
 
-这个脚本会把所有 HTML 里的 `?v=` 自动同步到版本清单。只想检查是否同步时运行：
+这个脚本会同步 HTML 中的资源引用，以及本地 JS 模块的 `from` / `import()` 引用中的 `?v=`。只想检查是否同步时运行：
 
 ```bash
 node scripts/sync-asset-versions.mjs --check
 ```
 
-GitHub Pages 部署流程也会运行同步脚本，确保线上构建使用同一份版本清单。
+GitHub Pages 构建会检查版本是否同步；版本不一致时停止构建，避免发布混合版本。
 
 ## 更新项目
 
@@ -76,7 +78,7 @@ GitHub Pages 部署流程也会运行同步脚本，确保线上构建使用同�
 
 ## 更新云盘
 
-云盘页内容在 `config/cloud.json`。目录使用 `children` 表示，文件优先使用 `downloadUrl` 或 `href`；如果只写 `path`，页面会自动拼接到 `dl.thedyingkai.cn`。
+云盘页内容在 `config/cloud.json`。`folders` 定义目录，各目录的 `entries` 定义内容，子目录通过 `folder` 字段关联目录 ID。文件优先使用 `downloadUrl` 或 `href`；如果只写 `path`，页面会自动拼接到 `dl.thedyingkai.cn`。
 
 ## 更新关于页
 
@@ -103,3 +105,39 @@ GitHub Pages 部署流程也会运行同步脚本，确保线上构建使用同�
 ## 代码高亮
 
 支持 `c`、`cpp`、`java`、`python`、`bash`。第三方前端库统一放在 `assets/vendor/`，代码高亮主题使用 `assets/vendor/highlight.js/11.11.1/styles/atom-one-dark.min.css`。
+
+代码块请在围栏后写明语言；`text`、未声明语言或尚未支持的语言按纯文本展示，不再猜测语言。行号与代码按行布局，工具栏可以切换自动换行、复制代码，复制内容不含行号。公式由 Markdown 扩展识别，代码内的 `$`、尖括号和反斜杠不会被公式预处理改写。当前固定使用的 marked 4 会把制表符展开为四个空格。
+
+渲染职责分为 `markdown-renderer.js`（Markdown / 公式识别）、`code-blocks.js`（高亮与代码交互）、`article-renderer.js`（文章组装）、`article-toc.js`（目录）和 `article-math.js`（MathJax 加载）。目录中的公式与正文一起排版；悬浮预览复用排版结果。公式加载失败时保留正文和代码，并提供重试按钮。
+
+## 音乐播放器
+
+`config/music.json` 继续维护原歌单、音量、顺序和循环模式。播放器使用原生 Audio；歌单仍通过原有 Meting API 获取，不再加载 APlayer / MetingJS 的隐藏界面。
+
+- 默认点击播放才请求歌单，加载失败可重试；第三方服务或版权限制无法由静态站点保证，面板保留音乐平台入口。
+- 点击封面或曲目信息打开面板，可搜索歌单、拖动进度、调整音量、切换顺序/循环和歌词；`Escape` 收起面板，右侧箭头最小化播放器。
+- 记录当前歌曲、播放位置和设置；跨页面后点击播放恢复，不绑定全局点击事件强制启动声音。浏览器禁止自动播放时会提示再次点击。
+- 兼容旧版 `tdk-music:<playlistId>` 设置。存储不可用时仍可播放；不在每个时间更新事件里写存储。
+- 实现在 `music-player.js`，纯数据逻辑在 `music-model.js`，样式在 `music-player.css`。旧 vendor 文件保留以便回退，页面不再引用。
+
+## 回归检查
+
+Node.js 22，无需安装依赖即可运行：
+
+```bash
+npm test
+npm run check
+npm run build
+```
+
+浏览器回归需额外安装 Playwright（仅开发测试使用，不是站点运行依赖）：
+
+```bash
+npm install --no-save playwright
+npx playwright install chromium
+npm run test:browser
+```
+
+测试启动临时本地服务器和独立浏览器，使用隔离的存储、模拟歌单接口和本地静音 WAV，覆盖代码复制/换行、公式失败降级、播放器失败重试、切歌与恢复。截图写入系统临时目录，不读取或更改个人浏览器状态。也可用 `PLAYWRIGHT_MODULE` 和 `BROWSER_EXECUTABLE` 指定已有测试运行时。
+
+构建产物位于 `_site/`，仅包含公开站点文件；手动 Pages 部署上传此目录。`fix` 分支的自动检查不会部署网站。模块划分、构建边界和完整回归范围见 [维护说明](docs/maintenance.md)。
