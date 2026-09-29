@@ -162,11 +162,13 @@
     },
     {
       "date": "2025-05-25",
-      "title": "第一场线下 xcpc 邀请赛"
+      "title": "第一场线下 xcpc 邀请赛",
+      "level": "mid"
     },
     {
       "date": "2025-06-23",
-      "title": "蓝桥杯 JavaB 国一"
+      "title": "蓝桥杯 JavaB 国一",
+      "level": "major"
     },
     {
       "date": "2025-07-18",
@@ -178,24 +180,22 @@
     },
     {
       "date": "2025-09-14",
-      "title": "CCPC 南昌邀请赛打星金牌"
+      "title": "CCPC 南昌邀请赛打星金牌",
+      "level": "major"
     },
     {
       "date": "2025-10-12",
-      "title": "举办本校第一场校赛暨新生赛"
+      "title": "举办本校第一场校赛暨新生赛",
+      "level": "major"
     },
     {
       "date": "2025-11-23",
-      "title": "ICPC 上海区域赛铜牌"
+      "title": "ICPC 上海区域赛铜牌",
+      "level": "major"
     },
     {
       "date": "2025-12-06",
       "title": "CCF 算法能力大赛（CACC）区域赛二等奖",
-      "level": "mid"
-    },
-    {
-      "date": "2026-02-11",
-      "title": "牛客寒假算法基础集训营一等奖",
       "level": "mid"
     },
     {
@@ -240,11 +240,6 @@
     {
       "date": "2026-07-29",
       "title": "ICPC 沈阳邀请赛银牌",
-      "level": "mid"
-    },
-    {
-      "date": "2026-08-18",
-      "title": "牛客暑期多校训练营二等奖",
       "level": "mid"
     },
     {
