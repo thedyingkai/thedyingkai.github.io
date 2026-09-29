@@ -200,15 +200,18 @@
     },
     {
       "date": "2026-04-11",
-      "title": "ICPC 深圳邀请赛银牌"
+      "title": "ICPC 深圳邀请赛银牌",
+      "level": "mid"
     },
     {
       "date": "2026-05-02",
-      "title": "ICPC 西安邀请赛银牌"
+      "title": "ICPC 西安邀请赛银牌",
+      "level": "mid"
     },
     {
       "date": "2026-05-17",
-      "title": "ICPC 南昌邀请赛银牌"
+      "title": "ICPC 南昌邀请赛银牌",
+      "level": "mid"
     },
     {
       "date": "2026-05-19",
@@ -217,17 +220,18 @@
     },
     {
       "date": "2026-05-24",
-      "title": "CCPC 南昌邀请赛打星银牌"
+      "title": "CCPC 南昌邀请赛打星银牌",
+      "level": "mid"
     },
     {
       "date": "2026-06-06",
       "title": "蓝桥杯 JavaB 国二",
-      "level": "major"
+      "level": "mid"
     },
     {
       "date": "2026-06-07",
-      "title": "传智杯程序设计挑战赛 B 组国二（第 59 名）",
-      "level": "major"
+      "title": "传智杯 B 组国二",
+      "level": "mid"
     },
     {
       "date": "2026-06-08",
@@ -235,7 +239,8 @@
     },
     {
       "date": "2026-07-29",
-      "title": "ICPC 沈阳邀请赛银牌"
+      "title": "ICPC 沈阳邀请赛银牌",
+      "level": "mid"
     },
     {
       "date": "2026-08-18",
@@ -244,7 +249,7 @@
     },
     {
       "date": "2026-08-28",
-      "title": "ICPC 2026 Online Challenge 1（华为）二等奖，第 10 名",
+      "title": "ICPC 2026 Online Challenge powered by Huawei Second Prize, Rank 10",
       "level": "major"
     }
   ]
