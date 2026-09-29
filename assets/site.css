@@ -1236,7 +1236,7 @@ a.card--with-image:hover .post-card__thumb img {
 
 .timeline {
   position: relative;
-  --timeline-gap: 24px;
+  --timeline-gap: 12px;
   min-height: 80px;
   margin-top: 20px;
   isolation: isolate;
@@ -1398,7 +1398,7 @@ a.card--with-image:hover .post-card__thumb img {
   font-size: 10px;
   color: var(--cyan-deep);
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.4;
   letter-spacing: .08em;
   text-transform: uppercase
 }
@@ -1407,8 +1407,8 @@ a.card--with-image:hover .post-card__thumb img {
   font-family: var(--serif);
   font-size: 12px;
   font-weight: 400;
-  line-height: 1.5;
-  margin: 4px 0 0;
+  line-height: 1.4;
+  margin: 3px 0 0;
   letter-spacing: 0
 }
 
@@ -2592,7 +2592,7 @@ a.card--with-image:hover .post-card__thumb img {
   }
 
   .timeline {
-    --timeline-gap: 22px
+    --timeline-gap: 10px
   }
 
   .timeline__curve-main {
