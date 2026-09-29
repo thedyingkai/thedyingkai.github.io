@@ -106,64 +106,78 @@
   "timeline": [
     {
       "date": "2024-09-09",
-      "title": "注册洛谷账号"
+      "title": "注册洛谷账号",
+      "level": "minor"
     },
     {
       "date": "2024-10-26",
-      "title": "第一次校队训练，注册 Codeforces、AtCoder 账号"
+      "title": "第一次校队训练，注册 Codeforces、AtCoder 账号",
+      "level": "minor"
     },
     {
       "date": "2024-11-30",
-      "title": "洛谷绿名"
+      "title": "洛谷绿名",
+      "level": "dot"
     },
     {
       "date": "2024-12-25",
-      "title": "洛谷 100 AC"
+      "title": "洛谷 100 AC",
+      "level": "dot"
     },
     {
       "date": "2025-01-20",
-      "title": "洛谷橙名"
+      "title": "洛谷橙名",
+      "level": "dot"
     },
     {
       "date": "2025-02-08",
-      "title": "洛谷 200 AC"
+      "title": "洛谷 200 AC",
+      "level": "dot"
     },
     {
       "date": "2025-02-12",
-      "title": "洛谷第一篇题解过审"
+      "title": "洛谷第一篇题解过审",
+      "level": "minor"
     },
     {
       "date": "2025-02-24",
-      "title": "洛谷红名"
+      "title": "洛谷红名",
+      "level": "minor"
     },
     {
       "date": "2025-02-25",
-      "title": "Codeforces 绿名"
+      "title": "Codeforces 绿名",
+      "level": "dot"
     },
     {
       "date": "2025-04-04",
-      "title": "Codeforces 青名"
+      "title": "Codeforces 青名",
+      "level": "dot"
     },
     {
       "date": "2025-04-12",
-      "title": "洛谷 300 AC"
+      "title": "洛谷 300 AC",
+      "level": "dot"
     },
     {
       "date": "2025-04-15",
-      "title": "Codeforces 100 AC"
+      "title": "Codeforces 100 AC",
+      "level": "dot"
     },
     {
       "date": "2025-04-29",
-      "title": "Codeforces 蓝名"
+      "title": "Codeforces 蓝名",
+      "level": "minor"
     },
     {
       "date": "2025-05-12",
-      "title": "Codeforces 200 AC"
+      "title": "Codeforces 200 AC",
+      "level": "dot"
     },
     {
       "date": "2025-05-25",
       "title": "第一场线下 xcpc 邀请赛",
-      "level": "mid"
+      "level": "minor"
     },
     {
       "date": "2025-06-23",
@@ -172,11 +186,13 @@
     },
     {
       "date": "2025-07-18",
-      "title": "Codeforces 300 AC"
+      "title": "Codeforces 300 AC",
+      "level": "dot"
     },
     {
       "date": "2025-08-07",
-      "title": "洛谷 400 AC"
+      "title": "洛谷 400 AC",
+      "level": "dot"
     },
     {
       "date": "2025-09-14",
@@ -235,7 +251,8 @@
     },
     {
       "date": "2026-06-08",
-      "title": "洛谷 500 AC"
+      "title": "洛谷 500 AC",
+      "level": "minor"
     },
     {
       "date": "2026-07-29",
