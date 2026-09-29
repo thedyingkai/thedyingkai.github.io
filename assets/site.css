@@ -1995,6 +1995,30 @@ a.card--with-image:hover .post-card__thumb img {
   }
 }
 
+.navigation-notice {
+  position: fixed;
+  z-index: 1100;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid #98d4e4;
+  border-radius: 16px;
+  background: #f8fcff;
+  color: #263b50;
+  box-shadow: 0 6px 24px #263b501a;
+}
+
+.navigation-notice[hidden] { display: none; }
+.navigation-notice .btn { padding: 6px 12px; }
+main:focus { outline: none; }
+
 @media(prefers-reduced-motion:reduce) {
   .timeline__spark,
   .timeline__halo {

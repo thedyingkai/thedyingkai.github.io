@@ -2,6 +2,7 @@ import { safeUrl, isExternalUrl } from './lib/urls.js?v=1.0';
 import { loadConfig } from './lib/http.js?v=1.0';
 import { contentRendered } from './lib/dom.js?v=1.0';
 import { initPageEffects } from './page-effects.js?v=1.0';
+import { initNavigation } from './navigation.js?v=1.0';
 
 const defaultSite = {
   brand: 'TDK 的小窝',
@@ -200,11 +201,14 @@ function renderFooter(site) {
 }
 
 // Navigation stays usable even while site.json is slow or unavailable.
-renderHeader(defaultSite);
+let currentSite = defaultSite;
+renderHeader(currentSite);
 renderFooter(defaultSite);
 initPageEffects();
+initNavigation({ onNavigate: () => renderHeader(currentSite) });
 import('./music-player.js?v=1.1').then(module => module.initMusicPlayer()).catch(error => console.warn('音乐播放器未能加载。', error));
 loadSiteConfig().then(site => {
+  currentSite = site;
   renderHeader(site);
   renderFooter(site);
   contentRendered();

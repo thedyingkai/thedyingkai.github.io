@@ -31,7 +31,8 @@ npm run build
 | Native Audio playback / persistence / playlist data | `music-player.js`, `music-model.js` |
 | Timeline data rules / layout and animation | `timeline-model.js`, `timeline.js` |
 | Cloud directory validation / navigation and downloads | `cloud-model.js`, `cloud.js` |
-| Navigation, page reveal/progress, decorative image motion | `site.js`, `page-effects.js`, `images.js` |
+| Persistent shell / same-document navigation / page lifetimes | `site.js`, `navigation.js`, `navigation-history.js`, `page-runtime.js` |
+| Page reveal/progress, decorative image motion | `page-effects.js`, `images.js` |
 
 Only the about page imports timeline code. Shared config loads are deduplicated; explicit retries can reload corrected JSON. List pages read metadata instead of fetching every article body or mixing in GitHub's `main` branch.
 
@@ -46,3 +47,15 @@ Install Playwright only for development, as described in the root README. Tests 
 Coverage includes exact code copying, wrapping/line numbers, math fallback and retry, all five convolution headings in the TOC, tooltip bounds, mobile overflow, player loading/errors/seek/restore, denied storage, metadata-only listing, search/tags, 1/2/3-column layout and focus retention, partial legacy index recovery, cloud back/forward/invalid links/cyclic graphs, motion pause controls, and timeline spacing/level controls. Screenshots are written to a unique system-temporary directory.
 
 External music sources can still fail due to upstream availability, licensing, CORS or browser autoplay rules. Failures remain actionable; tests cannot guarantee a third-party stream will remain available. Existing pinned vendor files are retained and are not automatically upgraded by this refactor.
+
+## Continuous music during navigation
+
+The header, footer, music dock and its native Audio instance live for the whole document. Normal same-origin links between supported site pages fetch HTML and replace only `main`; the player is neither detached nor recreated. Playback, buffering, lyrics, playlist/search, volume, progress, open panel and minimized state remain intact, including browser back/forward. These are real URLs: direct visits and refreshes still work on static hosting, without server rewrites.
+
+Page entry modules export `mountPage({ root, signal, onCleanup })` instead of running on import. Keep queries inside `root`, guard asynchronous results with `signal`, and register observers/listeners/timers with `onCleanup`. Shared cached requests are not cancelled by one page's departure. Article requests are cancelled; MathJax work is serialized. The shell never evaluates scripts from fetched HTML. New page routes must be added to the navigation allowlist and, if they need code, to the lazy imports in `page-runtime.js`.
+
+History state is namespaced. Pages adding entries (such as cloud folders) must use `savePageScroll` and `pushPageHistory`, preserving both scroll restoration and their own state. Failed or cancelled navigation keeps the current content and music, with an explicit retry instead of a forced document reload. Downloads, external links, modified clicks and new-tab targets retain normal browser behavior. Navigation only restores late layout positions if the user has not interacted in the meantime.
+
+Continuity applies within the same open blog document. Refreshing, closing that tab or navigating it to another website destroys the document and cannot retain that Audio instance. Saved-track recovery remains available after a full reload, subject to browser autoplay rules. Third-party visit counters remain best-effort; cached displayed counts can be reused, but soft navigation does not re-run the counter script to fabricate a new page view.
+
+`tests/navigation.browser.mjs` uses local silent WAV playback and probes media events: it asserts a single document and Audio instance, advancing time, no extra pause/load events, retained controls, route functionality, history, rapid navigation and failure recovery.
