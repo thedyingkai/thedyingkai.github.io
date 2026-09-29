@@ -1,3 +1,6 @@
+import { copyText as copyCode } from './lib/clipboard.js?v=1.0';
+export { copyCode };
+
 const aliases = { 'c++': 'cpp', cc: 'cpp', cxx: 'cpp', hpp: 'cpp', hxx: 'cpp', py: 'python', python3: 'python', sh: 'bash', shell: 'bash', zsh: 'bash', text: 'plaintext', txt: 'plaintext', plain: 'plaintext', none: 'plaintext' };
 const labels = { cpp: 'C++', c: 'C', java: 'Java', python: 'Python', bash: 'Bash', plaintext: '纯文本' };
 export const normalizeLanguage = value => aliases[value.toLowerCase()] || value.toLowerCase();
@@ -27,30 +30,6 @@ function node(tag, className, text) {
   element.className = className;
   if (text != null) element.textContent = text;
   return element;
-}
-
-export async function copyCode(text) {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch { /* Permissions can deny Clipboard API even on HTTPS. */ }
-  const previous = document.activeElement;
-  const selection = document.getSelection();
-  const ranges = Array.from({ length: selection?.rangeCount || 0 }, (_, i) => selection.getRangeAt(i).cloneRange());
-  const field = node('textarea', 'code-copy-buffer');
-  field.value = text;
-  field.setAttribute('readonly', '');
-  document.body.append(field);
-  field.select();
-  let copied = false;
-  try { copied = document.execCommand('copy'); } catch { /* Show a retry hint. */ }
-  field.remove();
-  previous?.focus({ preventScroll: true });
-  selection?.removeAllRanges();
-  ranges.forEach(range => selection?.addRange(range));
-  return copied;
 }
 
 export function enhanceCodeBlocks(root, highlighter = window.hljs) {

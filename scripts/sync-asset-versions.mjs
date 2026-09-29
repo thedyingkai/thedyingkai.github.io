@@ -1,7 +1,8 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = process.cwd();
+const root = fileURLToPath(new URL('../', import.meta.url));
 const configPath = path.join(root, 'config', 'asset-versions.json');
 const checkOnly = process.argv.includes('--check');
 const assetRefPattern = /(<(?:link|script)\b[^>]*\b(?:href|src)=["'])(\/(?:assets|highlight)\/[^"']+\.(?:css|js))(?:\?v=[^"']*)?(["'][^>]*>)/g;
@@ -15,7 +16,7 @@ async function listSourceFiles(dir) {
   const files = [];
 
   for (const entry of entries) {
-    if (['.git', 'node_modules', 'vendor'].includes(entry.name)) continue;
+    if (['.git', 'node_modules', 'vendor', '_site', 'test-results', 'playwright-report'].includes(entry.name)) continue;
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...await listSourceFiles(fullPath));

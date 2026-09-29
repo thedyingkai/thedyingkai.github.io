@@ -9,9 +9,11 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href : 'playwright');
-const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
+const root = path.resolve(process.env.SITE_ROOT || fileURLToPath(new URL('../', import.meta.url)));
 const artifacts = await mkdtemp(path.join(tmpdir(), 'tdk-blog-fix-'));
 const musicConfig = JSON.parse(await readFile(path.join(root, 'config/music.json'), 'utf8'));
+const aboutConfig = JSON.parse(await readFile(path.join(root, 'config/about.json'), 'utf8'));
+const manifest = JSON.parse(await readFile(path.join(root, 'config/posts.json'), 'utf8'));
 const types = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff': 'font/woff', '.woff2': 'font/woff2' };
 const wave = Buffer.alloc(44 + 8000 * 60 * 2);
 wave.write('RIFF'); wave.writeUInt32LE(wave.length - 8, 4); wave.write('WAVEfmt ', 8);
@@ -83,7 +85,7 @@ try {
   // Exercise denied Clipboard API and verify the exact fallback value.
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => Promise.reject(new Error('denied')) } });
-    document.execCommand = command => { window.copiedCode = document.querySelector('.code-copy-buffer').value; return command === 'copy'; };
+    document.execCommand = command => { window.copiedCode = document.querySelector('.clipboard-buffer').value; return command === 'copy'; };
   });
   await page.locator('.code-frame').first().getByRole('button', { name: '复制', exact: true }).click();
   await page.getByRole('button', { name: '已复制', exact: true }).waitFor();
@@ -99,6 +101,35 @@ try {
   assert.equal(await page.locator('.code-frame').count(), 4);
   console.log('PASS article remains readable when MathJax fails');
   await page.unroute('**/assets/vendor/mathjax/**');
+  await page.getByRole('button', { name: '重试公式', exact: true }).click();
+  await page.locator('.render-body mjx-container').first().waitFor();
+  assert.equal(await page.locator('.render-notice').count(), 0, 'math can retry without reloading the article');
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`${origin}/blog/post/?file=generating-functions.md`);
+  await page.locator('[data-post-ready="true"] .render-toc mjx-container').first().waitFor();
+  const mathLinks = page.locator('.render-toc__link').filter({ has: page.locator('mjx-container') });
+  assert.equal(await mathLinks.count(), 5, 'all five convolution headings must render real math in the TOC');
+  assert.equal(await page.locator('.render-toc mjx-merror').count(), 0);
+  assert.equal(await mathLinks.last().locator('mjx-container').count(), 1, 'neq heading is typeset, not approximated with text');
+  await mathLinks.first().scrollIntoViewIfNeeded();
+  await mathLinks.first().focus();
+  await mathLinks.first().hover();
+  await page.locator('.render-toc-tip:not([hidden]) mjx-container').waitFor();
+  assert.ok(await page.locator('.render-toc-tip').evaluate(node => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
+  }));
+  await page.screenshot({ path: path.join(artifacts, 'toc-math-desktop.png') });
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.render-toc-tip').isVisible(), false);
+  await page.setViewportSize({ width: 360, height: 780 });
+  await mathLinks.first().scrollIntoViewIfNeeded();
+  await mathLinks.first().focus();
+  await page.locator('.render-toc').screenshot({ path: path.join(artifacts, 'toc-panel-mobile.png') });
+  await page.screenshot({ path: path.join(artifacts, 'toc-math-mobile.png') });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  console.log('PASS TOC: five real formulas, clipped-heading preview, viewport bounds, Escape, mobile');
 
   let attempts = 0;
   await page.route('https://api.i-meto.com/meting/api?**', route => {
@@ -198,6 +229,143 @@ try {
   await page.setViewportSize({ width: 1280, height: 900 });
   console.log('PASS music edge cases: unavailable track, autoplay denial, small/landscape screens');
 
+  // The v2 listing loads metadata once, never article bodies or GitHub main.
+  const requests = [];
+  const record = request => requests.push(request.url());
+  page.on('request', record);
+  await page.goto(`${origin}/blog/`);
+  await page.locator('.post-masonry__item').first().waitFor();
+  assert.equal(await page.locator('.card--post').count(), manifest.files.length);
+  assert.equal(requests.filter(url => /\/posts\/[^/]+\.md/.test(url)).length, 0);
+  assert.equal(requests.filter(url => url.includes('/config/posts.json')).length, 1);
+  assert.equal(requests.filter(url => url.includes('api.github.com')).length, 0);
+  page.off('request', record);
+  const searchPosts = page.locator('[data-post-search]');
+  await searchPosts.fill('ICPC');
+  assert.equal(await page.locator('.card--post').count(), 1);
+  await searchPosts.fill('不存在的关键词 no-match-123');
+  await page.getByText('没有匹配文章', { exact: true }).waitFor();
+  await searchPosts.fill('');
+  const tag = page.locator('[data-tag="数学"]');
+  await tag.click();
+  assert.equal(await tag.getAttribute('aria-pressed'), 'true');
+  assert.ok(await page.locator('.card--post').count() < manifest.files.length);
+  await tag.click();
+  const firstCard = page.locator('.card--post').first();
+  await firstCard.focus();
+  for (const [width, columns] of [[1280, 3], [800, 2], [360, 1]]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForFunction(expected => {
+      const grid = document.querySelector('.post-masonry');
+      const cards = [...grid.querySelectorAll('.card--post')];
+      return getComputedStyle(grid).gridTemplateColumns.split(' ').length === expected && cards.every((card, i) => cards.slice(i + 1).every(other => {
+        const a = card.getBoundingClientRect(), b = other.getBoundingClientRect();
+        return a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1;
+      }));
+    }, columns);
+    assert.equal(await firstCard.evaluate(node => document.activeElement === node), true, 'resize must retain focused card');
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  }
+  await page.screenshot({ path: path.join(artifacts, 'posts-mobile.png') });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  console.log('PASS post index: metadata-only requests, search/tags, 3/2/1 columns, no overlap, resize focus');
+
+  // Legacy local manifests stay supported; one failed article does not hide all.
+  let unavailable = true;
+  await page.route('**/config/posts.json*', route => route.fulfill({ json: { files: ['legacy-one.md', 'legacy-two.md'] } }));
+  await page.route('**/posts/legacy-one.md', route => route.fulfill({ body: '---\ntitle: Legacy One\n---\nText' }));
+  await page.route('**/posts/legacy-two.md', route => route.fulfill(unavailable ? { status: 503, body: 'missing' } : { body: '---\ntitle: Legacy Two\n---\nText' }));
+  await page.goto(`${origin}/blog/`);
+  await page.locator('[data-post-warning]').waitFor();
+  assert.equal(await page.locator('.card--post').count(), 1);
+  unavailable = false;
+  await page.getByRole('button', { name: '重试', exact: true }).click();
+  await page.waitForFunction(() => document.querySelectorAll('.card--post').length === 2);
+  assert.equal(await page.locator('[data-post-warning]').count(), 0);
+  await page.unroute('**/config/posts.json*');
+  await page.unroute('**/posts/legacy-one.md');
+  await page.unroute('**/posts/legacy-two.md');
+
+  await page.goto(`${origin}/cloud/`);
+  await page.locator('[data-folder="archive"]').click();
+  assert.match(page.url(), /#folder=archive$/);
+  await page.locator('[data-cloud-breadcrumb] [data-folder="root"]').click();
+  await page.locator('[data-folder="downloads"]').click();
+  await page.goBack();
+  await page.locator('[data-cloud-entries] [data-folder="archive"]').waitFor();
+  await page.goBack();
+  await page.locator('[data-cloud-breadcrumb] [aria-current="location"][data-folder="archive"]').waitFor();
+  await page.goForward();
+  await page.locator('[data-cloud-entries] [data-folder="downloads"]').waitFor();
+  await page.locator('#cloud-path').fill('javascript:alert(1)');
+  assert.equal(await page.locator('#cloud-path').evaluate(node => node.checkValidity()), false);
+  await page.locator('#cloud-path').fill('archive/file.zip');
+  assert.equal(await page.locator('#cloud-path').evaluate(node => node.checkValidity()), true);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => Promise.reject(new Error('denied')) } });
+    document.execCommand = () => false;
+  });
+  await page.getByRole('button', { name: '复制链接', exact: true }).first().click();
+  await page.getByRole('button', { name: '复制失败，请手动选择链接', exact: true }).waitFor();
+  const cloudConfig = JSON.parse(await readFile(path.join(root, 'config/cloud.json'), 'utf8'));
+  await page.route('**/config/cloud.json*', route => route.fulfill({ json: { ...cloudConfig, folders: [
+    { id: 'root', entries: [{ type: 'folder', folder: 'a' }] }, { id: 'a', entries: [{ type: 'folder', folder: 'root' }] }
+  ] } }));
+  await page.reload();
+  await page.getByRole('alert').filter({ hasText: '循环引用' }).waitFor();
+  await page.unroute('**/config/cloud.json*');
+  await page.getByRole('button', { name: '重新加载', exact: true }).click();
+  await page.locator('[data-cloud-entries] [data-folder="archive"]').waitFor();
+  console.log('PASS cloud: back/forward, breadcrumbs, invalid links, honest clipboard failure, cycle errors');
+
+  await page.goto(`${origin}/`);
+  await page.locator('[data-image-stack][data-motion-active="true"]').waitFor();
+  await page.evaluate(() => {
+    const request = window.requestAnimationFrame;
+    window.measuredFrames = 0;
+    window.requestAnimationFrame = callback => request.call(window, time => { window.measuredFrames++; callback(time); });
+  });
+  const dotTwo = page.getByRole('button', { name: '切换到第 2 张图片' });
+  await dotTwo.click();
+  assert.equal(await dotTwo.getAttribute('aria-pressed'), 'true');
+  await page.getByRole('button', { name: '暂停图片轮播' }).click();
+  await page.locator('[data-image-stack][data-motion-active="false"]').waitFor();
+  await page.getByRole('button', { name: '继续图片轮播' }).click();
+  await page.locator('[data-image-stack][data-motion-active="true"]').waitFor();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.locator('[data-image-stack][data-motion-active="false"]').waitFor();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.locator('[data-image-stack][data-motion-active="true"]').waitFor();
+  await page.locator('.footer').scrollIntoViewIfNeeded();
+  await page.locator('[data-image-stack][data-motion-active="false"]').waitFor({ state: 'attached' });
+  const offscreenFrames = await page.evaluate(async () => {
+    window.measuredFrames = 0;
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return window.measuredFrames;
+  });
+  assert.ok(offscreenFrames <= 2, `offscreen hero must stop its RAF loop, got ${offscreenFrames}`);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.locator('[data-image-stack][data-motion-active="true"]').waitFor();
+  await page.screenshot({ path: path.join(artifacts, 'home-desktop.png') });
+  console.log('PASS motion: accessible image controls, pause/resume, live reduced-motion change, offscreen pause');
+
+  await page.goto(`${origin}/about/`);
+  await page.locator('.timeline--ready').waitFor();
+  for (const width of [1280, 360]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForFunction(() => {
+      const labels = [...document.querySelectorAll('.timeline__text')];
+      return labels.every((label, i) => !i || labels[i - 1].getBoundingClientRect().bottom <= label.getBoundingClientRect().top + 1);
+    });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  }
+  await page.getByRole('button', { name: '折叠一层', exact: true }).click();
+  assert.equal(await page.locator('.timeline').getAttribute('data-label-min-rank'), '1');
+  await page.getByRole('button', { name: '展开一层', exact: true }).click();
+  assert.equal(await page.locator('.timeline').getAttribute('data-label-min-rank'), '0');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  console.log('PASS timeline: preserved entries, adaptive spacing, mobile bounds, explicit-level controls');
+
   const posts = JSON.parse(await readFile(path.join(root, 'config/posts.json'), 'utf8')).files;
   for (const file of posts) {
     await page.goto(`${origin}/blog/post/?file=${encodeURIComponent(file)}`);
@@ -214,8 +382,16 @@ try {
   await page.route('**/config/home.json*', route => route.fulfill({ status: 500, body: 'broken unrelated config' }));
   await page.goto(`${origin}/about/`);
   await page.locator('.timeline--ready').waitFor();
-  assert.equal(await page.locator('.timeline__item').count(), 37);
+  assert.equal(await page.locator('.timeline__item').count(), aboutConfig.timeline.length);
   await page.unroute('**/config/home.json*');
+  // Config retry must reload even if the previous response was valid JSON but invalid data.
+  await page.route('**/config/about.json*', route => route.fulfill({ json: { ...aboutConfig, timeline: [{ date: '2026-01-09', title: 'Missing level' }] } }));
+  await page.reload();
+  await page.getByRole('alert').filter({ hasText: 'level is required' }).waitFor();
+  await page.unroute('**/config/about.json*');
+  await page.getByRole('button', { name: '重新加载', exact: true }).click();
+  await page.locator('.timeline--ready').waitFor();
+  assert.equal(await page.locator('.timeline__item').count(), aboutConfig.timeline.length);
   await page.addInitScript(() => {
     for (const key of ['localStorage', 'sessionStorage']) Object.defineProperty(window, key, { get: () => { throw new Error('Storage denied'); } });
   });

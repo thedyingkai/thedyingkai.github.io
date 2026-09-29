@@ -1,3 +1,6 @@
+export { fetchResource as fetchWithTimeout } from './lib/http.js?v=1.0';
+import { httpUrl } from './lib/urls.js?v=1.0';
+
 export const clamp = (value, min, max, fallback = min) => Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Number(value))) : fallback;
 export const formatTime = seconds => {
   const value = Math.floor(clamp(seconds, 0, Number.MAX_SAFE_INTEGER));
@@ -9,13 +12,7 @@ export function playlistId(config) {
   return /^\w+$/.test(value) ? value : value.match(/[?&]id=(\w+)/)?.[1] || '';
 }
 
-export function mediaUrl(value, base) {
-  if (typeof value !== 'string' || !value.trim()) return '';
-  try {
-    const url = new URL(value, base);
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
-  } catch { return ''; }
-}
+export const mediaUrl = httpUrl;
 
 export function playlistEndpoint(config) {
   // Same provider as the previously bundled MetingJS; no extra service added.
@@ -98,20 +95,4 @@ export function lyricAt(lines, seconds) {
     else hi = mid;
   }
   return lo ? lines[lo - 1].text : '';
-}
-
-export async function fetchWithTimeout(url, { signal, timeout = 12000, format = 'json', fetcher = fetch } = {}) {
-  const controller = new AbortController();
-  const abort = () => controller.abort();
-  if (signal?.aborted) abort();
-  signal?.addEventListener('abort', abort, { once: true });
-  const timer = setTimeout(abort, timeout);
-  try {
-    const response = await fetcher(url, { signal: controller.signal });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response[format]();
-  } finally {
-    clearTimeout(timer);
-    signal?.removeEventListener('abort', abort);
-  }
 }

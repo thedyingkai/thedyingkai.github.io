@@ -101,7 +101,7 @@
 
 .render-body {
     font-size: 14px;
-    line-height: 1.82;
+    line-height: 1.86;
     color: var(--ink);
     background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .18));
     border: 1px solid rgba(102, 204, 255, .13);
@@ -141,6 +141,10 @@
 }
 
 .render-toc__link,
+.render-toc__label { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 2px 0; }
+.render-toc__label mjx-container { margin: 0 !important; }
+.render-toc__label--math { text-overflow: clip; }
+
 .render-toc__empty {
     border-left: 2px solid transparent;
     padding: 7px 0 7px 12px;
@@ -152,8 +156,6 @@
 .render-toc__link {
     display: block;
     overflow: hidden;
-    text-overflow: clip;
-    white-space: nowrap;
     border-radius: 0 8px 8px 0;
     transition: color .18s, background .18s, border-color .18s
 }
@@ -181,26 +183,13 @@
     box-shadow: 0 18px 46px -24px rgba(33, 150, 212, .62), 0 8px 18px -16px rgba(122, 77, 16, .34);
     font-size: 12px;
     line-height: 1.65;
-    pointer-events: none
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+    scrollbar-width: thin;
+    overflow-wrap: anywhere
 }
 
-.render-toc-tip mjx-container {
-    max-width: 100%;
-    overflow-x: clip;
-    overflow-y: hidden
-}
-
-.render-toc-tip mjx-container.is-overflowing {
-    display: block !important;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin
-}
-
-.render-toc-tip mjx-container.is-overflowing > mjx-math {
-    min-width: max-content
-}
+.render-toc-tip mjx-container { max-width: none; }
 
 .render-toc__link--3 {
     padding-left: 24px
@@ -262,6 +251,9 @@
     margin: 18px 0
 }
 
+.render-body p,
+.render-body li { line-height: 1.92; }
+
 .render-body li {
     margin: 7px 0
 }
@@ -282,6 +274,9 @@
 }
 
 .render-body mjx-container[display="true"] {
+    display: block !important;
+    padding: .75rem 0;
+    margin: 1.35rem 0;
     font-size: .94em;
     max-width: 100%;
     overflow-x: clip;
@@ -302,8 +297,12 @@
 }
 
 .render-body mjx-container:not([display="true"]) {
-    max-width: none;
-    overflow: visible
+    display: inline-block !important;
+    vertical-align: -.12em !important;
+    margin: 0 .04em !important;
+    line-height: 1 !important;
+    max-width: none !important;
+    overflow: visible !important
 }
 
 .render-body blockquote {
@@ -335,12 +334,12 @@
 
 .render-body code:not(pre code) {
     font-family: var(--mono);
-    background: rgba(102, 204, 255, .12);
-    border: 1px solid var(--line);
+    background: #2b2d30;
+    border: 1px solid #393b40;
     border-radius: 6px;
     padding: .12em .42em;
     font-size: .9em;
-    color: #175d83
+    color: #bcbec4
 }
 
 .render-body pre:not(.code-pre) {
@@ -392,7 +391,6 @@
 .code-frame.is-wrapped .code-pre { width: 100%; }
 .code-frame.is-wrapped .code-line-content { white-space: pre-wrap; overflow-wrap: anywhere; }
 .code-pre .hljs-comment, .code-pre .hljs-quote { color: #94aa87; font-style: italic; text-shadow: none; }
-.code-copy-buffer { position: fixed; left: -9999px; top: 0; }
 .render-notice { padding: 12px; border: 1px solid #d6a533; border-radius: 8px; }
 
 .back {
@@ -513,6 +511,9 @@
         margin: 1rem 0;
         padding: .55rem 0
     }
+
+    .render-body p,
+    .render-body li { line-height: 1.78; }
 
     .code-frame {
         --code-font-size: 12px

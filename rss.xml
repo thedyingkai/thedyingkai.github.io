@@ -6,7 +6,17 @@
     <atom:link href="https://blog.thedyingkai.cn/rss.xml" rel="self" type="application/rss+xml"/>
     <description>thedyingkai_ 的个人博客、算法笔记、项目归档和成长记录。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Wed, 24 Jun 2026 22:24:57 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 02 Sep 2026 16:00:00 GMT</lastBuildDate>
+    <item>
+      <title>The 2025 ICPC Asia East Continent Online Contest (I) 题解</title>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=icpc-2025-online-1-writeup.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=icpc-2025-online-1-writeup.md</guid>
+      <pubDate>Wed, 02 Sep 2026 16:00:00 GMT</pubDate>
+      <description>The 2025 ICPC Asia East Continent Online Contest (I) A、B、G、I、M 参考题解，C、D 暂待补充。</description>
+      <category>ICPC</category>
+      <category>算法竞赛</category>
+      <category>题解</category>
+    </item>
     <item>
       <title>树状数组线段树</title>
       <link>https://blog.thedyingkai.cn/blog/post/?file=tree-templates.md</link>

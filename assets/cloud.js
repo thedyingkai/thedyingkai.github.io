@@ -1,226 +1,101 @@
-(() => {
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
-  const DEFAULT_BASE_URL = 'https://dl.thedyingkai.cn/';
-  const isExt = h => {
+import { loadConfig } from './lib/http.js?v=1.0';
+import { escapeHtml as esc, setText, contentRendered, showError } from './lib/dom.js?v=1.0';
+import { isExternalUrl } from './lib/urls.js?v=1.0';
+import { copyText } from './lib/clipboard.js?v=1.0';
+import { createFolderIndex, resourceUrl } from './cloud-model.js?v=1.0';
+
+let config;
+let tree;
+let currentFolder;
+const entriesTarget = document.querySelector('[data-cloud-entries]');
+const tagsHtml = tags => (tags || []).map(tag => `<span class="tag">${esc(tag)}</span>`).join('');
+const resolveResource = entry => resourceUrl(entry.downloadUrl || entry.href || entry.downloadPath || entry.path || '/', config.baseUrl);
+
+function actionLink(action) {
+  const href = resolveResource(action);
+  return `<a class="btn${action.primary ? ' btn--primary' : ''}" href="${esc(href)}"${isExternalUrl(href) ? ' target="_blank" rel="noreferrer"' : ''}>${esc(action.label)}</a>`;
+}
+function noteCard(item) {
+  return `<div class="card"><div class="card__meta"><span>${esc(item.meta)}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p><div class="tags">${tagsHtml(item.tags)}</div></div>`;
+}
+function entryCard(item) {
+  if (item.type === 'folder') return `<button class="card cloud-entry cloud-entry--folder" type="button" data-folder="${esc(item.folder)}"><div class="card__meta"><span>Folder</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text || '打开文件夹')}</p><div class="tags">${tagsHtml(item.tags)}</div></button>`;
+  const href = resolveResource(item);
+  return `<div class="card cloud-entry cloud-entry--file"><div class="card__meta"><span>${esc(item.meta || item.size || 'File')}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text || '下载文件')}</p><p class="cloud-entry__url">${esc(href)}</p><div class="cloud-entry__actions"><a class="btn btn--primary" href="${esc(href)}" target="_blank" rel="noreferrer" download>下载</a><button class="btn" type="button" data-copy-url="${esc(href)}">复制链接</button></div><div class="tags">${tagsHtml(item.tags)}</div></div>`;
+}
+function folderFromHash() {
+  const id = new URLSearchParams(location.hash.slice(1)).get('folder');
+  return tree.folders.has(id) ? id : tree.root;
+}
+function setFolder(id, push = true) {
+  const next = tree.folders.has(id) ? id : tree.root;
+  if (push && currentFolder !== next) history.pushState(null, '', `#folder=${encodeURIComponent(next)}`);
+  currentFolder = next;
+  const folder = tree.folders.get(next);
+  const breadcrumb = document.querySelector('[data-cloud-breadcrumb]');
+  breadcrumb.innerHTML = tree.trail(next).map(item => `<button type="button" data-folder="${esc(item.id)}"${item.id === next ? ' aria-current="location"' : ''}>${esc(item.title)}</button>`).join('<span aria-hidden="true">/</span>');
+  const parent = tree.parents.get(next);
+  const back = document.querySelector('[data-cloud-back]');
+  back.disabled = back.hidden = !parent;
+  back.onclick = () => setFolder(parent);
+  entriesTarget.innerHTML = folder.entries.length ? folder.entries.map(entryCard).join('') : '<div class="card"><h3>空文件夹</h3><p>这个文件夹还没有配置资源。</p></div>';
+  contentRendered();
+}
+function bindForm() {
+  const form = document.querySelector('[data-cloud-form]');
+  if (!form) return;
+  const input = form.elements.namedItem('path');
+  const target = document.querySelector('[data-cloud-target]');
+  const update = () => {
     try {
-      const url = new URL(h, location.origin);
-      return ['http:', 'https:'].includes(url.protocol) && url.origin !== location.origin;
-    } catch {
-      return false;
+      const url = resourceUrl(input.value, config.baseUrl);
+      input.setCustomValidity('');
+      input.removeAttribute('aria-invalid');
+      target.textContent = url;
+      return url;
+    } catch (error) {
+      input.setCustomValidity(error.message);
+      input.setAttribute('aria-invalid', 'true');
+      target.textContent = error.message;
+      return '';
     }
   };
-  let baseUrl = 'https://dl.thedyingkai.cn/';
-  let folders = new Map();
-  let rootFolder = 'root';
-  let currentFolder = 'root';
+  form.oninput = update;
+  form.onsubmit = event => {
+    event.preventDefault();
+    const url = update();
+    if (url && form.reportValidity()) window.open(url, '_blank', 'noopener,noreferrer');
+  };
+  update();
+}
 
-  function setText(selector, value) {
-    const node = document.querySelector(selector);
-    if (node && value != null) node.textContent = value;
-  }
+document.querySelector('.cloud-browser')?.addEventListener('click', async event => {
+  const folder = event.target.closest('[data-folder]');
+  if (folder && tree) { setFolder(folder.dataset.folder); return; }
+  const button = event.target.closest('[data-copy-url]');
+  if (!button) return;
+  button.textContent = await copyText(button.dataset.copyUrl) ? '已复制' : '复制失败，请手动选择链接';
+  setTimeout(() => { button.textContent = '复制链接'; }, 1500);
+});
+const restoreFolder = () => { if (tree) setFolder(folderFromHash(), false); };
+addEventListener('popstate', restoreFolder);
+addEventListener('hashchange', restoreFolder);
 
-  function tagsHtml(tags) {
-    return (tags || []).map(tag => `<span class="tag">${esc(tag)}</span>`).join('');
-  }
-
-  function safeUrl(value, fallback = '') {
-    const raw = String(value ?? '').trim();
-    if (!raw) return fallback;
-    if (raw.startsWith('#')) return raw;
-    try {
-      const url = new URL(raw, location.origin);
-      if (!ALLOWED_URL_PROTOCOLS.has(url.protocol)) return fallback;
-      return raw;
-    } catch {
-      return fallback;
-    }
-  }
-
-  function safeHttpUrl(value, base = location.origin) {
-    try {
-      const url = new URL(value, base);
-      return ['http:', 'https:'].includes(url.protocol) ? url : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function safeHttpHref(value, fallback = DEFAULT_BASE_URL) {
-    return safeHttpUrl(value)?.href || fallback;
-  }
-
-  function toResourceUrl(pathOrHref) {
-    const raw = String(pathOrHref || '/').trim();
-    const safeBase = safeHttpUrl(baseUrl) || new URL(DEFAULT_BASE_URL);
-    if (!raw || raw === '/') return safeBase;
-    if (/^https?:\/\//i.test(raw)) return safeHttpUrl(raw) || safeBase;
-    const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-    return safeHttpUrl(raw.replace(/^\/+/, ''), base) || safeBase;
-  }
-
-  function downloadUrl(entry) {
-    return toResourceUrl(entry.downloadUrl || entry.href || entry.downloadPath || entry.path || '/').href;
-  }
-
-  function actionUrl(action) {
-    return action.href ? safeUrl(action.href, toResourceUrl(action.path || '/').href) : toResourceUrl(action.path || '/').href;
-  }
-
-  function actionLink(action) {
-    const href = actionUrl(action);
-    const cls = action.primary ? 'btn btn--primary' : 'btn';
-    return `<a class="${cls}" href="${esc(href)}"${isExt(href) ? ' target="_blank" rel="noreferrer"' : ''}>${esc(action.label)}</a>`;
-  }
-
-  function noteCard(item) {
-    return `<div class="card"><div class="card__meta"><span>${esc(item.meta)}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p><div class="tags">${tagsHtml(item.tags)}</div></div>`;
-  }
-
-  function folderCard(item) {
-    return `<button class="card cloud-entry cloud-entry--folder" type="button" data-folder="${esc(item.folder)}"><div class="card__meta"><span>Folder</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text || '打开文件夹')}</p><div class="tags">${tagsHtml(item.tags)}</div></button>`;
-  }
-
-  function fileCard(item) {
-    const href = downloadUrl(item);
-    return `<div class="card cloud-entry cloud-entry--file"><div class="card__meta"><span>${esc(item.meta || item.size || 'File')}</span></div><h3>${esc(item.title)}</h3><p>${esc(item.text || '下载文件')}</p><p class="cloud-entry__url">${esc(href)}</p><div class="cloud-entry__actions"><a class="btn btn--primary" href="${esc(href)}" target="_blank" rel="noreferrer" download>下载</a><button class="btn" type="button" data-copy-url="${esc(href)}">复制链接</button></div><div class="tags">${tagsHtml(item.tags)}</div></div>`;
-  }
-
-  function folderParent(id) {
-    for (const folder of folders.values()) {
-      if ((folder.entries || []).some(item => item.type === 'folder' && item.folder === id)) return folder.id;
-    }
-    return '';
-  }
-
-  function folderTrail(id) {
-    const trail = [];
-    let cursor = folders.has(id) ? id : rootFolder;
-    while (cursor && folders.has(cursor)) {
-      trail.unshift(folders.get(cursor));
-      if (cursor === rootFolder) break;
-      cursor = folderParent(cursor);
-    }
-    return trail;
-  }
-
-  function folderFromHash() {
-    const params = new URLSearchParams(location.hash.replace(/^#/, ''));
-    const id = params.get('folder');
-    return id && folders.has(id) ? id : rootFolder;
-  }
-
-  function setFolder(id, push = true) {
-    currentFolder = folders.has(id) ? id : rootFolder;
-    if (push) history.replaceState(null, '', `#folder=${encodeURIComponent(currentFolder)}`);
-    renderFolder();
-  }
-
-  function renderBreadcrumb(folder) {
-    const target = document.querySelector('[data-cloud-breadcrumb]');
-    if (!target) return;
-    target.innerHTML = folderTrail(folder.id).map(item => `<button type="button" data-folder="${esc(item.id)}">${esc(item.title)}</button>`).join('<span>/</span>');
-    target.querySelectorAll('[data-folder]').forEach(button => {
-      button.addEventListener('click', () => setFolder(button.dataset.folder));
-    });
-  }
-
-  function copyToClipboard(text, button) {
-    const done = () => {
-      button.textContent = '已复制';
-      setTimeout(() => { button.textContent = '复制链接'; }, 1200);
-    };
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(() => { button.textContent = '复制失败'; });
-      return;
-    }
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.append(textarea);
-    textarea.select();
-    try {
-      document.execCommand('copy');
-      done();
-    } finally {
-      textarea.remove();
-    }
-  }
-
-  function bindFolderEntries(target) {
-    target.querySelectorAll('[data-folder]').forEach(button => {
-      button.addEventListener('click', () => setFolder(button.dataset.folder));
-    });
-    target.querySelectorAll('[data-copy-url]').forEach(button => {
-      button.addEventListener('click', () => copyToClipboard(button.dataset.copyUrl, button));
-    });
-  }
-
-  function renderFolder() {
-    const target = document.querySelector('[data-cloud-entries]');
-    const back = document.querySelector('[data-cloud-back]');
-    if (!target) return;
-
-    const folder = folders.get(currentFolder) || folders.get(rootFolder);
-    renderBreadcrumb(folder);
-    const parent = folderParent(folder.id);
-    if (back) {
-      back.disabled = !parent;
-      back.hidden = !parent;
-      back.onclick = parent ? () => setFolder(parent) : null;
-    }
-
-    const entries = folder.entries || [];
-    target.innerHTML = entries.length
-      ? entries.map(item => item.type === 'folder' ? folderCard(item) : fileCard(item)).join('')
-      : '<div class="card"><h3>空文件夹</h3><p>这个文件夹还没有配置资源。</p></div>';
-    bindFolderEntries(target);
-  }
-
-  function bindForm() {
-    const form = document.querySelector('[data-cloud-form]');
-    const target = document.querySelector('[data-cloud-target]');
-    if (!form) return;
-
-    const updateTarget = () => {
-      const url = toResourceUrl(new FormData(form).get('path')).href;
-      if (target) target.textContent = url;
-      return url;
-    };
-
-    form.addEventListener('input', updateTarget);
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-      window.open(updateTarget(), '_blank', 'noopener');
-    });
-    updateTarget();
-  }
-
-  async function loadCloudConfig() {
-    const res = await fetch(`/config/cloud.json?t=${Date.now()}`);
-    if (!res.ok) throw new Error(`config/cloud.json ${res.status}`);
-    return res.json();
-  }
-
-  loadCloudConfig().then(cfg => {
-    baseUrl = safeHttpHref(cfg.baseUrl, baseUrl);
-    rootFolder = cfg.rootFolder || rootFolder;
-    folders = new Map((cfg.folders || []).map(folder => [folder.id, folder]));
-    currentFolder = folderFromHash();
-    setText('[data-config="cloud.eyebrow"]', cfg.eyebrow);
-    setText('[data-config="cloud.title"]', cfg.title);
-    setText('[data-config="cloud.lead"]', cfg.lead);
-
-    const actions = document.querySelector('[data-cloud-actions]');
-    const notes = document.querySelector('[data-cloud-notes]');
-    if (actions) actions.innerHTML = (cfg.actions || []).map(actionLink).join('');
-    if (notes) notes.innerHTML = (cfg.notes || []).map(noteCard).join('');
+async function initialize(reload = false) {
+  try {
+    config = await loadConfig('cloud', { reload });
+    tree = createFolderIndex(config);
+    // Validate all links before installing navigation handlers.
+    for (const folder of tree.folders.values()) folder.entries.filter(entry => entry.type === 'file').forEach(resolveResource);
+    for (const field of ['eyebrow', 'title', 'lead']) setText(`[data-config="cloud.${field}"]`, config[field]);
+    document.querySelector('[data-cloud-actions]').innerHTML = (config.actions || []).map(actionLink).join('');
+    document.querySelector('[data-cloud-notes]').innerHTML = (config.notes || []).map(noteCard).join('');
+    document.querySelector('[data-config-error]')?.replaceChildren();
     bindForm();
-    renderFolder();
-    addEventListener('hashchange', () => setFolder(folderFromHash(), false));
-  }).catch(error => {
-    document.querySelectorAll('[data-config-error]').forEach(x => x.textContent = error.message);
-    bindForm();
-  });
-})();
+    setFolder(folderFromHash(), false);
+  } catch (error) {
+    tree = null;
+    if (entriesTarget) showError(entriesTarget, `云盘加载失败：${error.message}`, () => initialize(true));
+  }
+}
+void initialize();

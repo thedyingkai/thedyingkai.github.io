@@ -1,4 +1,6 @@
-import { formatTime, playlistId, playlistEndpoint, normalizeTracks, musicSettings, restoredIndex, shuffledIndices, parseLyrics, lyricAt, mediaUrl, fetchWithTimeout } from './music-model.js?v=1.0';
+import { element } from './lib/dom.js?v=1.0';
+import { loadConfig } from './lib/http.js?v=1.0';
+import { formatTime, playlistId, playlistEndpoint, normalizeTracks, musicSettings, restoredIndex, shuffledIndices, parseLyrics, lyricAt, mediaUrl, fetchWithTimeout } from './music-model.js?v=1.1';
 
 const icons = {
   play: '<path d="m9 5 11 7-11 7Z"/>',
@@ -11,12 +13,6 @@ const icons = {
   music: '<path d="M9 18V5l11-2v13M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>'
 };
 
-function element(tag, className, text) {
-  const node = document.createElement(tag);
-  node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
 function iconButton(name, label) {
   const button = element('button', 'music-player__button');
   button.type = 'button';
@@ -89,6 +85,7 @@ export function createMusicPlayer(config, host = document.body) {
   const history = [];
   const lyricsCache = new Map();
   let lastSave = 0;
+  let volumeSave;
 
   const dock = element('section', 'music-player');
   dock.setAttribute('aria-label', '音乐播放器');
@@ -457,7 +454,9 @@ export function createMusicPlayer(config, host = document.body) {
   on(audio, 'error', () => { if (index >= 0) mediaFailed('音频不可用，可能有版权或网络限制。请重试或换一首。'); });
   on(audio, 'ended', () => { playing = false; syncControls(); advance(1, true); });
   on(audio, 'volumechange', () => {
-    settings.volume = audio.volume; settings.muted = audio.muted; syncControls(); persist();
+    settings.volume = audio.volume; settings.muted = audio.muted; syncControls();
+    clearTimeout(volumeSave);
+    volumeSave = setTimeout(persist, 250);
   });
   on(document, 'visibilitychange', () => { syncControls(); if (document.hidden) persist(); });
   on(window, 'pagehide', persist);
@@ -468,6 +467,7 @@ export function createMusicPlayer(config, host = document.body) {
   return {
     destroy() {
       persist();
+      clearTimeout(volumeSave);
       events.abort(); loading?.abort(); lyricsRequest?.abort(); clearTimeout(mediaTimer);
       playRequest++; audio.pause(); audio.removeAttribute('src'); audio.load();
       dock.remove(); document.body.classList.remove('has-music-player');
@@ -478,7 +478,7 @@ export function createMusicPlayer(config, host = document.body) {
 export async function initMusicPlayer() {
   if (document.querySelector('.music-player')) return;
   try {
-    const config = await fetchWithTimeout('/config/music.json');
-    if (config.enabled !== false) createMusicPlayer(config);
+    const config = await loadConfig('music');
+    if (config.enabled !== false && !document.querySelector('.music-player')) createMusicPlayer(config);
   } catch (error) { console.warn('音乐配置加载失败；不影响正文。', error); }
 }

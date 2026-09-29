@@ -76,7 +76,9 @@ a {
   height: 3px;
   background: linear-gradient(90deg, var(--cyan), #fff3b0, var(--gold));
   z-index: 200;
-  width: 0;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
   box-shadow: 0 0 18px rgba(102, 204, 255, .72)
 }
 
@@ -95,7 +97,7 @@ a {
   background: rgba(248, 251, 255, .78);
   backdrop-filter: saturate(180%) blur(16px);
   border-bottom: 1px solid var(--line);
-  animation: chrome-breathe 8.5s ease-in-out infinite
+
 }
 
 .topbar__inner {
@@ -193,7 +195,7 @@ a {
   padding: 72px 0 72px;
   border-bottom: 1px solid var(--line);
   overflow: hidden;
-  animation: page-breathe 9s ease-in-out infinite
+
 }
 
 .hero__grid {
@@ -305,11 +307,7 @@ a {
   border-color: rgba(214, 165, 51, .46);
   box-shadow: 0 34px 82px -34px rgba(33, 150, 212, .68), 0 18px 44px -30px rgba(122, 77, 16, .42);
   filter: saturate(1.24) contrast(1.06) brightness(1.08);
-  animation: hero-active-glow 3.8s ease-in-out infinite
-}
 
-.hero__image-stack.is-switching .hero__stack-image.is-active {
-  animation: hero-active-glow 4.8s ease-in-out infinite
 }
 
 .hero__stack-dots {
@@ -326,21 +324,24 @@ a {
 .hero__stack-dot {
   display: block;
   width: 22px;
-  height: 3px;
+  height: 32px;
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: rgba(129, 144, 166, .38);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .24);
+  background: linear-gradient(rgba(129, 144, 166, .38), rgba(129, 144, 166, .38)) center / 100% 3px no-repeat;
   cursor: pointer;
   transition: width .34s ease, background .34s ease, opacity .34s ease
 }
 
 .hero__stack-dot.is-active {
   width: 36px;
-  background: linear-gradient(90deg, var(--cyan), var(--gold));
+  background: linear-gradient(90deg, var(--cyan), var(--gold)) center / 100% 3px no-repeat;
   opacity: 1
 }
+
+.hero__stack-pause { min-height: 32px; border: 1px solid var(--line-2); border-radius: 8px; padding: 0 8px; background: var(--card); color: var(--ink-2); cursor: pointer; }
+.hero__image-stack[data-motion-active="false"] .hero__stack-image { will-change: auto; }
+.load-error .btn, .load-warning .btn, .render-notice .btn { margin-left: 8px; }
 
 @keyframes hero-copy-in {
   from {
@@ -351,17 +352,6 @@ a {
   to {
     opacity: 1;
     transform: translateY(0)
-  }
-}
-
-@keyframes hero-active-glow {
-  0%,
-  100% {
-    box-shadow: 0 34px 82px -34px rgba(33, 150, 212, .62), 0 18px 44px -30px rgba(122, 77, 16, .38)
-  }
-
-  50% {
-    box-shadow: 0 40px 92px -34px rgba(33, 150, 212, .78), 0 22px 52px -30px rgba(122, 77, 16, .52)
   }
 }
 
@@ -378,65 +368,6 @@ a {
   }
 }
 
-@keyframes page-breathe {
-  0%,
-  100% {
-    box-shadow: inset 0 1px 0 rgba(102, 204, 255, .05)
-  }
-
-  50% {
-    box-shadow: inset 0 1px 0 rgba(102, 204, 255, .22), inset 0 -1px 0 rgba(214, 165, 51, .12)
-  }
-}
-
-@keyframes chrome-breathe {
-  0%,
-  100% {
-    border-color: rgba(102, 204, 255, .18);
-    box-shadow: 0 1px 0 rgba(102, 204, 255, .04)
-  }
-
-  50% {
-    border-color: rgba(102, 204, 255, .38);
-    box-shadow: 0 18px 42px -36px rgba(33, 150, 212, .48)
-  }
-}
-
-@keyframes surface-breathe {
-  0%,
-  100% {
-    border-color: rgba(102, 204, 255, .24);
-    box-shadow: var(--shadow-sm)
-  }
-
-  50% {
-    border-color: rgba(102, 204, 255, .42);
-    box-shadow: 0 24px 58px -40px rgba(33, 150, 212, .48), 0 6px 18px -16px rgba(122, 77, 16, .24)
-  }
-}
-
-@keyframes micro-breathe {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(102, 204, 255, .06)
-  }
-
-  50% {
-    box-shadow: 0 10px 26px -24px rgba(33, 150, 212, .46)
-  }
-}
-
-@keyframes title-breathe {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 0 rgba(102, 204, 255, 0))
-  }
-
-  50% {
-    filter: drop-shadow(0 12px 26px rgba(102, 204, 255, .18))
-  }
-}
-
 .hero h1 {
   font-family: var(--serif);
   font-size: clamp(36px, 6.4vw, 68px);
@@ -447,7 +378,7 @@ a {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: title-breathe 7.5s ease-in-out infinite
+
 }
 
 .hero__lead {
@@ -628,7 +559,7 @@ button.cloud-entry {
   border-radius: 14px;
   position: relative;
   overflow: hidden;
-  animation: surface-breathe 7.8s ease-in-out infinite
+
 }
 
 .stat-card:before {
@@ -649,7 +580,7 @@ button.cloud-entry {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: title-breathe 8.2s ease-in-out infinite
+
 }
 
 .stats {
@@ -691,7 +622,7 @@ button.cloud-entry {
   background: linear-gradient(135deg, rgba(102, 204, 255, .16), rgba(255, 255, 255, .72) 42%, rgba(214, 165, 51, .16));
   box-shadow: var(--shadow-md);
   position: relative;
-  animation: surface-breathe 8.8s ease-in-out infinite
+
 }
 
 .anime-frame img,
@@ -755,7 +686,7 @@ button.cloud-entry {
   overflow: hidden;
   padding: 72px 0;
   border-bottom: 1px solid var(--line);
-  animation: page-breathe 10s ease-in-out infinite
+
 }
 
 .band:before {
@@ -798,7 +729,7 @@ button.cloud-entry {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: title-breathe 8s ease-in-out infinite
+
 }
 
 .section-head p {
@@ -848,7 +779,7 @@ button.cloud-entry {
   border-bottom: 1px solid rgba(102, 204, 255, .28);
   color: var(--cyan-deep);
   transition: border-color .18s, color .18s, transform .18s;
-  animation: micro-breathe 7.2s ease-in-out infinite
+
 }
 
 .profile-link:hover {
@@ -889,7 +820,7 @@ button.cloud-entry {
   transition: border-color .2s, box-shadow .2s, transform .2s;
   position: relative;
   overflow: hidden;
-  animation: surface-breathe 7.4s ease-in-out infinite
+
 }
 
 .card:before {
@@ -1019,7 +950,7 @@ a.card--with-image:hover .post-card__thumb img {
   border-bottom: 1px solid rgba(214, 165, 51, .24);
   background: linear-gradient(180deg, rgba(255, 255, 255, .62), rgba(255, 255, 255, .28));
   box-shadow: 0 26px 70px -56px rgba(33, 150, 212, .72);
-  animation: surface-breathe 8.2s ease-in-out infinite
+
 }
 
 .friend-exchange__panel:before {
@@ -1534,7 +1465,7 @@ a.card--with-image:hover .post-card__thumb img {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: title-breathe 8s ease-in-out infinite
+
 }
 
 .page-head p {
@@ -1600,16 +1531,16 @@ a.card--with-image:hover .post-card__thumb img {
 .post-masonry {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+  grid-auto-rows: 2px;
+  column-gap: 20px;
   align-items: start
 }
 
-.post-masonry__column {
-  display: grid;
-  gap: 18px;
-  align-content: start;
-  min-width: 0
-}
+.post-masonry__item { min-width: 0; }
+.post-masonry__item > .card { display: block; }
+.post-masonry > .load-error, .post-masonry > .card { grid-column: 1 / -1; grid-row: span 90; }
+.band:not(.motion-in-view):before { animation-play-state: paused; }
+.is-page-hidden *, .is-page-hidden *:before, .is-page-hidden *:after { animation-play-state: paused !important; }
 
 .post-tools {
   display: grid;
@@ -1620,7 +1551,7 @@ a.card--with-image:hover .post-card__thumb img {
   background: linear-gradient(180deg, rgba(255, 255, 255, .64), rgba(255, 255, 255, .28));
   box-shadow: 0 22px 56px -46px rgba(33, 150, 212, .52);
   overflow: hidden;
-  animation: hero-copy-in .78s .1s ease both, surface-breathe 8s ease-in-out infinite
+  animation: hero-copy-in .78s .1s ease both
 }
 
 .post-tools__bar {
@@ -1689,7 +1620,7 @@ a.card--with-image:hover .post-card__thumb img {
   padding: 0 10px;
   cursor: pointer;
   transition: border-color .18s, background .18s, color .18s, transform .18s;
-  animation: micro-breathe 7.6s ease-in-out infinite
+
 }
 
 .tag-filter:hover,
@@ -1706,7 +1637,7 @@ a.card--with-image:hover .post-card__thumb img {
   color: var(--ink-3);
   font-size: 13px;
   margin-bottom: 12px;
-  animation: chrome-breathe 9s ease-in-out infinite
+
 }
 
 .footer__inner {
