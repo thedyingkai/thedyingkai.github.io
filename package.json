@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "test:browser": "node tests/site.browser.mjs",
+    "test:browser": "node tests/site.browser.mjs && node tests/navigation.browser.mjs",
     "generate": "node scripts/generate-site-data.mjs",
     "build": "node scripts/build-site.mjs",
     "check": "node scripts/check-syntax.mjs && node scripts/validate-site.mjs && node scripts/sync-asset-versions.mjs --check"

@@ -33,6 +33,9 @@ function node(tag, className, text) {
 }
 
 export function enhanceCodeBlocks(root, highlighter = window.hljs) {
+  const lifetime = new AbortController();
+  const timers = new Set();
+  const { signal } = lifetime;
   root.querySelectorAll('pre > code').forEach((code, index) => {
     if (code.dataset.codeEnhanced) return;
     const pre = code.parentElement;
@@ -75,17 +78,20 @@ export function enhanceCodeBlocks(root, highlighter = window.hljs) {
     wrap.addEventListener('click', () => {
       const active = frame.classList.toggle('is-wrapped');
       wrap.setAttribute('aria-pressed', String(active));
-    });
+    }, { signal });
     const copy = node('button', 'code-copy', '复制');
     copy.type = 'button';
     copy.setAttribute('aria-live', 'polite');
     let timer;
     copy.addEventListener('click', async () => {
       const success = await copyCode(raw);
+      if (signal.aborted) return;
       copy.textContent = success ? '已复制' : '复制失败，请手动选择';
       clearTimeout(timer);
-      timer = setTimeout(() => { copy.textContent = '复制'; }, 2000);
-    });
+      timers.delete(timer);
+      timer = setTimeout(() => { timers.delete(timer); copy.textContent = '复制'; }, 2000);
+      timers.add(timer);
+    }, { signal });
     actions.append(wrap, copy);
     toolbar.append(label, count, actions);
     const scroller = node('div', 'code-scroller');
@@ -96,4 +102,9 @@ export function enhanceCodeBlocks(root, highlighter = window.hljs) {
     scroller.append(pre);
     frame.append(toolbar, scroller);
   });
+  return () => {
+    lifetime.abort();
+    timers.forEach(timer => clearTimeout(timer));
+    timers.clear();
+  };
 }

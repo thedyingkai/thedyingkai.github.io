@@ -59,12 +59,13 @@ function initTimelineLayout(timeline) {
   let active = true;
 
   const syncMotion = () => {
-    const running = !document.hidden && !motion.matches && visibleNodes.size > 0;
+    const running = active && !document.hidden && !motion.matches && visibleNodes.size > 0;
     timeline.classList.toggle('timeline--running', running);
     animations.forEach(animation => running ? animation.play() : animation.pause());
   };
 
   const updateSparks = () => {
+    if (!active) return;
     animations.forEach(animation => animation.cancel());
     animations = [];
     if (!motion.matches && keyframes.length && typeof sparks[0]?.animate === 'function') {
@@ -137,6 +138,7 @@ function initTimelineLayout(timeline) {
   document.fonts?.ready.then(scheduleLayout);
 
   const visibilityObserver = typeof IntersectionObserver === 'function' ? new IntersectionObserver(changes => {
+    if (!active) return;
     changes.forEach(change => {
       change.target.classList.toggle('timeline__item--in-view', change.isIntersecting);
       if (change.isIntersecting) visibleNodes.add(change.target);
@@ -150,6 +152,7 @@ function initTimelineLayout(timeline) {
   scheduleLayout();
 
   return () => {
+    if (!active) return;
     active = false;
     cancelAnimationFrame(frame);
     resizeObserver?.disconnect();
@@ -158,6 +161,7 @@ function initTimelineLayout(timeline) {
     window.removeEventListener('resize', scheduleLayout);
     document.removeEventListener('visibilitychange', syncMotion);
     motion.removeEventListener('change', updateSparks);
+    timeline.classList.remove('timeline--running');
   };
 }
 
@@ -197,8 +201,9 @@ export function renderTimeline(timeline, items = []) {
   timeline.classList.remove('timeline--ready', 'timeline--running');
   const controls = timelineControls(timeline);
   let stepIndex = 0;
+  let active = true;
   timeline.innerHTML = timelineHtml(entries);
-  timelineCleanups.set(timeline, initTimelineLayout(timeline));
+  const cleanupLayout = initTimelineLayout(timeline);
 
   const update = () => {
     const step = TIMELINE_VIEW_STEPS[stepIndex] || TIMELINE_VIEW_STEPS[0];
@@ -210,13 +215,26 @@ export function renderTimeline(timeline, items = []) {
   };
 
   const changeStep = delta => {
+    if (!active) return;
     const next = Math.max(0, Math.min(TIMELINE_VIEW_STEPS.length - 1, stepIndex + delta));
     if (next === stepIndex) return;
     stepIndex = next;
     update();
   };
 
-  controls.collapse.addEventListener('click', () => changeStep(1));
-  controls.expand.addEventListener('click', () => changeStep(-1));
+  const collapse = () => changeStep(1);
+  const expand = () => changeStep(-1);
+  controls.collapse.addEventListener('click', collapse);
+  controls.expand.addEventListener('click', expand);
+  const cleanup = () => {
+    if (!active) return;
+    active = false;
+    cleanupLayout();
+    controls.collapse.removeEventListener('click', collapse);
+    controls.expand.removeEventListener('click', expand);
+    if (timelineCleanups.get(timeline) === cleanup) timelineCleanups.delete(timeline);
+  };
+  timelineCleanups.set(timeline, cleanup);
   update();
+  return cleanup;
 }

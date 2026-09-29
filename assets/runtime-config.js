@@ -4,6 +4,7 @@ import { loadConfig as fetchConfig } from './lib/http.js?v=1.0';
 import { postFiles } from './lib/posts.js?v=1.0';
 
 const BUSUANZI_SRC = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+const busuanziValues = new Map();
 const tagHtml = a => (a || []).map(t => `<span class="tag">${cfgEsc(t)}</span>`).join('');
 
 function cardData(x) {
@@ -69,13 +70,25 @@ function statRow(item) {
   return `<div class="stat"><span>${cfgEsc(x.label)}</span>${value}</div>`;
 }
 
-function loadBusuanzi() {
-  if (
-    (!document.getElementById('busuanzi_value_site_pv') &&
-      !document.getElementById('busuanzi_value_site_uv') &&
-      !document.getElementById('busuanzi_value_page_pv'))
-    || document.querySelector('script[data-busuanzi-loader]')
-  ) return;
+function loadBusuanzi({ root, onCleanup }) {
+  const counters = [...root.querySelectorAll('[id^="busuanzi_value_"]')];
+  if (!counters.length) return;
+  const pageKey = `${location.pathname}${location.search}`;
+  const counterKey = counter => counter.id === 'busuanzi_value_page_pv' ? `${counter.id}:${pageKey}` : counter.id;
+  // The third-party script runs once per document. Preserve its visible site
+  // counters when the home page is detached and later mounted again.
+  counters.forEach(counter => {
+    const key = counterKey(counter);
+    if (busuanziValues.has(key)) counter.textContent = busuanziValues.get(key);
+  });
+  const remember = () => counters.forEach(counter => {
+    const value = counter.textContent.trim();
+    if (value && value !== '--') busuanziValues.set(counterKey(counter), value);
+  });
+  const observer = new MutationObserver(remember);
+  counters.forEach(counter => observer.observe(counter, { childList: true, characterData: true, subtree: true }));
+  onCleanup(() => { remember(); observer.disconnect(); });
+  if (document.querySelector('script[data-busuanzi-loader]')) return;
   const script = document.createElement('script');
   script.async = true;
   script.src = BUSUANZI_SRC;
@@ -83,84 +96,101 @@ function loadBusuanzi() {
   document.body.append(script);
 }
 
-async function updatePostCounts() {
-  const targets = [...document.querySelectorAll('[data-post-count]')];
+async function updatePostCounts({ root, signal }) {
+  const targets = [...root.querySelectorAll('[data-post-count]')];
   if (!targets.length) return;
   try {
     const count = postFiles(await fetchConfig('posts')).length;
+    if (signal.aborted) return;
     targets.forEach(target => { target.textContent = count; });
-  } catch { targets.forEach(target => { target.textContent = '—'; }); }
+  } catch { if (!signal.aborted) targets.forEach(target => { target.textContent = '—'; }); }
 }
 
-function renderHomePage(cfg) {
+function renderHomePage(cfg, { root }) {
   const h = cfg.home;
   if (!h) return;
-  setText('[data-config="home.eyebrow"]', h.eyebrow);
-  setText('[data-config="home.title"]', h.title);
-  setText('[data-config="home.lead"]', h.lead);
-  const actions = document.querySelector('[data-home-actions]');
-  const stats = document.querySelector('[data-home-stats]');
+  setText('[data-config="home.eyebrow"]', h.eyebrow, root);
+  setText('[data-config="home.title"]', h.title, root);
+  setText('[data-config="home.lead"]', h.lead, root);
+  const actions = root.querySelector('[data-home-actions]');
+  const stats = root.querySelector('[data-home-stats]');
   if (actions) actions.innerHTML = (h.actions || []).map(actionLink).join('');
   if (stats) stats.innerHTML = (h.stats || []).map(statRow).join('');
-  loadBusuanzi();
 }
 
-function renderProjectPage(cfg) {
+function renderProjectPage(cfg, { root }) {
   const p = cfg.projects;
   if (!p) return;
-  setText('[data-config="projects.title"]', p.title);
-  setText('[data-config="projects.eyebrow"]', p.eyebrow);
-  setText('[data-config="projects.lead"]', p.lead);
-  const featured = document.querySelector('[data-projects-featured]');
-  const directions = document.querySelector('[data-projects-directions]');
+  setText('[data-config="projects.title"]', p.title, root);
+  setText('[data-config="projects.eyebrow"]', p.eyebrow, root);
+  setText('[data-config="projects.lead"]', p.lead, root);
+  const featured = root.querySelector('[data-projects-featured]');
+  const directions = root.querySelector('[data-projects-directions]');
   if (featured) featured.innerHTML = (p.featured || []).map(cfgCard).join('');
   if (directions) directions.innerHTML = (p.directions || []).map(cfgCard).join('');
 }
 
-async function renderAboutPage(cfg) {
+async function renderAboutPage(cfg, { root, signal, onCleanup }) {
   const a = cfg.about;
   if (!a) return;
-  setText('[data-config="about.title"]', a.title);
-  setText('[data-config="about.eyebrow"]', a.eyebrow);
-  setText('[data-config="about.lead"]', a.lead);
-  const profile = document.querySelector('[data-about-profile]');
-  const cards = document.querySelector('[data-about-cards]');
-  const timeline = document.querySelector('[data-about-timeline]');
+  setText('[data-config="about.title"]', a.title, root);
+  setText('[data-config="about.eyebrow"]', a.eyebrow, root);
+  setText('[data-config="about.lead"]', a.lead, root);
+  const profile = root.querySelector('[data-about-profile]');
+  const cards = root.querySelector('[data-about-cards]');
+  const timeline = root.querySelector('[data-about-timeline]');
   if (profile) profile.innerHTML = renderProfileBlock(a.profile);
   if (cards) cards.innerHTML = (a.cards || []).map(cfgCard).join('');
   if (timeline) {
-    const { renderTimeline } = await import('./timeline.js?v=1.0');
-    renderTimeline(timeline, a.timeline || []);
+    const { renderTimeline } = await import('./timeline.js?v=1.1');
+    if (signal.aborted) return;
+    onCleanup(renderTimeline(timeline, a.timeline || []));
   }
 }
 
-function renderFriendsPage(cfg) {
+function renderFriendsPage(cfg, { root }) {
   const f = cfg.friends;
   if (!f) return;
-  setText('[data-config="friends.title"]', f.title);
-  setText('[data-config="friends.eyebrow"]', f.eyebrow);
-  setText('[data-config="friends.lead"]', f.lead);
-  const links = document.querySelector('[data-friends-links]');
-  const apply = document.querySelector('[data-friends-apply]');
+  setText('[data-config="friends.title"]', f.title, root);
+  setText('[data-config="friends.eyebrow"]', f.eyebrow, root);
+  setText('[data-config="friends.lead"]', f.lead, root);
+  const links = root.querySelector('[data-friends-links]');
+  const apply = root.querySelector('[data-friends-apply]');
   if (links) links.innerHTML = (f.links || []).map(friendCard).join('');
   if (apply) apply.innerHTML = (f.apply || []).map(cfgCard).join('');
 }
 
 const renderers = { home: renderHomePage, projects: renderProjectPage, about: renderAboutPage, friends: renderFriendsPage };
-async function renderPage(name, reload = false) {
-  const errorTarget = document.querySelector('[data-config-error]');
+async function renderPage(name, context, reload = false) {
+  const { root, signal } = context;
+  if (signal.aborted) return;
+  const errorTarget = root.querySelector('[data-config-error]');
   try {
     const data = await fetchConfig(name, { reload });
-    await renderers[name]({ [name]: data });
+    if (signal.aborted) return;
+    await renderers[name]({ [name]: data }, context);
+    if (signal.aborted) return;
     errorTarget?.replaceChildren();
-    loadBusuanzi();
-    await updatePostCounts();
+    loadBusuanzi(context);
+    await updatePostCounts(context);
+    if (signal.aborted) return;
     contentRendered();
   } catch (error) {
-    if (errorTarget) showError(errorTarget, `页面配置加载失败：${error.message}`, () => renderPage(name, true));
+    if (signal.aborted) return;
+    if (errorTarget) showError(errorTarget, `页面配置加载失败：${error.message}`, () => renderPage(name, context, true));
     else console.warn('页面配置加载失败。', error);
   }
 }
-for (const name of Object.keys(renderers)) {
-  if (document.querySelector(`[data-config^="${name}."]`)) void renderPage(name);
+
+export async function mountPage(context) {
+  let configured = false;
+  for (const name of Object.keys(renderers)) {
+    if (context.signal.aborted) return;
+    if (context.root.querySelector(`[data-config^="${name}."]`)) {
+      configured = true;
+      await renderPage(name, context);
+    }
+  }
+  // Cloud has its own config renderer, but its counters share the same loader.
+  if (!configured && !context.signal.aborted) loadBusuanzi(context);
 }

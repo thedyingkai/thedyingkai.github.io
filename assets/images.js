@@ -85,7 +85,7 @@ function applyCarousel(images, activeIndex) {
   });
 }
 
-function bindHeroStackMotion(target) {
+function bindHeroStackMotion(target, { signal, onCleanup }) {
   const host = target.closest('.hero__copy') || target;
   const images = [...target.querySelectorAll('.hero__stack-image')];
   if (!images.length) return;
@@ -108,6 +108,7 @@ function bindHeroStackMotion(target) {
   host.append(controls);
   let activeIndex = 0;
   let running = false;
+  let disposed = false;
   let paused = false;
   let hovering = false;
   let focused = false;
@@ -117,6 +118,7 @@ function bindHeroStackMotion(target) {
   let depths = [];
 
   function setActive(index) {
+    if (disposed) return;
     activeIndex = (index + images.length) % images.length;
     applyCarousel(images, activeIndex);
     depths = images.map(image => Number(image.style.getPropertyValue('--stack-depth')) || 1);
@@ -153,7 +155,7 @@ function bindHeroStackMotion(target) {
   function sync() {
     clearInterval(cycle);
     cycle = 0;
-    const animate = running && !paused;
+    const animate = !disposed && running && !paused;
     target.dataset.motionActive = String(animate);
     if (!animate) { cancelAnimationFrame(frame); frame = 0; }
     else {
@@ -168,31 +170,46 @@ function bindHeroStackMotion(target) {
     pause.setAttribute('aria-pressed', String(paused));
     sync();
   };
-  host.addEventListener('pointerenter', () => { hovering = true; sync(); });
+  host.addEventListener('pointerenter', () => { hovering = true; sync(); }, { signal });
   host.addEventListener('pointermove', event => {
     if (!running || paused || event.pointerType === 'touch') return;
     const rect = host.getBoundingClientRect();
     nextX = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
     nextY = Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1));
-  });
-  host.addEventListener('pointerleave', () => { hovering = false; sync(); });
-  host.addEventListener('focusin', () => { focused = true; sync(); });
-  host.addEventListener('focusout', event => { focused = host.contains(event.relatedTarget); sync(); });
+  }, { signal });
+  host.addEventListener('pointerleave', () => { hovering = false; sync(); }, { signal });
+  host.addEventListener('focusin', () => { focused = true; sync(); }, { signal });
+  host.addEventListener('focusout', event => { focused = host.contains(event.relatedTarget); sync(); }, { signal });
   setActive(0);
-  observeActivity(host, active => { running = active; sync(); });
+  const stopActivity = observeActivity(host, active => { running = active; sync(); });
+  onCleanup(() => {
+    disposed = true;
+    stopActivity();
+    cancelAnimationFrame(frame);
+    clearInterval(cycle);
+    pause.onclick = null;
+    dots.forEach(dot => { dot.onclick = null; });
+    controls.remove();
+  });
 }
 
-loadConfig('images').then(cfg => {
-  document.querySelectorAll('[data-image-slot]').forEach(target => {
-    const slot = cfg.slots?.[target.dataset.imageSlot];
-    if (!slot) return;
-    target.innerHTML = frame(slot, cfg.basePath);
-  });
-  document.querySelectorAll('[data-image-stack]').forEach(target => {
-    const slot = cfg.slots?.[target.dataset.imageStack];
-    if (!slot) return;
-    target.innerHTML = imageStack(slot, cfg.basePath);
-    bindHeroStackMotion(target);
-  });
-  contentRendered();
-}).catch(() => { });
+export async function mountPage(context) {
+  const { root, signal } = context;
+  if (signal.aborted || !root.querySelector('[data-image-slot], [data-image-stack]')) return;
+  try {
+    const cfg = await loadConfig('images');
+    if (signal.aborted) return;
+    root.querySelectorAll('[data-image-slot]').forEach(target => {
+      const slot = cfg.slots?.[target.dataset.imageSlot];
+      if (!slot) return;
+      target.innerHTML = frame(slot, cfg.basePath);
+    });
+    root.querySelectorAll('[data-image-stack]').forEach(target => {
+      const slot = cfg.slots?.[target.dataset.imageStack];
+      if (!slot) return;
+      target.innerHTML = imageStack(slot, cfg.basePath);
+      bindHeroStackMotion(target, context);
+    });
+    contentRendered();
+  } catch { /* Decorative images must not block page content. */ }
+}
