@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/validate-timeline.mjs
+      - run: node --test tests/*.test.mjs
       - run: node scripts/generate-site-data.mjs
       - run: node scripts/sync-asset-versions.mjs
       - uses: actions/configure-pages@v5

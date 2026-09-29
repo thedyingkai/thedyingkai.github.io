@@ -351,7 +351,10 @@ async function fetchConfig(name) {
 }
 
 async function loadConfig() {
-  const parts = await Promise.all(['home', 'about', 'projects', 'friends'].map(fetchConfig));
+  // An unrelated page's failed config must not prevent this page rendering.
+  const names = ['home', 'about', 'projects', 'friends'].filter(name =>
+    document.querySelector(`[data-config^="${name}."]`));
+  const parts = await Promise.all(names.map(fetchConfig));
   return Object.fromEntries(parts);
 }
 
@@ -431,6 +434,7 @@ loadConfig().then(cfg => {
   renderProjectPage(cfg);
   renderAboutPage(cfg);
   renderFriendsPage(cfg);
+  loadBusuanzi();
   updatePostCounts();
   window.dispatchEvent(new Event('tdk:content-rendered'));
 }).catch(e => {
