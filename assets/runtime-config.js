@@ -8,6 +8,7 @@ const TIMELINE_VIEW_STEPS = [
   { minRank: 2, label: '主要以上' },
   { minRank: 3, label: '最大层' }
 ];
+const timelineCleanups = new WeakMap();
 
 function safeUrl(value, fallback = '') {
   const raw = String(value ?? '').trim();
@@ -83,69 +84,18 @@ function timelineData(item) {
   return { date: item[0], title: item[1], level: item[2] };
 }
 
-function normalizeTimelineLevel(value) {
-  const key = String(value ?? '').trim().toLowerCase();
-  const map = {
-    0: 'dot',
-    dot: 'dot',
-    tiny: 'dot',
-    point: 'dot',
-    none: 'dot',
-    '点': 'dot',
-    '最小': 'dot',
-    1: 'minor',
-    minor: 'minor',
-    small: 'minor',
-    '小': 'minor',
-    2: 'mid',
-    mid: 'mid',
-    medium: 'mid',
-    middle: 'mid',
-    normal: 'mid',
-    '中': 'mid',
-    3: 'major',
-    major: 'major',
-    large: 'major',
-    big: 'major',
-    important: 'major',
-    '大': 'major',
-    '重点': 'major'
-  };
-  return map[key] || '';
-}
-
-function timelineLevel(item, index = 0) {
-  const x = timelineData(item);
-  const manualLevel = normalizeTimelineLevel(x.level ?? x.size ?? x.importance);
-  if (manualLevel) return manualLevel;
-  const text = `${x.title} ${x.date}`;
-  if (x.important === true || /(国一|金牌|银牌|铜牌|ICPC|CCPC|线下|邀请赛)/.test(text)) return 'major';
-  if (/(第一次|过审|红名|蓝名|青名|校赛|400 AC|500 AC)/.test(text)) return 'mid';
-  if (/(注册|300 AC)/.test(text) || index % 7 === 0) return 'minor';
-  if (/(200 AC|100 AC|绿名|橙名)/.test(text)) return 'dot';
-  return 'dot';
-}
-
 function timelineRank(level) {
-  return TIMELINE_LEVEL_RANK[level] ?? 0;
+  return TIMELINE_LEVEL_RANK[level];
 }
 
 function timelineEntries(items = []) {
-  return [...items]
-    .sort((a, b) => String(timelineData(a).date || '').localeCompare(String(timelineData(b).date || '')))
-    .map((item, index) => ({
-      item,
-      data: timelineData(item),
-      level: timelineLevel(item, index)
-    }));
-}
-
-function readTimelineViewStep() {
-  return 0;
-}
-
-function timelineHeight(count = 0) {
-  return `${Math.max(760, count * 54)}px`;
+  return items.map((item, index) => {
+    const data = timelineData(item);
+    if (typeof data.level !== 'string' || !Object.hasOwn(TIMELINE_LEVEL_RANK, data.level)) {
+      throw new Error(`时间线第 ${index + 1} 项必须手动指定 level：dot、minor、mid 或 major。`);
+    }
+    return { data, level: data.level };
+  }).sort((a, b) => String(a.data.date || '').localeCompare(String(b.data.date || '')));
 }
 
 function timelineWave(t) {
@@ -154,37 +104,150 @@ function timelineWave(t) {
   return Math.max(12, Math.min(88, 50 + (main + fine) * 31));
 }
 
-function timelinePoint(index = 0, total = 1) {
-  const t = total <= 1 ? 0.5 : index / (total - 1);
-  return {
-    x: timelineWave(t),
-    y: 4 + t * 92
+function timelinePath(points) {
+  if (!points.length) return '';
+  const position = point => `${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+  const slope = index => {
+    const before = points[Math.max(0, index - 1)];
+    const after = points[Math.min(points.length - 1, index + 1)];
+    return after.y === before.y ? 0 : (after.x - before.x) / (after.y - before.y);
   };
-}
-
-function timelinePath(total = 1) {
-  const samples = 180;
-  return Array.from({ length: samples }, (_, i) => {
-    const t = samples <= 1 ? 0 : i / (samples - 1);
-    const x = timelineWave(t).toFixed(2);
-    const y = (4 + t * 92).toFixed(2);
-    return `${i ? 'L' : 'M'}${x} ${y}`;
-  }).join(' ');
+  return points.slice(1).reduce((path, point, i) => {
+    const previous = points[i];
+    const dy = (point.y - previous.y) / 3;
+    const start = { x: previous.x + slope(i) * dy, y: previous.y + dy };
+    const end = { x: point.x - slope(i + 1) * dy, y: point.y - dy };
+    return `${path} C${position(start)} ${position(end)} ${position(point)}`;
+  }, `M${position(points[0])}`);
 }
 
 function timelineItem(entry, index = 0, items = []) {
-  const x = entry?.data || timelineData(entry?.item || entry);
-  const level = entry?.level || timelineLevel(entry?.item || entry, index);
-  const point = timelinePoint(index, items.length || 1);
-  const labelSide = point.x < 50 ? 'right' : 'left';
-  const delay = (index % 12) * 90;
-  const style = `--timeline-x:${point.x.toFixed(2)}%;--timeline-y:${point.y.toFixed(2)}%;--timeline-delay:${delay}ms`;
-  return `<div class="timeline__item timeline__item--${cfgEsc(level)} timeline__item--${labelSide}" style="${style}" tabindex="0" aria-label="${cfgEsc(`${x.date} ${x.title}`)}"><span class="timeline__dot" aria-hidden="true"></span><span class="timeline__text"><span class="timeline__time">${cfgEsc(x.date)}</span><h3>${cfgEsc(x.title)}</h3></span></div>`;
+  const { data, level } = entry;
+  const x = timelineWave(items.length <= 1 ? 0.5 : index / (items.length - 1));
+  const side = x < 50 ? 'right' : 'left';
+  const style = `--timeline-x:${x.toFixed(2)}%;--timeline-phase:${-(index % 5)}s`;
+  return `<div class="timeline__item timeline__item--${level} timeline__item--${side}" style="${style}" tabindex="0" aria-label="${cfgEsc(`${data.date} ${data.title}`)}"><span class="timeline__halo" aria-hidden="true"></span><span class="timeline__dot" aria-hidden="true"></span><span class="timeline__text"><span class="timeline__time">${cfgEsc(data.date)}</span><h3>${cfgEsc(data.title)}</h3></span></div>`;
 }
 
 function timelineHtml(entries = []) {
-  const path = timelinePath(entries.length || 1);
-  return `<svg class="timeline__curve" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path class="timeline__curve-shadow" d="${path}"></path><path class="timeline__curve-main" d="${path}"></path><path class="timeline__curve-gold" d="${path}"></path></svg>${entries.map(timelineItem).join('')}`;
+  return `<svg class="timeline__curve" aria-hidden="true"><path class="timeline__curve-shadow"></path><path class="timeline__curve-main"></path><path class="timeline__curve-gold"></path></svg><span class="timeline__spark" aria-hidden="true"></span><span class="timeline__spark timeline__spark--gold" aria-hidden="true"></span>${entries.map(timelineItem).join('')}`;
+}
+
+function initTimelineLayout(timeline) {
+  const nodes = [...timeline.querySelectorAll('.timeline__item')];
+  const labels = nodes.map(node => node.querySelector('.timeline__text'));
+  const svg = timeline.querySelector('.timeline__curve');
+  const paths = [...svg.querySelectorAll('path')];
+  const sparks = [...timeline.querySelectorAll('.timeline__spark')];
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const visibleNodes = new Set();
+  let animations = [];
+  let keyframes = [];
+  let frame = 0;
+  let width = 0;
+  let active = true;
+
+  const syncMotion = () => {
+    const running = !document.hidden && !motion.matches && visibleNodes.size > 0;
+    timeline.classList.toggle('timeline--running', running);
+    animations.forEach(animation => running ? animation.play() : animation.pause());
+  };
+
+  const updateSparks = () => {
+    animations.forEach(animation => animation.cancel());
+    animations = [];
+    if (!motion.matches && keyframes.length && typeof sparks[0]?.animate === 'function') {
+      animations = sparks.map((spark, index) => {
+        const animation = spark.animate(keyframes, {
+          duration: 18000,
+          iterations: Infinity,
+          easing: 'linear'
+        });
+        animation.currentTime = index * 9000;
+        return animation;
+      });
+    }
+    syncMotion();
+  };
+
+  const layout = () => {
+    frame = 0;
+    if (!active || !timeline.isConnected) return;
+    width = timeline.clientWidth;
+    if (!width) return;
+    const gap = parseFloat(getComputedStyle(timeline).getPropertyValue('--timeline-gap')) || 24;
+    const points = nodes.map((node, index) => {
+      const x = timelineWave(nodes.length <= 1 ? 0.5 : index / (nodes.length - 1)) * width / 100;
+      // Labels face inward; reserve room for the dot, its halo and the outer edge.
+      const available = (x < width / 2 ? width - x : x) - 36;
+      node.style.setProperty('--label-max-width', `${Math.max(1, available)}px`);
+      return { x, y: 0 };
+    });
+    // Read all actual line heights together, then write positions in one batch.
+    const heights = labels.map(label => Math.ceil(label.getBoundingClientRect().height));
+    let bottom = 24;
+    points.forEach((point, index) => {
+      const height = Math.max(heights[index], 32);
+      point.y = bottom + height / 2;
+      bottom += height + gap;
+    });
+    const height = Math.max(80, bottom - gap + 24);
+    timeline.style.height = `${height}px`;
+    nodes.forEach((node, index) => node.style.setProperty('--timeline-y', `${points[index].y}px`));
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    const path = timelinePath(points);
+    paths.forEach(node => node.setAttribute('d', path));
+
+    // Sample the static path only on layout. The moving lights animate transforms,
+    // avoiding a full-height SVG stroke repaint on every animation frame.
+    keyframes = [];
+    if (points.length > 1) {
+      const length = paths[1].getTotalLength();
+      const samples = Math.max(60, Math.min(220, Math.ceil(length / 24)));
+      keyframes = Array.from({ length: samples + 1 }, (_, index) => {
+        const offset = index / samples;
+        const point = paths[1].getPointAtLength(length * offset);
+        return { transform: `translate(${point.x.toFixed(2)}px, ${point.y.toFixed(2)}px)`, opacity: index === 0 || index === samples ? 0 : 1, offset };
+      });
+    }
+    timeline.classList.add('timeline--ready');
+    updateSparks();
+  };
+
+  const scheduleLayout = () => {
+    if (active && !frame) frame = requestAnimationFrame(layout);
+  };
+  const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(changes => {
+    if (changes.some(change => change.target !== timeline || Math.abs(change.contentRect.width - width) > 1)) scheduleLayout();
+  }) : null;
+  resizeObserver?.observe(timeline);
+  labels.forEach(label => resizeObserver?.observe(label));
+  window.addEventListener('resize', scheduleLayout, { passive: true });
+  document.fonts?.ready.then(scheduleLayout);
+
+  const visibilityObserver = typeof IntersectionObserver === 'function' ? new IntersectionObserver(changes => {
+    changes.forEach(change => {
+      change.target.classList.toggle('timeline__item--in-view', change.isIntersecting);
+      if (change.isIntersecting) visibleNodes.add(change.target);
+      else visibleNodes.delete(change.target);
+    });
+    syncMotion();
+  }) : null;
+  nodes.forEach(node => visibilityObserver?.observe(node));
+  document.addEventListener('visibilitychange', syncMotion);
+  motion.addEventListener('change', updateSparks);
+  scheduleLayout();
+
+  return () => {
+    active = false;
+    cancelAnimationFrame(frame);
+    resizeObserver?.disconnect();
+    visibilityObserver?.disconnect();
+    animations.forEach(animation => animation.cancel());
+    window.removeEventListener('resize', scheduleLayout);
+    document.removeEventListener('visibilitychange', syncMotion);
+    motion.removeEventListener('change', updateSparks);
+  };
 }
 
 function timelineButton(label, ariaLabel) {
@@ -219,10 +282,12 @@ function timelineControls(timeline) {
 
 function renderTimeline(timeline, items = []) {
   const entries = timelineEntries(items);
+  timelineCleanups.get(timeline)?.();
+  timeline.classList.remove('timeline--ready', 'timeline--running');
   const controls = timelineControls(timeline);
-  let stepIndex = readTimelineViewStep();
-  timeline.style.setProperty('--timeline-height', timelineHeight(entries.length));
+  let stepIndex = 0;
   timeline.innerHTML = timelineHtml(entries);
+  timelineCleanups.set(timeline, initTimelineLayout(timeline));
 
   const update = () => {
     const step = TIMELINE_VIEW_STEPS[stepIndex] || TIMELINE_VIEW_STEPS[0];

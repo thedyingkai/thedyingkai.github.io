@@ -1236,11 +1236,15 @@ a.card--with-image:hover .post-card__thumb img {
 
 .timeline {
   position: relative;
-  min-height: var(--timeline-height, 1120px);
+  --timeline-gap: 24px;
+  min-height: 80px;
   margin-top: 20px;
-  padding: 12px 0 34px;
   isolation: isolate;
   overflow: visible
+}
+
+.timeline:not(.timeline--ready) {
+  visibility: hidden
 }
 
 .timeline__curve {
@@ -1261,21 +1265,44 @@ a.card--with-image:hover .post-card__thumb img {
 }
 
 .timeline__curve-shadow {
-  stroke: rgba(102, 204, 255, .12);
-  stroke-width: 14;
-  filter: blur(2px)
+  stroke: rgba(102, 204, 255, .1);
+  stroke-width: 10
 }
 
 .timeline__curve-main {
-  stroke: rgba(102, 204, 255, .64);
-  stroke-width: 4;
-  stroke-dasharray: 14 12;
-  animation: timeline-flow 20s linear infinite
+  stroke: rgba(102, 204, 255, .7);
+  stroke-width: 3
 }
 
 .timeline__curve-gold {
-  stroke: rgba(214, 165, 51, .62);
-  stroke-width: 1.7
+  stroke: rgba(214, 165, 51, .65);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 13
+}
+
+.timeline__spark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  margin: -4px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(102, 204, 255, .25), 0 0 12px 4px rgba(102, 204, 255, .6);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 2
+}
+
+.timeline__spark--gold {
+  background: #fff7d1;
+  box-shadow: 0 0 0 3px rgba(214, 165, 51, .2), 0 0 12px 4px rgba(214, 165, 51, .5)
+}
+
+.timeline--running .timeline__spark {
+  visibility: visible
 }
 
 .timeline__item {
@@ -1283,18 +1310,14 @@ a.card--with-image:hover .post-card__thumb img {
   left: var(--timeline-x, 50%);
   top: var(--timeline-y, 50%);
   z-index: 1;
-  width: 0;
-  height: 0;
+  width: 1px;
+  height: 1px;
   transform: translate(-50%, -50%);
   outline: none;
   --dot-size: 9px;
-  --label-gap: 18px;
-  --label-width: min(260px, 28vw);
-  --label-scale: 1;
-  --label-hover-scale: 1.24;
-  --hit-size: 46px;
-  animation: timeline-float 7.6s ease-in-out infinite;
-  animation-delay: var(--timeline-delay, 0ms)
+  --label-gap: 22px;
+  --label-width: 300px;
+  --hit-size: 44px
 }
 
 .timeline__item:before {
@@ -1319,21 +1342,43 @@ a.card--with-image:hover .post-card__thumb img {
   border: 2px solid rgba(255, 255, 255, .88);
   border-radius: 50%;
   background: var(--gold-grad);
-  box-shadow: 0 0 0 5px rgba(102, 204, 255, .13), 0 0 22px rgba(214, 165, 51, .34);
+  box-shadow: 0 0 0 4px rgba(102, 204, 255, .15);
   transform: translate(-50%, -50%) scale(1);
-  transition: transform .22s ease, box-shadow .22s ease, background .22s ease
+  transition: transform .2s ease
+}
+
+.timeline__halo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--dot-size) + 14px);
+  height: calc(var(--dot-size) + 14px);
+  border: 1px solid var(--cyan-deep);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none
+}
+
+.timeline__item--mid .timeline__halo,
+.timeline__item--major .timeline__halo {
+  animation: timeline-pulse 4s ease-out infinite;
+  animation-delay: var(--timeline-phase, 0s);
+  animation-play-state: paused
+}
+
+.timeline--running .timeline__item--in-view .timeline__halo {
+  animation-play-state: running
 }
 
 .timeline__text {
   position: absolute;
   top: 50%;
-  width: var(--label-width);
+  width: min(var(--label-width), var(--label-max-width, 300px));
   color: var(--ink);
-  pointer-events: none;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .82), 0 10px 26px rgba(33, 150, 212, .18);
-  transform: translateY(-50%) scale(var(--label-scale));
-  transition: opacity .22s ease, visibility .22s ease, transform .22s ease, color .22s ease;
-  will-change: transform
+  overflow-wrap: anywhere;
+  transform: translateY(-50%);
+  transition: opacity .18s ease, visibility .18s ease
 }
 
 .timeline__item--left .timeline__text {
@@ -1352,7 +1397,8 @@ a.card--with-image:hover .post-card__thumb img {
   display: block;
   font-size: 10px;
   color: var(--cyan-deep);
-  font-weight: 900;
+  font-weight: 600;
+  line-height: 1.5;
   letter-spacing: .08em;
   text-transform: uppercase
 }
@@ -1360,15 +1406,15 @@ a.card--with-image:hover .post-card__thumb img {
 .timeline__item h3 {
   font-family: var(--serif);
   font-size: 12px;
-  line-height: 1.22;
-  margin: 3px 0 0;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 4px 0 0;
   letter-spacing: 0
 }
 
 .timeline__item--dot {
   --dot-size: 7px;
-  --label-width: min(180px, 24vw);
-  --label-hover-scale: 1.18;
+  --label-width: 220px;
   --hit-size: 42px;
   z-index: 1
 }
@@ -1380,46 +1426,62 @@ a.card--with-image:hover .post-card__thumb img {
 .timeline[data-label-min-rank="3"] .timeline__item--minor:not(:hover):not(:focus-within) .timeline__text,
 .timeline[data-label-min-rank="3"] .timeline__item--mid:not(:hover):not(:focus-within) .timeline__text {
   opacity: 0;
-  visibility: hidden;
-  transform: translateY(-50%) scale(.72)
+  visibility: hidden
 }
 
 .timeline__item--minor {
-  --dot-size: 9px;
-  --label-width: min(210px, 26vw);
-  opacity: .9
+  --dot-size: 10px;
+  --label-width: 280px
+}
+
+.timeline__item--minor h3 {
+  font-size: 15px
+}
+
+.timeline__item--minor .timeline__time {
+  font-size: 11px
 }
 
 .timeline__item--mid {
-  --dot-size: 12px;
-  --hit-size: 54px;
-  --label-width: min(250px, 30vw)
+  --dot-size: 13px;
+  --hit-size: 48px;
+  --label-width: 360px
+}
+
+.timeline__item--mid h3,
+.timeline__item--major h3 {
+  font-size: 18px
 }
 
 .timeline__item--mid h3 {
-  font-size: 15px
+  color: #202020;
+  font-weight: 400
 }
 
 .timeline__item--major {
   --dot-size: 17px;
-  --label-width: min(320px, 34vw);
-  --label-hover-scale: 1.28;
-  --hit-size: 64px;
+  --label-width: 360px;
+  --hit-size: 48px;
   z-index: 2
 }
 
 .timeline__item--major .timeline__dot {
   background: linear-gradient(135deg, var(--gold), var(--cyan));
-  box-shadow: 0 0 0 7px rgba(102, 204, 255, .16), 0 0 36px rgba(214, 165, 51, .42)
+  box-shadow: 0 0 0 6px rgba(214, 165, 51, .16)
 }
 
+.timeline__item--major .timeline__halo {
+  border-color: var(--gold)
+}
+
+.timeline__item--mid .timeline__time,
 .timeline__item--major .timeline__time {
-  font-size: 11px
+  font-size: 12px
 }
 
 .timeline__item--major h3 {
   color: var(--gold-deep);
-  font-size: 18px
+  font-weight: 800
 }
 
 .timeline__item:hover,
@@ -1430,37 +1492,35 @@ a.card--with-image:hover .post-card__thumb img {
 
 .timeline__item:hover .timeline__dot,
 .timeline__item:focus-within .timeline__dot {
-  box-shadow: 0 0 0 9px rgba(102, 204, 255, .18), 0 0 42px rgba(214, 165, 51, .5);
-  transform: translate(-50%, -50%) scale(1.55)
+  transform: translate(-50%, -50%) scale(1.3)
 }
 
 .timeline__item:hover .timeline__text,
 .timeline__item:focus-within .timeline__text {
-  color: var(--ink-strong);
   opacity: 1;
-  visibility: visible;
-  transform: translateY(-50%) scale(var(--label-hover-scale))
+  visibility: visible
 }
 
-.timeline__item p {
-  color: var(--ink-2);
-  margin: 0
+.timeline__item:hover h3,
+.timeline__item:focus-within h3 {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px
 }
 
-@keyframes timeline-flow {
-  to {
-    stroke-dashoffset: -180
+@keyframes timeline-pulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.7)
   }
-}
-
-@keyframes timeline-float {
-  0%,
+  20% {
+    opacity: .65
+  }
+  85%,
   100% {
-    filter: drop-shadow(0 0 0 rgba(102, 204, 255, 0))
-  }
-
-  50% {
-    filter: drop-shadow(0 0 10px rgba(102, 204, 255, .24))
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.7)
   }
 }
 
@@ -2532,8 +2592,7 @@ a.card--with-image:hover .post-card__thumb img {
   }
 
   .timeline {
-    min-height: var(--timeline-height, 1120px);
-    padding: 18px 0 10px
+    --timeline-gap: 22px
   }
 
   .timeline__curve-main {
@@ -2542,28 +2601,6 @@ a.card--with-image:hover .post-card__thumb img {
 
   .timeline__curve-shadow {
     stroke-width: 10
-  }
-
-  .timeline__item {
-    --label-width: min(178px, 38vw);
-    --label-gap: 13px
-  }
-
-  .timeline__item h3 {
-    font-size: 11px
-  }
-
-  .timeline__item--mid h3 {
-    font-size: 13px
-  }
-
-  .timeline__item--major h3 {
-    font-size: 15px
-  }
-
-  .timeline__item:hover .timeline__text,
-  .timeline__item:focus-within .timeline__text {
-    transform: translateY(-50%) scale(1.14)
   }
 
   .nav {
@@ -2971,6 +3008,11 @@ a.card--with-image:hover .post-card__thumb img {
 }
 
 @media(prefers-reduced-motion:reduce) {
+  .timeline__spark,
+  .timeline__halo {
+    display: none
+  }
+
   *,
   *:before,
   *:after {

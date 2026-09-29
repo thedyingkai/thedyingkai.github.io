@@ -237,7 +237,7 @@
 
   function initPageMotion() {
     const candidates = [
-      ...document.querySelectorAll('.page-head, .section-head, .card, .stat-card, .anime-frame, .timeline__item, .post-tools, .friend-exchange__panel, .friend-exchange__steps li')
+      ...document.querySelectorAll('.page-head, .section-head, .card, .stat-card, .anime-frame, .post-tools, .friend-exchange__panel, .friend-exchange__steps li')
     ].filter(node => !node.dataset.revealReady);
     if (!candidates.length) return;
     document.body.classList.add('motion-ready');
