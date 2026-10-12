@@ -6,7 +6,19 @@
     <atom:link href="https://blog.thedyingkai.cn/rss.xml" rel="self" type="application/rss+xml"/>
     <description>thedyingkai_ 的个人博客、算法笔记、项目归档和成长记录。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Wed, 02 Sep 2026 16:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 11 Oct 2026 16:00:00 GMT</lastBuildDate>
+    <item>
+      <title>华为挑战赛：端云协同调度复现</title>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=icpc-2026-huawei-edge-cloud-scheduling.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=icpc-2026-huawei-edge-cloud-scheduling.md</guid>
+      <pubDate>Sun, 11 Oct 2026 16:00:00 GMT</pubDate>
+      <description>ICPC 2026 华为挑战赛终测第 10 名方案，介绍端云协同推理的瓶颈建模、在线动作价值、Decode 准入、批处理与复现验证。</description>
+      <category>ICPC</category>
+      <category>华为挑战赛</category>
+      <category>Codeforces</category>
+      <category>启发式优化</category>
+      <category>调度算法</category>
+    </item>
     <item>
       <title>The 2025 ICPC Asia East Continent Online Contest (I) 题解</title>
       <link>https://blog.thedyingkai.cn/blog/post/?file=icpc-2025-online-1-writeup.md</link>

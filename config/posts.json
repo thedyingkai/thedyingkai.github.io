@@ -1,6 +1,7 @@
 {
   "version": 2,
   "files": [
+    "icpc-2026-huawei-edge-cloud-scheduling.md",
     "icpc-2025-online-1-writeup.md",
     "tree-templates.md",
     "generating-functions.md",
@@ -11,6 +12,21 @@
     "post-7.md"
   ],
   "posts": [
+    {
+      "fileName": "icpc-2026-huawei-edge-cloud-scheduling.md",
+      "title": "华为挑战赛：端云协同调度复现",
+      "description": "ICPC 2026 华为挑战赛终测第 10 名方案，介绍端云协同推理的瓶颈建模、在线动作价值、Decode 准入、批处理与复现验证。",
+      "date": "2026.10.12",
+      "tags": [
+        "ICPC",
+        "华为挑战赛",
+        "Codeforces",
+        "启发式优化",
+        "调度算法"
+      ],
+      "cover": "",
+      "coverAlt": ""
+    },
     {
       "fileName": "icpc-2025-online-1-writeup.md",
       "title": "The 2025 ICPC Asia East Continent Online Contest (I) 题解",
