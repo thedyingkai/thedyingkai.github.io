@@ -1,6 +1,9 @@
 {
   "version": 2,
   "files": [
+    "ccpc-2026-cosine-similarity-scheduling.md",
+    "ccpc-2026-cumsum-scheduling.md",
+    "ccpc-2026-log-sigmoid-scheduling.md",
     "icpc-2026-huawei-edge-cloud-scheduling.md",
     "icpc-2025-online-1-writeup.md",
     "tree-templates.md",
@@ -12,6 +15,51 @@
     "post-7.md"
   ],
   "posts": [
+    {
+      "fileName": "ccpc-2026-cosine-similarity-scheduling.md",
+      "title": "CCPC 长春站 T1：批量余弦相似度调度方案",
+      "description": "从点积和两个平方和出发，说明行组分核、紧凑叶子归约、长行输入流水、尾波协作与 Cube 调度。",
+      "date": "2026.10.17",
+      "tags": [
+        "CCPC",
+        "昇腾",
+        "Ascend C",
+        "算子优化",
+        "调度算法"
+      ],
+      "cover": "",
+      "coverAlt": ""
+    },
+    {
+      "fileName": "ccpc-2026-cumsum-scheduling.md",
+      "title": "CCPC 长春站 T2：前缀和的分层调度方案",
+      "description": "按扫描轴和内存布局组织 FP32 分层前缀、驻留协作扫描、FP16 有序链，以及长链证书生产、解析与输出。",
+      "date": "2026.10.17",
+      "tags": [
+        "CCPC",
+        "昇腾",
+        "Ascend C",
+        "算子优化",
+        "调度算法"
+      ],
+      "cover": "",
+      "coverAlt": ""
+    },
+    {
+      "fileName": "ccpc-2026-log-sigmoid-scheduling.md",
+      "title": "CCPC 长春站 T3：LogSigmoid 的分核与流水线",
+      "description": "说明 LogSigmoid 的规模分派、连续分核、单块向量计算、双缓冲生命周期、L2 策略与尾部处理。",
+      "date": "2026.10.17",
+      "tags": [
+        "CCPC",
+        "昇腾",
+        "Ascend C",
+        "算子优化",
+        "调度算法"
+      ],
+      "cover": "",
+      "coverAlt": ""
+    },
     {
       "fileName": "icpc-2026-huawei-edge-cloud-scheduling.md",
       "title": "华为挑战赛：端云协同调度复现",
