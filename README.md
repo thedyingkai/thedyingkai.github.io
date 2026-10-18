@@ -120,24 +120,13 @@ GitHub Pages 构建会检查版本是否同步；版本不一致时停止构建�
 - 兼容旧版 `tdk-music:<playlistId>` 设置。存储不可用时仍可播放；不在每个时间更新事件里写存储。
 - 实现在 `music-player.js`，纯数据逻辑在 `music-model.js`，样式在 `music-player.css`。旧 vendor 文件保留以便回退，页面不再引用。
 
-## 回归检查
+## 检查与构建
 
 Node.js 22，无需安装依赖即可运行：
 
 ```bash
-npm test
 npm run check
 npm run build
 ```
 
-浏览器回归需额外安装 Playwright（仅开发测试使用，不是站点运行依赖）：
-
-```bash
-npm install --no-save playwright
-npx playwright install chromium
-npm run test:browser
-```
-
-测试启动临时本地服务器和独立浏览器，使用隔离的存储、模拟歌单接口和本地静音 WAV，覆盖代码复制/换行、公式失败降级、播放器失败重试、切歌与恢复。截图写入系统临时目录，不读取或更改个人浏览器状态。也可用 `PLAYWRIGHT_MODULE` 和 `BROWSER_EXECUTABLE` 指定已有测试运行时。
-
-构建产物位于 `_site/`，仅包含公开站点文件；手动 Pages 部署上传此目录。`fix` 分支的自动检查不会部署网站。模块划分、构建边界和完整回归范围见 [维护说明](docs/maintenance.md)。
+构建产物位于 `_site/`，仅包含公开站点文件；手动 Pages 部署上传此目录。`fix` 分支的自动检查不会部署网站。模块划分和构建边界见 [维护说明](docs/maintenance.md)。

@@ -8,35 +8,11 @@
     <language>zh-CN</language>
     <lastBuildDate>Fri, 16 Oct 2026 16:00:00 GMT</lastBuildDate>
     <item>
-      <title>CCPC 长春站 T1：批量余弦相似度调度方案</title>
-      <link>https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-cosine-similarity-scheduling.md</link>
-      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-cosine-similarity-scheduling.md</guid>
+      <title>CCPC 长春算子赛：三题调度方案</title>
+      <link>https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-changchun-operators.md</link>
+      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-changchun-operators.md</guid>
       <pubDate>Fri, 16 Oct 2026 16:00:00 GMT</pubDate>
-      <description>从点积和两个平方和出发，说明行组分核、紧凑叶子归约、长行输入流水、尾波协作与 Cube 调度。</description>
-      <category>CCPC</category>
-      <category>昇腾</category>
-      <category>Ascend C</category>
-      <category>算子优化</category>
-      <category>调度算法</category>
-    </item>
-    <item>
-      <title>CCPC 长春站 T2：前缀和的分层调度方案</title>
-      <link>https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-cumsum-scheduling.md</link>
-      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-cumsum-scheduling.md</guid>
-      <pubDate>Fri, 16 Oct 2026 16:00:00 GMT</pubDate>
-      <description>按扫描轴和内存布局组织 FP32 分层前缀、驻留协作扫描、FP16 有序链，以及长链证书生产、解析与输出。</description>
-      <category>CCPC</category>
-      <category>昇腾</category>
-      <category>Ascend C</category>
-      <category>算子优化</category>
-      <category>调度算法</category>
-    </item>
-    <item>
-      <title>CCPC 长春站 T3：LogSigmoid 的分核与流水线</title>
-      <link>https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-log-sigmoid-scheduling.md</link>
-      <guid isPermaLink="true">https://blog.thedyingkai.cn/blog/post/?file=ccpc-2026-log-sigmoid-scheduling.md</guid>
-      <pubDate>Fri, 16 Oct 2026 16:00:00 GMT</pubDate>
-      <description>说明 LogSigmoid 的规模分派、连续分核、单块向量计算、双缓冲生命周期、L2 策略与尾部处理。</description>
+      <description>2026 CCPC 长春算子赛 Rank 4，获华为手环 11。整理批量余弦相似度、前缀和与 LogSigmoid 三题的分核、缓冲复用、流水线和数值处理方案。</description>
       <category>CCPC</category>
       <category>昇腾</category>
       <category>Ascend C</category>
