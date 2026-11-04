@@ -2,9 +2,8 @@ import { escapeHtml as cfgEsc, setText, contentRendered, showError } from './lib
 import { safeUrl, isExternalUrl as isExt, imageUrl } from './lib/urls.js?v=1.0';
 import { loadConfig as fetchConfig } from './lib/http.js?v=1.0';
 import { postFiles } from './lib/posts.js?v=1.0';
+import { mountVisitCounters } from './visit-counter.js?v=1.0';
 
-const BUSUANZI_SRC = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
-const busuanziValues = new Map();
 const tagHtml = a => (a || []).map(t => `<span class="tag">${cfgEsc(t)}</span>`).join('');
 
 function cardData(x) {
@@ -63,37 +62,11 @@ function statRow(item) {
   const value = x.value === 'auto'
     ? '<b data-post-count>0</b>'
     : x.value === 'busuanzi_site_pv'
-      ? '<b><span id="busuanzi_container_site_pv"><span id="busuanzi_value_site_pv">--</span>次</span></b>'
+      ? '<b><span id="busuanzi_container_site_pv"><span id="busuanzi_value_site_pv">--</span><span data-counter-unit>次</span></span></b>'
       : x.value === 'busuanzi_site_uv'
-        ? '<b><span id="busuanzi_container_site_uv"><span id="busuanzi_value_site_uv">--</span>人</span></b>'
+        ? '<b><span id="busuanzi_container_site_uv"><span id="busuanzi_value_site_uv">--</span><span data-counter-unit>人</span></span></b>'
         : `<b>${cfgEsc(x.value)}</b>`;
   return `<div class="stat"><span>${cfgEsc(x.label)}</span>${value}</div>`;
-}
-
-function loadBusuanzi({ root, onCleanup }) {
-  const counters = [...root.querySelectorAll('[id^="busuanzi_value_"]')];
-  if (!counters.length) return;
-  const pageKey = `${location.pathname}${location.search}`;
-  const counterKey = counter => counter.id === 'busuanzi_value_page_pv' ? `${counter.id}:${pageKey}` : counter.id;
-  // The third-party script runs once per document. Preserve its visible site
-  // counters when the home page is detached and later mounted again.
-  counters.forEach(counter => {
-    const key = counterKey(counter);
-    if (busuanziValues.has(key)) counter.textContent = busuanziValues.get(key);
-  });
-  const remember = () => counters.forEach(counter => {
-    const value = counter.textContent.trim();
-    if (value && value !== '--') busuanziValues.set(counterKey(counter), value);
-  });
-  const observer = new MutationObserver(remember);
-  counters.forEach(counter => observer.observe(counter, { childList: true, characterData: true, subtree: true }));
-  onCleanup(() => { remember(); observer.disconnect(); });
-  if (document.querySelector('script[data-busuanzi-loader]')) return;
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = BUSUANZI_SRC;
-  script.dataset.busuanziLoader = '1';
-  document.body.append(script);
 }
 
 async function updatePostCounts({ root, signal }) {
@@ -171,7 +144,7 @@ async function renderPage(name, context, reload = false) {
     await renderers[name]({ [name]: data }, context);
     if (signal.aborted) return;
     errorTarget?.replaceChildren();
-    loadBusuanzi(context);
+    mountVisitCounters(context);
     await updatePostCounts(context);
     if (signal.aborted) return;
     contentRendered();
@@ -192,5 +165,5 @@ export async function mountPage(context) {
     }
   }
   // Cloud has its own config renderer, but its counters share the same loader.
-  if (!configured && !context.signal.aborted) loadBusuanzi(context);
+  if (!configured && !context.signal.aborted) mountVisitCounters(context);
 }

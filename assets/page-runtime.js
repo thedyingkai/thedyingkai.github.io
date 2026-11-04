@@ -17,7 +17,7 @@ export function mountPageContent(root) {
   const imports = [];
   if (root.matches('[data-post-view]')) imports.push(() => import('./article-renderer.js?v=6.2'));
   if (root.querySelector('[data-post-list]')) imports.push(() => import('./post-list.js?v=2.1'));
-  if (root.querySelector('[data-config^="home."], [data-config^="projects."], [data-config^="about."], [data-config^="friends."], [id^="busuanzi_value_"]')) imports.push(() => import('./runtime-config.js?v=2.1'));
+  if (root.querySelector('[data-config^="home."], [data-config^="projects."], [data-config^="about."], [data-config^="friends."], [id^="busuanzi_value_"]')) imports.push(() => import('./runtime-config.js?v=2.2'));
   if (root.querySelector('[data-image-slot], [data-image-stack]')) imports.push(() => import('./images.js?v=3.1'));
   if (root.querySelector('[data-cloud-entries]')) imports.push(() => import('./cloud.js?v=2.1'));
 

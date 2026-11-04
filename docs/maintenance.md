@@ -31,6 +31,7 @@ npm run build
 | Timeline data rules / layout and animation | `timeline-model.js`, `timeline.js` |
 | Cloud directory validation / navigation and downloads | `cloud-model.js`, `cloud.js` |
 | Persistent shell / same-document navigation / page lifetimes | `site.js`, `navigation.js`, `navigation-history.js`, `page-runtime.js` |
+| Visit counter requests, shared site totals and per-page cache | `visit-counter.js` |
 | Page reveal/progress, decorative image motion | `page-effects.js`, `images.js` |
 
 Only the about page imports timeline code. Shared config loads are deduplicated; explicit retries can reload corrected JSON. List pages read metadata instead of fetching every article body or mixing in GitHub's `main` branch.
@@ -47,4 +48,6 @@ Page entry modules export `mountPage({ root, signal, onCleanup })` instead of ru
 
 History state is namespaced. Pages adding entries (such as cloud folders) must use `savePageScroll` and `pushPageHistory`, preserving both scroll restoration and their own state. Failed or cancelled navigation keeps the current content and music, with an explicit retry instead of a forced document reload. Downloads, external links, modified clicks and new-tab targets retain normal browser behavior. Navigation only restores late layout positions if the user has not interacted in the meantime.
 
-Continuity applies within the same open blog document. Refreshing, closing that tab or navigating it to another website destroys the document and cannot retain that Audio instance. Saved-track recovery remains available after a full reload, subject to browser autoplay rules. Third-party visit counters remain best-effort; cached displayed counts can be reused, but soft navigation does not re-run the counter script to fabricate a new page view.
+Continuity applies within the same open blog document. Refreshing, closing that tab or navigating it to another website destroys the document and cannot retain that Audio instance. Saved-track recovery remains available after a full reload, subject to browser autoplay rules.
+
+Visit counters use the existing Busuanzi JSONP endpoint and referrer policy. The complete response is cached independently of the DOM: a direct visit to About can populate site totals when Home is mounted later. Page counts are keyed by pathname and query; only a missing count triggers a request, so returning to a visited page reuses its count. In-flight requests survive page disposal, while rendering is guarded by the page signal. Failed or timed-out requests are evicted and expose a retry button; they never cache placeholders or replace a known count with zero. The external service still controls availability and counting.
