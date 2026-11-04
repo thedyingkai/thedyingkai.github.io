@@ -2,7 +2,7 @@ import { escapeHtml as cfgEsc, setText, contentRendered, showError } from './lib
 import { safeUrl, isExternalUrl as isExt, imageUrl } from './lib/urls.js?v=1.0';
 import { loadConfig as fetchConfig } from './lib/http.js?v=1.0';
 import { postFiles } from './lib/posts.js?v=1.0';
-import { mountVisitCounters } from './visit-counter.js?v=1.0';
+import { mountVisitCounters } from './visit-counter.js?v=1.1';
 
 const tagHtml = a => (a || []).map(t => `<span class="tag">${cfgEsc(t)}</span>`).join('');
 

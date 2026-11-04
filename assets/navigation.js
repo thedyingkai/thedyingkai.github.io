@@ -1,5 +1,5 @@
 import { element, contentRendered } from './lib/dom.js?v=1.0';
-import { mountPageContent } from './page-runtime.js?v=1.1';
+import { mountPageContent } from './page-runtime.js?v=1.2';
 import { pageHistoryState, replacePageHistory, savePageScroll, pushPageHistory } from './navigation-history.js?v=1.0';
 
 const routes = new Set(['/', '/blog/', '/blog/post/', '/about/', '/projects/', '/cloud/', '/friends/', '/404.html']);

@@ -2,7 +2,7 @@ import { safeUrl, isExternalUrl } from './lib/urls.js?v=1.0';
 import { loadConfig } from './lib/http.js?v=1.0';
 import { contentRendered } from './lib/dom.js?v=1.0';
 import { initPageEffects } from './page-effects.js?v=1.0';
-import { initNavigation } from './navigation.js?v=1.1';
+import { initNavigation } from './navigation.js?v=1.2';
 
 const defaultSite = {
   brand: 'TDK 的小窝',

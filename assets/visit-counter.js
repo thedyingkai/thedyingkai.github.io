@@ -2,7 +2,7 @@ const ENDPOINT = 'https://busuanzi.ibruce.info/busuanzi';
 const fields = ['site_pv', 'site_uv', 'page_pv'];
 const values = new Map();
 const requests = new Map();
-let sequence = 0;
+let sequence = Math.floor(1099511627776 * Math.random());
 
 const valueKey = (field, page) => field === 'page_pv' ? `${field}:${page}` : field;
 
@@ -12,7 +12,7 @@ function requestCounts(page, needsPageCount) {
   const pending = requests.get(page) || (!needsPageCount && requests.values().next().value);
   if (pending) return pending;
   const request = new Promise((resolve, reject) => {
-    const callback = `BusuanziCallback_tdk_${Date.now()}_${++sequence}`;
+    const callback = `BusuanziCallback_${++sequence}`;
     const script = document.createElement('script');
     let settled = false;
     const finish = error => {
@@ -61,25 +61,25 @@ export function mountVisitCounters({ root, signal, onCleanup }) {
   if (!counters.length || signal.aborted) return;
   const page = `${location.pathname}${location.search}`;
   let loading = false;
+  let attempts = 0;
+  let retryTimer;
 
   const render = (failed = false) => {
     if (signal.aborted) return;
     for (const { field, node, container, unit } of counters) {
       const value = values.get(valueKey(field, page));
       const unavailable = failed && value === undefined;
+      // Page reading counts are optional metadata, so keep missing data out of
+      // the page heading instead of embedding controls in its badge.
+      if (field === 'page_pv' && container) {
+        container.hidden = value === undefined;
+        const metadata = container.closest('.page-meta');
+        if (metadata) metadata.hidden = [...metadata.children].every(child => child.hidden);
+      }
       if (unit) unit.hidden = unavailable;
       container?.setAttribute('aria-busy', String(loading && value === undefined));
-      node.replaceChildren();
-      if (unavailable) {
-        const retry = document.createElement('button');
-        retry.type = 'button';
-        retry.className = 'counter-retry';
-        retry.dataset.counterRetry = '1';
-        retry.textContent = '重试';
-        retry.title = '访问统计暂时不可用，点击重试';
-        retry.setAttribute('aria-label', retry.title);
-        node.append(retry);
-      } else node.textContent = value === undefined ? '--' : String(value);
+      if (container) container.dataset.counterState = value !== undefined ? 'ready' : loading ? 'loading' : 'unavailable';
+      node.textContent = value === undefined ? (failed ? '暂不可用' : '--') : String(value);
     }
   };
 
@@ -90,17 +90,22 @@ export function mountVisitCounters({ root, signal, onCleanup }) {
       return;
     }
     loading = true;
+    attempts++;
     render();
     let failed = false;
     try { await requestCounts(page, counters.some(({ field }) => field === 'page_pv')); }
     catch { failed = true; }
     loading = false;
     render(failed);
+    if (failed && !signal.aborted && attempts < 2) retryTimer = setTimeout(() => void load(), 2000);
   };
-  const retry = event => {
-    if (event.target.closest('[data-counter-retry]')) void load();
+  const online = () => {
+    if (loading) return;
+    clearTimeout(retryTimer);
+    attempts = 0;
+    void load();
   };
-  root.addEventListener('click', retry);
-  onCleanup(() => root.removeEventListener('click', retry));
+  window.addEventListener('online', online);
+  onCleanup(() => { clearTimeout(retryTimer); window.removeEventListener('online', online); });
   void load();
 }
